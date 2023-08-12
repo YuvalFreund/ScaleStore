@@ -127,7 +127,7 @@ public:
         uint64_t nodeIdOfWantedPage = getNodeIdOfBucket(bucketIdOfWantedPage);
         // check if node is not already hot
         if(nodeIdOfWantedPage == this->nodeId){
-            uint64_t ssdSlotOfRequestedPage= getPageSSDSlotInSelfNode(wantedPageId);
+            //uint64_t ssdSlotOfRequestedPage= getPageSSDSlotInSelfNode(wantedPageId);
             //read page or whatever
         }else{
             requestPageFromOtherNode(wantedPageId);
@@ -238,7 +238,7 @@ public:
     }
 
     void requestPageFromOtherNode(uint64_t wantedPageId){
-        uint64_t nodeIdHoldingWantedPage = getNodeIdOfBucket(wantedPageId & BUCKET_ID_MASK);
+        //uint64_t nodeIdHoldingWantedPage = getNodeIdOfBucket(wantedPageId & BUCKET_ID_MASK);
         //TODO - ASK NODE FOR PAGE
     }
 
