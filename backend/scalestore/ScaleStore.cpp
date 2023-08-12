@@ -50,7 +50,7 @@ ScaleStore::ScaleStore(){
    rdmaCounters = std::make_unique<profiling::RDMACounters>();
    catalog = std::make_unique<storage::Catalog>();
    vector<uint64_t> nodesInCluster = {0};
-   bucketManager = std::make_unique<BucketManager>(0,nodesInCluster); //todo yuval - how to get node id?
+   bucketManager = std::make_unique<BucketManager>(0,nodesInCluster); //todo yuval - how to get node id and all node ids
    // init catalog
    workerPool->scheduleJobSync(
       0, [&]() { catalog->init(nodeId); });

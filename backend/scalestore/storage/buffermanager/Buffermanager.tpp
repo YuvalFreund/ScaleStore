@@ -62,7 +62,9 @@ restart:
    // -------------------------------------------------------------------------------------
    g.frame->latch.latchExclusive(); // POSSIBLE ERROR?
    ensure(g.frame->pid == EMPTY_PID);
-   g.frame->state =
+    //todo Yuval - replace with call to buckets manager
+
+    g.frame->state =
        (pid.getOwner() == nodeId) ? BF_STATE::IO_SSD : BF_STATE::IO_RDMA;  // important to modify state before releasing the hashtable latch
    g.frame->page = page;
    g.frame->pid = pid;
@@ -71,6 +73,7 @@ restart:
    // -------------------------------------------------------------------------------------
    ht_latch.unlatchExclusive();
    // -------------------------------------------------------------------------------------
+    //todo Yuval - replace with call to buckets manager
    g.state = (pid.getOwner() == nodeId) ? STATE::SSD : STATE::REMOTE;
    g.vAcquired = g.frame->latch.version;
    g.latchState = LATCH_STATE::EXCLUSIVE;
@@ -227,14 +230,18 @@ restart:
          // -------------------------------------------------------------------------------------
          uintptr_t pageOffset = (uintptr_t)guard.frame->page;
          // -------------------------------------------------------------------------------------
+         //todo Yuval - replace with call to buckets manager
          auto& contextT = threads::Worker::my().cctxs[pid.getOwner()];
          auto& request = *MessageFabric::createMessage<PossessionRequest>(
              contextT.outgoing, ((functor.type == LATCH_STATE::EXCLUSIVE) ? MESSAGE_TYPE::PRX : MESSAGE_TYPE::PRS), pid, pageOffset);
-         threads::Worker::my().writeMsgASync<PossessionResponse>(pid.getOwner(), request);
+          //todo Yuval - replace with call to buckets manager
+          threads::Worker::my().writeMsgASync<PossessionResponse>(pid.getOwner(), request);
          // -------------------------------------------------------------------------------------
          _mm_prefetch(&guard.frame->page->data[0], _MM_HINT_T0);  // prefetch first cache line of page
          // -------------------------------------------------------------------------------------
-         auto& response = threads::Worker::my().collectResponseMsgASync<PossessionResponse>(pid.getOwner());
+          //todo Yuval - replace with call to buckets manager
+
+          auto& response = threads::Worker::my().collectResponseMsgASync<PossessionResponse>(pid.getOwner());
          // -------------------------------------------------------------------------------------
          // set version from owner
          guard.frame->pVersion = response.pVersion;
@@ -309,7 +316,9 @@ restart:
       // Upgrade we are owner and need to change possession or page evicted
       // ------------------------------------------------------------------------------------
       case STATE::LOCAL_POSSESSION_CHANGE: {
-         ensure(pid.getOwner() == nodeId);
+          //todo Yuval - replace with call to buckets manager
+
+          ensure(pid.getOwner() == nodeId);
          ensure(guard.frame->latch.isLatched());
          ensure(guard.frame->possession != POSSESSION::NOBODY);
          // -------------------------------------------------------------------------------------
@@ -406,10 +415,12 @@ restart:
          auto pVersionOld = guard.frame->pVersion.load();
          guard.frame->pVersion++;  // update here to prevent distributed deadlock
          // -------------------------------------------------------------------------------------
-         auto& contextT = threads::Worker::my().cctxs[pid.getOwner()];
+          //todo Yuval - replace with call to buckets manager
+          auto& contextT = threads::Worker::my().cctxs[pid.getOwner()];
          auto& request = *MessageFabric::createMessage<PossessionUpdateRequest>(contextT.outgoing, pid, pVersionOld);
          // -------------------------------------------------------------------------------------
-         auto& response = threads::Worker::my().writeMsgSync<PossessionUpdateResponse>(pid.getOwner(), request);
+          //todo Yuval - replace with call to buckets manager
+          auto& response = threads::Worker::my().writeMsgSync<PossessionUpdateResponse>(pid.getOwner(), request);
 
          if (response.resultType == RESULT::UpdateFailed) {
             ensure(guard.frame->latch.isLatched());

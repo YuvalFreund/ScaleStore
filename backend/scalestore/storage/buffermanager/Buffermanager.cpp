@@ -158,10 +158,12 @@ BufferFrame& Buffermanager::newRemotePage(NodeID remoteNode) {
    // -------------------------------------------------------------------------------------
    return frame;
 }
+
 // -------------------------------------------------------------------------------------
 // takes a latched bufferframe
 void Buffermanager::reclaimPage(BufferFrame& frame) {
    ensure(frame.latch.isLatched());
+   //todo Yuval - replace with call to buckets manager
    if(frame.pid.getOwner() == nodeId){
       removeFrame(frame, [&](BufferFrame& frame){
                          pidFreeList.push(frame.pid, threads::ThreadContext::my().pid_handle);
@@ -180,7 +182,8 @@ void Buffermanager::writeAllPages() {
       std::vector<uint64_t> retry_idx;
       for (size_t b_i = bf_b; b_i < bf_e; ++b_i) {
          auto& frame = bfs[b_i];
-         if ((frame.pid.getOwner() == nodeId && frame.state == BF_STATE::HOT)) {
+          //todo Yuval - replace with call to buckets manager
+          if ((frame.pid.getOwner() == nodeId && frame.state == BF_STATE::HOT)) {
             if (!frame.latch.tryLatchExclusive()) {
                std::cerr << "Background thread working and latched page " << std::endl;
                retry_idx.push_back(b_i);
