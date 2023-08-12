@@ -45,10 +45,12 @@ ScaleStore::ScaleStore(){
    mh = std::make_unique<rdma::MessageHandler>(*cm, *bm, nodeId);
    workerPool = std::make_unique<threads::WorkerPool>(*cm, nodeId);
    pp = std::make_unique<storage::PageProvider>(*cm, *bm, mh->mbPartitions, ssd_fd);
-   rGuard =std::make_unique<RemoteGuard>(mh->connectedClients); 
+   rGuard =std::make_unique<RemoteGuard>(mh->connectedClients);
    bmCounters = std::make_unique<profiling::BMCounters>(*bm);
    rdmaCounters = std::make_unique<profiling::RDMACounters>();
    catalog = std::make_unique<storage::Catalog>();
+   vector<uint64_t> nodesInCluster = {0};
+   bucketManager = std::make_unique<BucketManager>(0,nodesInCluster); //todo yuval - how to get node id?
    // init catalog
    workerPool->scheduleJobSync(
       0, [&]() { catalog->init(nodeId); });
