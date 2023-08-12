@@ -237,7 +237,8 @@ public:
         }
     }
 
-    void requestPageFromOtherNode(uint64_t wantedPageId){
+    void requestPageFromOtherNode(){//uint64_t wantedPageId
+
         //uint64_t nodeIdHoldingWantedPage = getNodeIdOfBucket(wantedPageId & BUCKET_ID_MASK);
         //TODO - ASK NODE FOR PAGE
     }
