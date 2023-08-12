@@ -2,8 +2,6 @@
 // Created by YuvalFreund on 09.03.23.
 //
 
-#ifndef RANGESATTEMPT_NODE_H
-#define RANGESATTEMPT_NODE_H
 
 //libraries
 #include <queue>
@@ -352,4 +350,3 @@ public:
 
 
 };
-#endif //RANGESATTEMPT_NODE_H
