@@ -3,4 +3,4 @@ project(buckets)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(buckets Bucket.h Page.h BucketManager.h tools.h cluster.h GenericDisjointSets.cpp GenericDisjointSets.h tests.h testUtils.h)
+add_executable(buckets Bucket.h Page.h BucketManager.h tools.h cluster.h GenericDisjointSets.cpp GenericDisjointSets.h)

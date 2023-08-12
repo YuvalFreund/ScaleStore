@@ -2,8 +2,6 @@
 // Created by YuvalFreund on 10.03.23.
 //
 
-#ifndef RANGESATTEMPT_TOOLS_H
-#define RANGESATTEMPT_TOOLS_H
 #include "Bucket.h"
 
 struct BucketsCompare
@@ -13,6 +11,7 @@ struct BucketsCompare
         return lhs.freeSlots.size() < rhs.freeSlots.size();
     }
 };
+
 static inline uint64_t FasterHash(uint64_t input) {
     uint64_t local_rand = input;
     uint64_t local_rand_hash = 8;
@@ -29,10 +28,4 @@ static inline uint64_t FasterHash(uint64_t input) {
 uint64_t tripleHash(uint64_t input){
     return FasterHash(FasterHash(FasterHash(input)));
 }
-struct clusterData{
-    uint64_t weight; // consistent hashing factor
-    uint64_t nodeNum;
 
-};
-
-#endif //RANGESATTEMPT_TOOLS_H
