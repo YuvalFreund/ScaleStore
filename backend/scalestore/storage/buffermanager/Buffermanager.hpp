@@ -14,6 +14,7 @@
 #include "scalestore/utils/MemoryManagement.hpp"
 #include "scalestore/utils/Parallelize.hpp"
 #include "scalestore/utils/FNVHash.hpp"
+#include "scalestore/storage/buffermanager/bucketsmanager/BucketManager.h"
 // -------------------------------------------------------------------------------------
 #include <cstdint>
 #include <mutex>
@@ -75,7 +76,7 @@ class Buffermanager
    friend storage::BuffermanagerSampler;
    // -------------------------------------------------------------------------------------
   public:
-   Buffermanager(rdma::CM<rdma::InitMessage>& cm, NodeID nodeId, s32 ssd_fd);
+   Buffermanager(rdma::CM<rdma::InitMessage>& cm, NodeID nodeId, s32 ssd_fd, BucketManager bucketManager);
    ~Buffermanager() noexcept;
    // -------------------------------------------------------------------------------------
    // Deleted constructors
@@ -139,6 +140,7 @@ class Buffermanager
    PageTable pTable;              // page table maps PID to BufferFrame
    const NodeID nodeId;
    const s32 ssd_fd;
+   BucketManager* bucketManager;
    // -------------------------------------------------------------------------------------
    // free lists
    // -------------------------------------------------------------------------------------

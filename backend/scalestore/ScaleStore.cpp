@@ -39,18 +39,18 @@ ScaleStore::ScaleStore(){
    ensure(fcntl(ssd_fd, F_GETFL) != -1);
    // -------------------------------------------------------------------------------------
    // order of construction is important
-   cm = std::make_unique<rdma::CM<rdma::InitMessage>>();
-   bm = std::make_unique<storage::Buffermanager>(*cm, nodeId, ssd_fd);
-   storage::BM::global = bm.get();
-   mh = std::make_unique<rdma::MessageHandler>(*cm, *bm, nodeId);
-   workerPool = std::make_unique<threads::WorkerPool>(*cm, nodeId);
-   pp = std::make_unique<storage::PageProvider>(*cm, *bm, mh->mbPartitions, ssd_fd);
-   rGuard =std::make_unique<RemoteGuard>(mh->connectedClients);
-   bmCounters = std::make_unique<profiling::BMCounters>(*bm);
-   rdmaCounters = std::make_unique<profiling::RDMACounters>();
-   catalog = std::make_unique<storage::Catalog>();
-   vector<uint64_t> nodesInCluster = {0};
-   bucketManager = std::make_unique<BucketManager>(0,nodesInCluster); //todo yuval - how to get node id and all node ids
+    vector<uint64_t> nodesInCluster = {0};
+    bucketManager = std::make_unique<BucketManager>(nodeId,nodesInCluster); //todo yuval - how to get node id and all node ids
+    cm = std::make_unique<rdma::CM<rdma::InitMessage>>();
+    bm = std::make_unique<storage::Buffermanager>(*cm, nodeId, ssd_fd,bucketManager);
+    storage::BM::global = bm.get();
+    mh = std::make_unique<rdma::MessageHandler>(*cm, *bm, nodeId);
+    workerPool = std::make_unique<threads::WorkerPool>(*cm, nodeId);
+    pp = std::make_unique<storage::PageProvider>(*cm, *bm, mh->mbPartitions, ssd_fd);
+    rGuard =std::make_unique<RemoteGuard>(mh->connectedClients);
+    bmCounters = std::make_unique<profiling::BMCounters>(*bm);
+    rdmaCounters = std::make_unique<profiling::RDMACounters>();
+    catalog = std::make_unique<storage::Catalog>();
    // init catalog
    workerPool->scheduleJobSync(
       0, [&]() { catalog->init(nodeId); });
