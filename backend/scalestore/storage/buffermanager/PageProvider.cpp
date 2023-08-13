@@ -175,7 +175,7 @@ void PageProvider::startThread() {
          // used wshen we do not evict to SSD but only to remote nodes 
          auto remote_condition = [&](BufferFrame& frame) {
             // local pages shared somewhere else
-e            if ((frame.pid.getOwner() == bm.nodeId) && (frame.state == BF_STATE::HOT) && (frame.possession == POSSESSION::SHARED) &&
+            if ((frame.pid.getOwner() == bm.nodeId) && (frame.state == BF_STATE::HOT) && (frame.possession == POSSESSION::SHARED) &&
                 !frame.latch.isLatched()) {
                if ((frame.isPossessor(bm.nodeId)) && (frame.possessors.shared.count() > 1)) { return true; }
                if ((!frame.isPossessor(bm.nodeId)) && (frame.possessors.shared.count() >= 1)) { return true; }

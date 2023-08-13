@@ -13,7 +13,6 @@
 
 //files
 #include "Bucket.h"
-#include "cluster.h"
 #include "GenericDisjointSets.h"
 
 //Macros
