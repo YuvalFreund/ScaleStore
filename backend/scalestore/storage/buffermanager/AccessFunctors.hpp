@@ -20,7 +20,9 @@ struct Exclusive {
       }
       // -------------------------------------------------------------------------------------
        //todo Yuval - replace with call to buckets manager
-      if (g.frame->possession != POSSESSION::EXCLUSIVE || !(g.frame->isPossessor(nodeId))) {
+       //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
+
+       if (g.frame->possession != POSSESSION::EXCLUSIVE || !(g.frame->isPossessor(nodeId))) {
          g.state = (g.frame->pid.getOwner() == nodeId) ? STATE::LOCAL_POSSESSION_CHANGE : STATE::REMOTE_POSSESSION_CHANGE;
       } else
          g.state = STATE::INITIALIZED;
@@ -124,7 +126,9 @@ struct Optimistic {
       // -------------------------------------------------------------------------------------
       // can be shared or exclusive as long as we are in possession
        //todo Yuval - replace with call to buckets manager
-      if (!(g.frame->isPossessor(nodeId))) {
+       //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
+       // todo - how to actually call it from here?
+       if (!(g.frame->isPossessor(nodeId))) {
          g.state = (g.frame->pid.getOwner() == nodeId) ? STATE::LOCAL_POSSESSION_CHANGE : STATE::REMOTE_POSSESSION_CHANGE;
       } else
          g.state = STATE::INITIALIZED;
