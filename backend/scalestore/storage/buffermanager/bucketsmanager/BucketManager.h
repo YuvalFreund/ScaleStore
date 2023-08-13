@@ -366,4 +366,4 @@ public:
 
 };
 
-#endif BUCKETMANAGER_H_
+#endif
