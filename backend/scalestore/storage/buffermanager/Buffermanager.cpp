@@ -165,6 +165,7 @@ BufferFrame& Buffermanager::newRemotePage(NodeID remoteNode) {
 void Buffermanager::reclaimPage(BufferFrame& frame) {
    ensure(frame.latch.isLatched());
    //todo Yuval - replace with call to buckets manager
+   uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
    if(frame.pid.getOwner() == nodeId){
       removeFrame(frame, [&](BufferFrame& frame){
                          pidFreeList.push(frame.pid, threads::ThreadContext::my().pid_handle);

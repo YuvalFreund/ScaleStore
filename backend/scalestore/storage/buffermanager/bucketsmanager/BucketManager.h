@@ -133,6 +133,11 @@ public:
         }
     }
 
+    uint64_t getNodeIdOfPage(uint64_t pageId){
+        uint64_t bucketId = pageId & BUCKET_ID_MASK;
+        return getNodeIdOfBucket(bucketId);
+    }
+
     uint64_t getNodeIdOfBucket(uint64_t bucketId){
         uint64_t res = INVALID_NODE_ID;
         auto pageInCacheIter = bucketIdToNodeCache.find(bucketId);
