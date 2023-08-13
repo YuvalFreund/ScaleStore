@@ -3,6 +3,8 @@
 //
 
 
+#ifndef BUCKETMANAGER_H_
+#define BUCKETMANAGER_H_
 //libraries
 #include <queue>
 #include <map>
@@ -363,3 +365,5 @@ public:
     }
 
 };
+
+#endif BUCKETMANAGER_H_
