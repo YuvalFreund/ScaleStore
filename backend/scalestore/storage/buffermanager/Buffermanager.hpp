@@ -140,20 +140,22 @@ class Buffermanager
    PageTable pTable;              // page table maps PID to BufferFrame
    const NodeID nodeId;
    const s32 ssd_fd;
-   BucketManager bucketManager;
    // -------------------------------------------------------------------------------------
    // free lists
    // -------------------------------------------------------------------------------------
-   PartitionedQueue<BufferFrame*,PARTITIONS,BATCH_SIZE, utils::Stack> frameFreeList;
-   PartitionedQueue<Page*,PARTITIONS,BATCH_SIZE, utils::Stack> pageFreeList;
-   PartitionedQueue<PID,PARTITIONS,BATCH_SIZE, utils::Stack> pidFreeList;
-   // -------------------------------------------------------------------------------------
+    PartitionedQueue<BufferFrame*,PARTITIONS,BATCH_SIZE, utils::Stack> frameFreeList;
+    PartitionedQueue<Page*,PARTITIONS,BATCH_SIZE, utils::Stack> pageFreeList;
+    PartitionedQueue<PID,PARTITIONS,BATCH_SIZE, utils::Stack> pidFreeList;
+    // -------------------------------------------------------------------------------------
+    // bucket manager
+    BucketManager bucketManager;
+    // -------------------------------------------------------------------------------------
    // private helper functions
    // -------------------------------------------------------------------------------------
    template <typename InitFunc>
    BufferFrame& insertFrame(PID pid,InitFunc&& init_bf_func){
       auto& bucket_bf =pTable[pid];
-      auto& ht_latch = bucket_bf.ht_bucket_latch; 
+      auto& ht_latch = bucket_bf.ht_bucket_latch;
    restart:
       // -------------------------------------------------------------------------------------
       RESTART(!ht_latch.tryLatchExclusive() , restart);
