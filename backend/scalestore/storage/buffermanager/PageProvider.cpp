@@ -12,13 +12,14 @@ namespace storage {
 PageProvider::PageProvider(CM<rdma::InitMessage>& cm,
                            storage::Buffermanager& bm,
                            std::vector<MessageHandler::MailboxPartition>& mhPartitions,
-                           s32 ssd_fd)
+                           s32 ssd_fd, BucketManager& bucketManager)
     : cm(cm),
       bm(bm),
       mhPartitions(mhPartitions),
       freeBFLimit(std::ceil((FLAGS_freePercentage * 1.0 * bm.dramPoolNumberPages / 100.0))),
       coolingBFLimit(std::ceil((FLAGS_coolingPercentage * 1.0 * bm.dramPoolNumberPages / 100.0))),
-      ssd_fd(ssd_fd) {
+      ssd_fd(ssd_fd),
+      bucketManager(bucketManager){
 
    ensure(FLAGS_evictCoolestEpochs < 1); // must be less than one 
    size_t n = bm.pTable.size;  // size of the hash table 

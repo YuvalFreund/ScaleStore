@@ -76,7 +76,7 @@ class Buffermanager
    friend storage::BuffermanagerSampler;
    // -------------------------------------------------------------------------------------
   public:
-   Buffermanager(rdma::CM<rdma::InitMessage>& cm, NodeID nodeId, s32 ssd_fd, BucketManager bucketManager);
+   Buffermanager(rdma::CM<rdma::InitMessage>& cm, NodeID nodeId, s32 ssd_fd, BucketManager& bucketManager);
    ~Buffermanager() noexcept;
    // -------------------------------------------------------------------------------------
    // Deleted constructors
@@ -140,7 +140,7 @@ class Buffermanager
    PageTable pTable;              // page table maps PID to BufferFrame
    const NodeID nodeId;
    const s32 ssd_fd;
-   BucketManager* bucketManager;
+   BucketManager bucketManager;
    // -------------------------------------------------------------------------------------
    // free lists
    // -------------------------------------------------------------------------------------

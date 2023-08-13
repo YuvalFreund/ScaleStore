@@ -35,7 +35,7 @@ public:
     //////////////INNER VARIABLES /////////////////////
     ///////////////////////////////////////////////////
     //locks
-    std::mutex newBucketMtx;
+    //std::mutex newBucketMtx; //todo yuval - how to get this lock without causing problem
 
     //variables
     uint64_t bucketsNum = 0;
@@ -182,7 +182,7 @@ public:
     }
 
     void createNewBucket(bool isNewBucketIdNeeded, uint64_t givenBucketId){
-        newBucketMtx.lock();
+        //newBucketMtx.lock(); //todo yuval - how to get this lock without causing problem
         uint64_t newBucketId;
         if(isNewBucketIdNeeded){
             bucketsFreeSSDSlots.pop();
@@ -197,7 +197,7 @@ public:
         // create new bucket
         bucketsMap.try_emplace(newBucketId, newBucketId, SSDSlotStart).first;
         bucketsNum++;
-        newBucketMtx.unlock();
+        //newBucketMtx.unlock(); //todo yuval - how to get this lock without causing problem
     }
 
     set<pair<uint64_t, uint64_t>> findMergableBuckets(vector<pair<uint64_t, uint64_t>> bucketsSizes){
