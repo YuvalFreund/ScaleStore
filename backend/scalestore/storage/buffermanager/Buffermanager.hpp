@@ -76,7 +76,7 @@ class Buffermanager
    friend storage::BuffermanagerSampler;
    // -------------------------------------------------------------------------------------
   public:
-   Buffermanager(rdma::CM<rdma::InitMessage>& cm, NodeID nodeId, s32 ssd_fd, BucketManager& bucketManager);
+   Buffermanager(rdma::CM<rdma::InitMessage>& cm, NodeID nodeId, s32 ssd_fd, BucketManager* bucketManager);
    ~Buffermanager() noexcept;
    // -------------------------------------------------------------------------------------
    // Deleted constructors
@@ -148,7 +148,7 @@ class Buffermanager
     PartitionedQueue<PID,PARTITIONS,BATCH_SIZE, utils::Stack> pidFreeList;
     // -------------------------------------------------------------------------------------
     // bucket manager
-    BucketManager bucketManager;
+    BucketManager* bucketManager;
     // -------------------------------------------------------------------------------------
    // private helper functions
    // -------------------------------------------------------------------------------------

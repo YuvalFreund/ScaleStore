@@ -42,7 +42,7 @@ ScaleStore::ScaleStore(){
     vector<uint64_t> nodesInCluster = {nodeId};
     bucketManager = std::make_unique<BucketManager>(nodeId,nodesInCluster); //todo yuval - how to get node id and all node ids
     cm = std::make_unique<rdma::CM<rdma::InitMessage>>();
-    bm = std::make_unique<storage::Buffermanager>(*cm, nodeId, ssd_fd, *bucketManager);
+    bm = std::make_unique<storage::Buffermanager>(*cm, nodeId, ssd_fd, &bucketManager);
     storage::BM::global = bm.get();
     mh = std::make_unique<rdma::MessageHandler>(*cm, *bm, nodeId);
     workerPool = std::make_unique<threads::WorkerPool>(*cm, nodeId);
