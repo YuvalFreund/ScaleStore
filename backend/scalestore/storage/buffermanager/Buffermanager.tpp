@@ -62,10 +62,10 @@ restart:
    // -------------------------------------------------------------------------------------
    g.frame->latch.latchExclusive(); // POSSIBLE ERROR?
    ensure(g.frame->pid == EMPTY_PID);
-    //todo Yuval - replace with call to buckets manager
-
+    //todo Yuval - DONE replace with call to buckets manager
+    uint64_t pidOwner = bucketManager->getNodeIdOfPage(g.frame.pid)
     g.frame->state =
-       (pid.getOwner() == nodeId) ? BF_STATE::IO_SSD : BF_STATE::IO_RDMA;  // important to modify state before releasing the hashtable latch
+       (pidOwner == nodeId) ? BF_STATE::IO_SSD : BF_STATE::IO_RDMA;  // important to modify state before releasing the hashtable latch
    g.frame->page = page;
    g.frame->pid = pid;
    g.frame->epoch = globalEpoch.load();
@@ -73,10 +73,9 @@ restart:
    // -------------------------------------------------------------------------------------
    ht_latch.unlatchExclusive();
    // -------------------------------------------------------------------------------------
-    //todo Yuval - replace with call to buckets manager
-    //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
+    //todo Yuval - DONE replace with call to buckets manager
 
-    g.state = (pid.getOwner() == nodeId) ? STATE::SSD : STATE::REMOTE;
+    g.state = (pidOwner == nodeId) ? STATE::SSD : STATE::REMOTE;
    g.vAcquired = g.frame->latch.version;
    g.latchState = LATCH_STATE::EXCLUSIVE;
    return g;
@@ -232,23 +231,20 @@ restart:
          // -------------------------------------------------------------------------------------
          uintptr_t pageOffset = (uintptr_t)guard.frame->page;
          // -------------------------------------------------------------------------------------
-         //todo Yuval - replace with call to buckets manager
-          //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
-
-          auto& contextT = threads::Worker::my().cctxs[pid.getOwner()];
+         //todo Yuval DONE- replace with call to buckets manager
+          uint64_t pidOwner = bucketManager->getNodeIdOfPage(pid);
+          auto& contextT = threads::Worker::my().cctxs[pidOwner];
          auto& request = *MessageFabric::createMessage<PossessionRequest>(
              contextT.outgoing, ((functor.type == LATCH_STATE::EXCLUSIVE) ? MESSAGE_TYPE::PRX : MESSAGE_TYPE::PRS), pid, pageOffset);
-          //todo Yuval - replace with call to buckets manager
-          //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
-
-          threads::Worker::my().writeMsgASync<PossessionResponse>(pid.getOwner(), request);
+          //todo Yuval - DONE replace with call to buckets manager
+          threads::Worker::my().writeMsgASync<PossessionResponse>(pidOwner, request);
          // -------------------------------------------------------------------------------------
          _mm_prefetch(&guard.frame->page->data[0], _MM_HINT_T0);  // prefetch first cache line of page
          // -------------------------------------------------------------------------------------
-          //todo Yuval - replace with call to buckets manager
+          //todo Yuval DONE- replace with call to buckets manager
           //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
 
-          auto& response = threads::Worker::my().collectResponseMsgASync<PossessionResponse>(pid.getOwner());
+          auto& response = threads::Worker::my().collectResponseMsgASync<PossessionResponse>(pidOwner);
          // -------------------------------------------------------------------------------------
          // set version from owner
          guard.frame->pVersion = response.pVersion;
@@ -324,9 +320,10 @@ restart:
       // ------------------------------------------------------------------------------------
       case STATE::LOCAL_POSSESSION_CHANGE: {
           //todo Yuval - replace with call to buckets manager
-          //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
 
-          ensure(pid.getOwner() == nodeId);
+          uint64_t pidOwner = bucketManager->getNodeIdOfPage(pid);
+
+          ensure(pidOwner == nodeId);
          ensure(guard.frame->latch.isLatched());
          ensure(guard.frame->possession != POSSESSION::NOBODY);
          // -------------------------------------------------------------------------------------

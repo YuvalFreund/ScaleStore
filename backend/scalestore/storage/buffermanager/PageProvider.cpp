@@ -175,17 +175,18 @@ void PageProvider::startThread() {
          // used wshen we do not evict to SSD but only to remote nodes 
          auto remote_condition = [&](BufferFrame& frame) {
             // local pages shared somewhere else
-             //todo Yuval - replace with call to buckets manager
+             //todo Yuval - DONE replace with call to buckets manager
              //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
-            if ((frame.pid.getOwner() == bm.nodeId) && (frame.state == BF_STATE::HOT) && (frame.possession == POSSESSION::SHARED) &&
+             uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
+            if ((pidOwner == bm.nodeId) && (frame.state == BF_STATE::HOT) && (frame.possession == POSSESSION::SHARED) &&
                 !frame.latch.isLatched()) {
                if ((frame.isPossessor(bm.nodeId)) && (frame.possessors.shared.count() > 1)) { return true; }
                if ((!frame.isPossessor(bm.nodeId)) && (frame.possessors.shared.count() >= 1)) { return true; }
             }
             // remote pages
-             //todo Yuval - replace with call to buckets manager
+             //todo Yuval - DONE replace with call to buckets manager
              //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);f
-            if ((frame.pid.getOwner() != bm.nodeId) && (frame.state == BF_STATE::HOT) && !frame.latch.isLatched()) return true;
+            if ((pidOwner != bm.nodeId) && (frame.state == BF_STATE::HOT) && !frame.latch.isLatched()) return true;
             return false;
          };
 

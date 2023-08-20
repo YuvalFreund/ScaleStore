@@ -19,7 +19,7 @@ struct Exclusive {
          return;
       }
       // -------------------------------------------------------------------------------------
-       //todo Yuval - replace with call to buckets manager
+       //todo Yuval -  DONE replace with call to buckets manager
        //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
 
        if (g.frame->possession != POSSESSION::EXCLUSIVE || !(g.frame->isPossessor(nodeId))) {
@@ -128,6 +128,7 @@ struct Optimistic {
        //todo Yuval - replace with call to buckets manager
        //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
        // todo - how to actually call it from here?
+
        if (!(g.frame->isPossessor(nodeId))) {
          g.state = (g.frame->pid.getOwner() == nodeId) ? STATE::LOCAL_POSSESSION_CHANGE : STATE::REMOTE_POSSESSION_CHANGE;
       } else
