@@ -319,7 +319,7 @@ restart:
       // Upgrade we are owner and need to change possession or page evicted
       // ------------------------------------------------------------------------------------
       case STATE::LOCAL_POSSESSION_CHANGE: {
-          //todo Yuval - replace with call to buckets manager
+          //todo Yuval DONE- replace with call to buckets manager
 
           uint64_t pidOwner = bucketManager->getNodeIdOfPage(pid);
 
@@ -420,13 +420,13 @@ restart:
          auto pVersionOld = guard.frame->pVersion.load();
          guard.frame->pVersion++;  // update here to prevent distributed deadlock
          // -------------------------------------------------------------------------------------
-          //todo Yuval - replace with call to buckets manager
+          //todo Yuval DONE - replace with call to buckets manager
           uint64_t pidOwner = bucketManager->getNodeIdOfPage(pid);
           auto& contextT = threads::Worker::my().cctxs[pidOwner];
          auto& request = *MessageFabric::createMessage<PossessionUpdateRequest>(contextT.outgoing, pid, pVersionOld);
          // -------------------------------------------------------------------------------------
-          //todo Yuval - replace with call to buckets manager
-          auto& response = threads::Worker::my().writeMsgSync<PossessionUpdateResponse>(pid.getOwner(), request);
+          //todo Yuval DONE- replace with call to buckets manager
+          auto& response = threads::Worker::my().writeMsgSync<PossessionUpdateResponse>(pidOwner, request);
 
          if (response.resultType == RESULT::UpdateFailed) {
             ensure(guard.frame->latch.isLatched());

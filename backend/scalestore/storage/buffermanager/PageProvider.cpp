@@ -320,7 +320,7 @@ void PageProvider::startThread() {
          };
 
          auto poll_write_buffer = [&]() {
-            const uint64_t polled_events = async_write_buffer.pollEventsSync();
+             const uint64_t polled_events = async_write_buffer.pollEventsSync();
             if (polled_events > 0) {
                async_write_buffer.getWrittenBfs(
                   [&](BufferFrame& frame, uint64_t epoch_added) {
@@ -330,13 +330,14 @@ void PageProvider::startThread() {
                       auto version = frame.latch.version.load();
                       frame.latch.unlatchShared();
                       counters.incr(profiling::WorkerCounters::ssd_pages_written);
+                      uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
 
                       if (epoch_added != frame.epoch.load()) { return; }
                       if ((frame.pid == EMPTY_PID) || (frame.state == BF_STATE::FREE) || (frame.state == BF_STATE::EVICTED)) { return; }
                       if (!frame.latch.optimisticUpgradeToExclusive(version)) { return;}
                       ensure(frame.state != BF_STATE::FREE);
                       ensure(frame.state != BF_STATE::EVICTED);
-                      ensure(frame.pid.getOwner() == bm.nodeId);
+                      ensure(pidOwner == bm.nodeId);
                       // -------------------------------------------------------------------------------------
                       auto rc = evict_owner_page(frame, epoch_added);
                       ensure(rc);
@@ -588,7 +589,8 @@ void PageProvider::startThread() {
                             ensure(frame.state != BF_STATE::FREE);
                             ensure(frame.state != BF_STATE::EVICTED);
                             // -------------------------------------------------------------------------------------
-                            if ((frame.pid.getOwner() == bm.nodeId)) {
+                             uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
+                             if ((pidOwner == bm.nodeId)) {
                                auto rc = evict_owner_page(frame, epoch);
                                if (!rc) break;  // encountered dirty page and we cannot write it to the buffer
                                continue;
@@ -597,7 +599,7 @@ void PageProvider::startThread() {
                             // Remote Page
                             // -------------------------------------------------------------------------------------
                             {
-                               auto targetNode = frame.pid.getOwner();
+                               auto targetNode = pidOwner;
                                if (partition.cctxs[targetNode].outgoing.current->full()) {
                                   ensure(frame.latch.isLatched());
                                   frame.latch.unlatchExclusive();
