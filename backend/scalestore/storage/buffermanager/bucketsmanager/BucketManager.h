@@ -116,10 +116,15 @@ public:
     }
 
     uint64_t getPageSSDSlotInSelfNode(uint64_t pageId){
+
         uint64_t retVal;
         uint64_t bucketId = pageId & BUCKET_ID_MASK;
         uint64_t realBucketId = disjointSets.find(bucketId);
         retVal = bucketsMap.find(realBucketId)->second.getPageSSDSlotByPageId(pageId); // this is the actual mapping
+        if(pageId%10000 == 0 ){
+            std::cout<<"got ssd slot of page id: "<< pageId << " slot id: "<<retVal <<std::endl;
+
+        }
         return retVal;
     }
 
