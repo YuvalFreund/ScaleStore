@@ -66,7 +66,7 @@ struct Shared {
       // -------------------------------------------------------------------------------------
       // can be shared or exclusive as long as we are in possession
        //todo Yuval - DONE replace with call to buckets manager
-       uint64_t pidOwner = bucketManager.getNodeIdOfPage(g.frame->pid);
+       uint64_t pidOwner = bucketManager->getNodeIdOfPage(g.frame->pid);
        if (!(g.frame->isPossessor(nodeId))) {
          g.state = (pidOwner == nodeId) ? STATE::LOCAL_POSSESSION_CHANGE : STATE::REMOTE_POSSESSION_CHANGE;
 
