@@ -19,7 +19,7 @@ restart:
       if (tmp->pid == pid) {
          g.frame = tmp;
          RESTART(!ht_latch.optimisticUnlatch(b_version.value()), restart);
-          functor(g, nodeId_,*bucketManager);
+          functor(g, nodeId_,bucketManager);
          // -------------------------------------------------------------------------------------
          // non-blocking does not restart
          if constexpr (method == CONTENTION_METHOD::NON_BLOCKING) {
