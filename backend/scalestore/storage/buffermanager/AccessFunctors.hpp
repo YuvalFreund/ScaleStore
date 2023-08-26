@@ -114,7 +114,7 @@ struct Shared {
 struct Optimistic {
    LATCH_STATE type = LATCH_STATE::OPTIMISTIC;
 
-   void operator()(Guard& g, NodeID nodeId, BucketManager*& bucketManager) {
+   void operator()(Guard& g, NodeID nodeId, BucketManager*&  bucketManager) {
       // -------------------------------------------------------------------------------------
       // Optimistic
       // -------------------------------------------------------------------------------------
