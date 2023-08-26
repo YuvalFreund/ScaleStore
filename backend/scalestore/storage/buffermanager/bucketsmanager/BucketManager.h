@@ -91,6 +91,7 @@ public:
                         tryNum++;
                     }
                 }catch (const runtime_error& error){
+                    std::cout<<"runtim error  putting new page"<<std::endl;
                     availableBucketFound = false;
                     tryNum++;
                 }
@@ -138,10 +139,7 @@ public:
 
         uint64_t bucketId = pageId & BUCKET_ID_MASK;
         uint64_t nodeId = getNodeIdOfBucket(bucketId);
-        if(pageId %100000 == 0){
-            std::cout<<"got node id of page: " << pageId <<" node id: "<< nodeId <<std::endl;
-            printNodeData();
-        }
+
         return nodeId;
     }
 
@@ -335,8 +333,8 @@ public:
         for(int i = 0; i<BUCKETS_NUM_TO_INIT; i++){
             createNewBucket(true,ZERO);
             availableBucketsBitSet.set(i);
-            if(i % 200 == 0){
-                //std::cout<<"finished " << i << " buckets"<<std::endl;
+            if(i % 500 == 0){
+                std::cout<<"finished " << i << " buckets"<<std::endl;
             }
         }
     }
