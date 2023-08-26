@@ -12,6 +12,7 @@
 #include <mutex>
 #include <set>
 #include <bitset>
+#include <algorithm>
 
 //files
 #include "Bucket.h"
