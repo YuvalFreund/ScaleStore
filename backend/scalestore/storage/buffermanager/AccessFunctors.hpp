@@ -9,7 +9,7 @@ namespace storage {
 struct Exclusive {
    LATCH_STATE type = LATCH_STATE::EXCLUSIVE;
 
-   void operator()(Guard& g, NodeID nodeId, BucketManager* bucketManager) {
+   void operator()(Guard& g, NodeID nodeId, BucketManager*& bucketManager) {
       // -------------------------------------------------------------------------------------
       // Optimistic
       // -------------------------------------------------------------------------------------
@@ -52,7 +52,7 @@ struct Exclusive {
 };
 struct Shared {
    LATCH_STATE type = LATCH_STATE::SHARED;
-   void operator()(Guard& g, NodeID nodeId, BucketManager* bucketManager) {
+   void operator()(Guard& g, NodeID nodeId, BucketManager*& bucketManager) {
       // -------------------------------------------------------------------------------------
       // Optimistic
       // -------------------------------------------------------------------------------------
@@ -114,7 +114,7 @@ struct Shared {
 struct Optimistic {
    LATCH_STATE type = LATCH_STATE::OPTIMISTIC;
 
-   void operator()(Guard& g, NodeID nodeId, BucketManager* bucketManager) {
+   void operator()(Guard& g, NodeID nodeId, BucketManager*& bucketManager) {
       // -------------------------------------------------------------------------------------
       // Optimistic
       // -------------------------------------------------------------------------------------
