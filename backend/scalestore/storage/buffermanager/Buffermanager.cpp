@@ -225,7 +225,7 @@ void Buffermanager::readPageSync(PID pid, uint8_t* destination) {
    do {
        //todo yuval DONE- replace with call to buckets manager
        //todo -  uint64_t pidOwner = bucketManager->getPageSSDSlotInSelfNode(frame.pid);
-       uint64_t ssdSlotOfPage = bucketManager->getPageSSDSlotInSelfNode(frame.pid);
+       uint64_t ssdSlotOfPage = bucketManager->getPageSSDSlotInSelfNode(pid);
 
        const int bytes_read = pread(ssd_fd, destination, bytes_left, ssdSlotOfPage * PAGE_SIZE + (PAGE_SIZE - bytes_left));
       assert(bytes_left > 0);
