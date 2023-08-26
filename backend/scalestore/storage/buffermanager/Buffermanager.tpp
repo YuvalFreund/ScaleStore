@@ -19,7 +19,7 @@ restart:
       if (tmp->pid == pid) {
          g.frame = tmp;
          RESTART(!ht_latch.optimisticUnlatch(b_version.value()), restart);
-         functor(g, nodeId_);
+         functor(g, nodeId_); //todo yuval - change ..
          // -------------------------------------------------------------------------------------
          // non-blocking does not restart
          if constexpr (method == CONTENTION_METHOD::NON_BLOCKING) {
@@ -102,7 +102,7 @@ restart:
       if (tmp->pid == pid) {
          g.frame = tmp;
          RESTART(!ht_latch.optimisticUnlatch(b_version.value()), restart);
-         functor(g, nodeId_);
+         functor(g, nodeId_,bucketManager);
          // -------------------------------------------------------------------------------------
          // non-blocking does not restart
          if constexpr (method == CONTENTION_METHOD::NON_BLOCKING) {
@@ -421,12 +421,11 @@ restart:
          guard.frame->pVersion++;  // update here to prevent distributed deadlock
          // -------------------------------------------------------------------------------------
           //todo Yuval - replace with call to buckets manager
-          //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
-          auto& contextT = threads::Worker::my().cctxs[pid.getOwner()];
+          uint64_t pidOwner = bucketManager->getNodeIdOfPage(pid);
+          auto& contextT = threads::Worker::my().cctxs[pidOwner];
          auto& request = *MessageFabric::createMessage<PossessionUpdateRequest>(contextT.outgoing, pid, pVersionOld);
          // -------------------------------------------------------------------------------------
           //todo Yuval - replace with call to buckets manager
-          //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
           auto& response = threads::Worker::my().writeMsgSync<PossessionUpdateResponse>(pid.getOwner(), request);
 
          if (response.resultType == RESULT::UpdateFailed) {

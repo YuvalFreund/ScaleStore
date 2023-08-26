@@ -138,6 +138,10 @@ public:
         return getNodeIdOfBucket(bucketId);
     }
 
+    uint64_t getNodeIdOfPage(PID pid){
+
+        return getNodeIdOfPage(pid.id);
+    }
     uint64_t getNodeIdOfBucket(uint64_t bucketId){
         uint64_t res = INVALID_NODE_ID;
         auto pageInCacheIter = bucketIdToNodeCache.find(bucketId);

@@ -1,5 +1,6 @@
 #pragma once
 #include "Guard.hpp"
+#include "scalestore/storage/buffermanager/bucketsmanager/BucketManager.h"
 // -------------------------------------------------------------------------------------
 namespace scalestore {
 namespace storage {
@@ -8,7 +9,7 @@ namespace storage {
 struct Exclusive {
    LATCH_STATE type = LATCH_STATE::EXCLUSIVE;
 
-   void operator()(Guard& g, NodeID nodeId) {
+   void operator()(Guard& g, NodeID nodeId, BucketManager* bucketManager) {
       // -------------------------------------------------------------------------------------
       // Optimistic
       // -------------------------------------------------------------------------------------
@@ -21,9 +22,9 @@ struct Exclusive {
       // -------------------------------------------------------------------------------------
        //todo Yuval -  DONE replace with call to buckets manager
        //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
-
+       uint64_t pidOwner = bucketManager->getNodeIdOfPage(g.frame->pid);
        if (g.frame->possession != POSSESSION::EXCLUSIVE || !(g.frame->isPossessor(nodeId))) {
-         g.state = (g.frame->pid.getOwner() == nodeId) ? STATE::LOCAL_POSSESSION_CHANGE : STATE::REMOTE_POSSESSION_CHANGE;
+         g.state = (pidOwner == nodeId) ? STATE::LOCAL_POSSESSION_CHANGE : STATE::REMOTE_POSSESSION_CHANGE;
       } else
          g.state = STATE::INITIALIZED;
       // -------------------------------------------------------------------------------------
@@ -51,7 +52,7 @@ struct Exclusive {
 };
 struct Shared {
    LATCH_STATE type = LATCH_STATE::SHARED;
-   void operator()(Guard& g, NodeID nodeId) {
+   void operator()(Guard& g, NodeID nodeId, BucketManager* bucketManager) {
       // -------------------------------------------------------------------------------------
       // Optimistic
       // -------------------------------------------------------------------------------------
@@ -64,9 +65,10 @@ struct Shared {
       }
       // -------------------------------------------------------------------------------------
       // can be shared or exclusive as long as we are in possession
-       //todo Yuval - replace with call to buckets manager
-      if (!(g.frame->isPossessor(nodeId))) {
-         g.state = (g.frame->pid.getOwner() == nodeId) ? STATE::LOCAL_POSSESSION_CHANGE : STATE::REMOTE_POSSESSION_CHANGE;
+       //todo Yuval - DONE replace with call to buckets manager
+       uint64_t pidOwner = bucketManager->getNodeIdOfPage(g.frame->pid);
+       if (!(g.frame->isPossessor(nodeId))) {
+         g.state = (pidOwner == nodeId) ? STATE::LOCAL_POSSESSION_CHANGE : STATE::REMOTE_POSSESSION_CHANGE;
 
       } else
          g.state = STATE::INITIALIZED;
@@ -112,7 +114,7 @@ struct Shared {
 struct Optimistic {
    LATCH_STATE type = LATCH_STATE::OPTIMISTIC;
 
-   void operator()(Guard& g, NodeID nodeId) {
+   void operator()(Guard& g, NodeID nodeId, BucketManager* bucketManager) {
       // -------------------------------------------------------------------------------------
       // Optimistic
       // -------------------------------------------------------------------------------------
@@ -125,12 +127,12 @@ struct Optimistic {
       }
       // -------------------------------------------------------------------------------------
       // can be shared or exclusive as long as we are in possession
-       //todo Yuval - replace with call to buckets manager
+       //todo Yuval - Done replace with call to buckets manager
        //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
        // todo - how to actually call it from here?
-
+       uint64_t pidOwner = bucketManager->getNodeIdOfPage(g.frame->pid);
        if (!(g.frame->isPossessor(nodeId))) {
-         g.state = (g.frame->pid.getOwner() == nodeId) ? STATE::LOCAL_POSSESSION_CHANGE : STATE::REMOTE_POSSESSION_CHANGE;
+         g.state = (pidOwner == nodeId) ? STATE::LOCAL_POSSESSION_CHANGE : STATE::REMOTE_POSSESSION_CHANGE;
       } else
          g.state = STATE::INITIALIZED;
       // -------------------------------------------------------------------------------------
