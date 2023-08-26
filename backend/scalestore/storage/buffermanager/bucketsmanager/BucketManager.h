@@ -101,6 +101,9 @@ public:
                 createNewBucket(false,ZERO);
             }
         }
+        if(retVal % 200000 == 0){
+            printNodeData();
+        }
         return retVal;
     }
 
@@ -121,10 +124,6 @@ public:
         uint64_t bucketId = pageId & BUCKET_ID_MASK;
         uint64_t realBucketId = disjointSets.find(bucketId);
         retVal = bucketsMap.find(realBucketId)->second.getPageSSDSlotByPageId(pageId); // this is the actual mapping
-        if(pageId%10000 == 0 ){
-            std::cout<<"got ssd slot of page id: "<< pageId << " slot id: "<<retVal <<std::endl;
-
-        }
         return retVal;
     }
 
@@ -364,7 +363,9 @@ public:
         std::cout<<endl;
         std::cout << "Printing buckets data: " << std::endl;
         for (auto &itr: bucketsMap) {
-            itr.second.printBucketData();
+            if(itr.second.isBucketEmpty()== false){
+                itr.second.printBucketData();
+            }
         }
     }
     static inline uint64_t FasterHash(uint64_t input) {
