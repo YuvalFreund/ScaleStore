@@ -434,7 +434,7 @@ struct MessageHandler {
    // Protocol functor which is injected to Buffermanager find frame;
    template <POSSESSION DESIRED_MODE>
    struct Protocol {
-      void operator()(Guard& g, [[maybe_unused]] NodeID nodeId)
+      void operator()(Guard& g, [[maybe_unused]] NodeID nodeId,BucketManager*&  bucketManager)
       {
          // -------------------------------------------------------------------------------------
          // Optimistic
@@ -476,7 +476,7 @@ struct MessageHandler {
 
    // Protocol functor which is injected to Buffermanager find frame;
    struct Invalidation {
-      void operator()(Guard& g, [[maybe_unused]] NodeID nodeId)
+      void operator()(Guard& g, [[maybe_unused]] NodeID nodeId,BucketManager*&  bucketManager)
       {
          // -------------------------------------------------------------------------------------
          // Exclusive
