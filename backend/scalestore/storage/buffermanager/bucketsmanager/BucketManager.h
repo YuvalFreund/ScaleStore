@@ -100,6 +100,9 @@ public:
                 createNewBucket(false,ZERO);
             }
         }
+        if(retVal %1000 == 0 ){
+            std::cout<<"add page:  " << retVal <<std::endl;
+        }
         return retVal;
     }
 
@@ -330,7 +333,7 @@ public:
             createNewBucket(true,ZERO);
             availableBucketsBitSet.set(i);
             if(i % 200 == 0){
-                std::cout<<"finished " << i << " buckets"<<std::endl;
+                //std::cout<<"finished " << i << " buckets"<<std::endl;
             }
         }
     }
