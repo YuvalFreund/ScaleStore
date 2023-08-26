@@ -100,9 +100,6 @@ public:
                 createNewBucket(false,ZERO);
             }
         }
-        if(retVal %1000 == 0 ){
-            std::cout<<"add page:  " << retVal <<std::endl;
-        }
         return retVal;
     }
 
@@ -138,6 +135,9 @@ public:
     }
 
     uint64_t getNodeIdOfPage(uint64_t pageId){
+        if(pageId %1000 == 0){
+            std::cout<<"got node id of " << pageId <<std::endl;
+        }
         uint64_t bucketId = pageId & BUCKET_ID_MASK;
         return getNodeIdOfBucket(bucketId);
     }
