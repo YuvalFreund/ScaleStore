@@ -479,7 +479,8 @@ struct MessageHandler {
    struct Invalidation {
       void operator()(Guard& g, [[maybe_unused]] NodeID nodeId,BucketManager*&  bucketManager)
       {
-         // -------------------------------------------------------------------------------------
+          if(bucketManager == NULL){} // todo yuval remove- this is silly
+          // -------------------------------------------------------------------------------------
          // Exclusive
          // -------------------------------------------------------------------------------------
          if (!g.frame->latch.tryLatchExclusive()) {
@@ -508,7 +509,8 @@ struct MessageHandler {
    struct Copy {
       void operator()(Guard& g, [[maybe_unused]] NodeID nodeId, BucketManager*&  bucketManager)
       {
-         // -------------------------------------------------------------------------------------
+          if(bucketManager == NULL){} // todo yuval remove- this is silly
+          // -------------------------------------------------------------------------------------
          // Exclusive
          // -------------------------------------------------------------------------------------
          if (!g.frame->latch.tryLatchShared()) {
