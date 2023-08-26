@@ -52,7 +52,7 @@ struct Exclusive {
 };
 struct Shared {
    LATCH_STATE type = LATCH_STATE::SHARED;
-   void operator()(Guard& g, NodeID nodeId, BucketManager* bucketManager) {
+   void operator()(Guard& g, NodeID nodeId, BucketManager bucketManager) {
       // -------------------------------------------------------------------------------------
       // Optimistic
       // -------------------------------------------------------------------------------------
@@ -66,7 +66,7 @@ struct Shared {
       // -------------------------------------------------------------------------------------
       // can be shared or exclusive as long as we are in possession
        //todo Yuval - DONE replace with call to buckets manager
-       uint64_t pidOwner = bucketManager->getNodeIdOfPage(g.frame->pid);
+       uint64_t pidOwner = bucketManager.getNodeIdOfPage(g.frame->pid);
        if (!(g.frame->isPossessor(nodeId))) {
          g.state = (pidOwner == nodeId) ? STATE::LOCAL_POSSESSION_CHANGE : STATE::REMOTE_POSSESSION_CHANGE;
 
