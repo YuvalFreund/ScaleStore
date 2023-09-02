@@ -59,9 +59,9 @@ public:
         freeSlots.pop();
         pageIdToSlot.insert(std::pair<uint64_t,uint16_t>(retVal,freeSlot));
         if(retVal % 10000 == 0 ){
-            std::cout<<"add page id: "<< retVal << "to bucket id: "<<BucketId <<std::endl;
-
-        }        readWriteLock.unlock();
+            //std::cout<<"add page id: "<< retVal << "to bucket id: "<<BucketId <<std::endl;
+        }
+        readWriteLock.unlock();
 
         return retVal;
     }

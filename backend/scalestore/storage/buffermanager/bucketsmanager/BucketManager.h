@@ -91,7 +91,7 @@ public:
                         tryNum++;
                     }
                 }catch (const runtime_error& error){
-                    std::cout<<"runtim error  putting new page"<<std::endl;
+                    std::cout<<"runtime error putting new page"<<std::endl;
                     availableBucketFound = false;
                     tryNum++;
                 }
@@ -102,7 +102,7 @@ public:
             }
         }
         if(retVal % 200000 == 0){
-            printNodeData();
+            //printNodeData();
         }
         return retVal;
     }
