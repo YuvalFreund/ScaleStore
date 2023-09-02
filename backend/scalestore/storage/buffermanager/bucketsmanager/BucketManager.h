@@ -119,7 +119,9 @@ public:
     }
 
     uint64_t getPageSSDSlotInSelfNode(uint64_t pageId){
-
+        if(pageId % 1000 == 0){
+            std::cout<<"Got ssd slot for page:  " << pageId <<std::endl;
+        }
         uint64_t retVal;
         uint64_t bucketId = pageId & BUCKET_ID_MASK;
         uint64_t realBucketId = disjointSets.find(bucketId);
