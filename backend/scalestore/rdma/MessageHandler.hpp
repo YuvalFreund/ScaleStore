@@ -62,7 +62,6 @@ struct MessageHandler {
       std::vector<uintptr_t> remoteMbOffsets;
       std::vector<uintptr_t> remotePlOffsets;
        // bucket manager
-       BucketManager* bucketManager;
    };
    // -------------------------------------------------------------------------------------
    // Mailbox partition per thread
@@ -94,7 +93,9 @@ struct MessageHandler {
    std::vector<MailboxPartition> mbPartitions;
    std::atomic<uint64_t> connectedClients = 0;
    std::atomic<bool> finishedInit = false;
-   // -------------------------------------------------------------------------------------   
+    BucketManager* bucketManager;
+
+    // -------------------------------------------------------------------------------------
    
    // -------------------------------------------------------------------------------------
    // Invalidation Logic
