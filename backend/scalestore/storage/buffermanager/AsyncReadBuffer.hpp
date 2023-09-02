@@ -143,7 +143,7 @@ struct aio_ring {
       write_buffer_commands[slot].client_slot = client_slot;
       write_buffer_commands[slot].recheck_msg = recheck_msg;
       bf.page->magicDebuggingNumber = pid;
-
+      std::cout<< " just making sure this code is called"<< std::endl;
       void* write_buffer_slot_ptr = bf.page;
       io_prep_pread(&iocbs[slot], fd, write_buffer_slot_ptr, page_size, page_size * pid.plainPID());
       iocbs[slot].data = write_buffer_slot_ptr;
