@@ -142,9 +142,7 @@ public:
     }
 
     uint64_t getNodeIdOfPage(uint64_t pageId){
-        if(pageId % 200000 == 0){
-            std::cout<< " got node id of page: " << pageId << std::endl;
-        }
+
         uint64_t bucketId = pageId & BUCKET_ID_MASK;
         uint64_t nodeId = getNodeIdOfBucket(bucketId);
 
