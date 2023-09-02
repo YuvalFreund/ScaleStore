@@ -61,6 +61,8 @@ struct MessageHandler {
       // remote mailboxes for each remote MH in order to allow MH to delegate requests
       std::vector<uintptr_t> remoteMbOffsets;
       std::vector<uintptr_t> remotePlOffsets;
+       // bucket manager
+       BucketManager* bucketManager;
    };
    // -------------------------------------------------------------------------------------
    // Mailbox partition per thread
@@ -75,7 +77,7 @@ struct MessageHandler {
       std::mutex inflightCRMutex;
    };
    // -------------------------------------------------------------------------------------
-   MessageHandler(rdma::CM<InitMessage>& cm, storage::Buffermanager& bm, NodeID nodeId);
+   MessageHandler(rdma::CM<InitMessage>& cm, storage::Buffermanager& bm, NodeID nodeId, BucketManager* bucketManager);
    ~MessageHandler();
    // -------------------------------------------------------------------------------------
    void startThread();

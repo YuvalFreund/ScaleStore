@@ -8,8 +8,9 @@
 
 namespace scalestore {
 namespace rdma {
-MessageHandler::MessageHandler(rdma::CM<InitMessage>& cm, storage::Buffermanager& bm, NodeID nodeId)
-    : cm(cm), bm(bm), nodeId(nodeId), mbPartitions(FLAGS_messageHandlerThreads) {
+MessageHandler::MessageHandler(rdma::CM<InitMessage>& cm, storage::Buffermanager& bm, NodeID nodeId, BucketManager* bucketManager)
+    : cm(cm), bm(bm), nodeId(nodeId), mbPartitions(FLAGS_messageHandlerThreads) ,bucketManager(bucketManager){ // todo yuval - avoiding copy constrcutor?
+            {
    // partition mailboxes
    size_t n = (FLAGS_worker) * (FLAGS_nodes - 1);
    if (n > 0) {
