@@ -197,7 +197,7 @@ void Buffermanager::writeAllPages() {
             //todo yuval DONE - replace with call to buckets manager
               uint64_t ssdSlotOfPage = bucketManager->getPageSSDSlotInSelfNode(frame.pid);
               if (frame.dirty) {
-               const int ret = pwrite(ssd_fd, frame.page, PAGE_SIZE, ssdSlotOfPage);
+               const int ret = pwrite(ssd_fd, frame.page, PAGE_SIZE, ssdSlotOfPage*PAGE_SIZE);
                ensure(ret == PAGE_SIZE);
                frame.dirty = false;
             }
@@ -210,7 +210,7 @@ void Buffermanager::writeAllPages() {
          if (frame.dirty) {
              //todo yuval DONE- replace with call to buckets manager
              uint64_t ssdSlotOfPage = bucketManager->getPageSSDSlotInSelfNode(frame.pid);
-            const int ret = pwrite(ssd_fd, frame.page, PAGE_SIZE, ssdSlotOfPage);
+            const int ret = pwrite(ssd_fd, frame.page, PAGE_SIZE, ssdSlotOfPage*PAGE_SIZE);
             ensure(ret == PAGE_SIZE);
             frame.dirty = false;
          }

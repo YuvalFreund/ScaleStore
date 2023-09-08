@@ -21,7 +21,7 @@
 //Macros
 #define MAX_BUCKETS 420
 #define BUCKETS_NUM_TO_INIT 400
-#define SLOT_SIZE_IN_BYTE 268435456
+#define SLOT_SIZE_IN_BYTE 65536
 #define RAND_MASK 0x0000000000000FFF
 #define NUM_NODES 8
 #define INVALID_FREE_SLOTS 1000000000
@@ -217,7 +217,7 @@ public:
         uint64_t SSDSlotStart = bucketsFreeSSDSlots.top();
 
         // create new bucket
-        bucketsMap.try_emplace(newBucketId, newBucketId, SSDSlotStart).first;
+        bucketsMap.try_emplace(newBucketId, newBucketId, SSDSlotStart);
         bucketsNum++;
         //newBucketMtx.unlock(); //todo yuval - how to get this lock without causing problem
     }
