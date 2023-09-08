@@ -43,6 +43,7 @@ public:
     uint64_t bucketsNum = 0;
     uint64_t nodeId;
     uint64_t freeBucketIdIndex = 0;
+    uint64_t maxSlot;
 
     //data structures for bucketsManagement
     std::map<uint64_t,Bucket> bucketsMap; // bucket id to Bucket mapping
@@ -125,6 +126,9 @@ public:
         retVal = bucketsMap.find(realBucketId)->second.getPageSSDSlotByPageId(pageId); // this is the actual mapping
         if(pageId%10==0){
             std::cout<<"Got ssd slot for page:  " << pageId <<"slot id:" <<retVal <<std::endl;
+        }
+        if(retVal > maxSlot){
+            std::cout<<"max slot threshold crossed!" <<std::endl;
         }
         return retVal;
     }
@@ -332,8 +336,8 @@ public:
     void makeStackOfSSDSlotsForBuckets() {
         for(int i = 0; i<BUCKETS_NUM_TO_INIT; i++){
             bucketsFreeSSDSlots.push(i*SLOT_SIZE_IN_BYTE);
-
         }
+        maxSlot = bucketsFreeSSDSlots.top();
     }
 
     void initAllBuckets(){
