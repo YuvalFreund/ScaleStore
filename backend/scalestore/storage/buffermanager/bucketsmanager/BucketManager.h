@@ -215,7 +215,7 @@ public:
             newBucketId = givenBucketId;
         }
         uint64_t SSDSlotStart = bucketsFreeSSDSlots.top();
-
+        std::cout<<"bucket id: " <<newBucketId << "ssd slot start" << SSDSlotStart<<std::endl;
         // create new bucket
         bucketsMap.try_emplace(newBucketId, newBucketId, SSDSlotStart);
         bucketsNum++;
