@@ -7,7 +7,7 @@
 
 #include <map>
 #include <cstdint>
-#define MAX_BUCKETS 80
+#define MAX_BUCKETS 100
 
 using namespace std;
 
