@@ -337,7 +337,7 @@ public:
     }
 
     void initAllBuckets(){
-        for(int i = 0; i<BUCKETS_NUM_TO_INIT; i++){
+        for(int i = 0; i<BUCKETS_NUM_TO_INIT-1; i++){
             createNewBucket(true,ZERO);
             availableBucketsBitSet.set(i);
             if(i % 500 == 0){
