@@ -94,7 +94,10 @@ class Buffermanager
    inline uint64_t getConsumedPages()
    {
       auto consumedPages = pidFreeList.approx_size();
-      if (consumedPages == 0) throw std::runtime_error("No PIDs left in PID free list!");
+      if (consumedPages == 0) {
+          std::cout<<"YUVAL CHECK 1"<<std::endl;
+          throw std::runtime_error("No PIDs left in PID free list!");
+      }
       return (ssdSlotsSize - consumedPages);
    }
    inline uint64_t getFreePages()

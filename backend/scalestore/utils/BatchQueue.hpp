@@ -189,7 +189,8 @@ struct BatchQueue {
       while (current) {
          histogram[idx(current)]++;
          if (histogram[idx(current)] > 1) {
-            throw std::runtime_error("found duplicate at idx " + std::to_string(idx(current)));
+             std::cout<<"YUVAL CHECK 3"<<std::endl;
+             throw std::runtime_error("found duplicate at idx " + std::to_string(idx(current)));
          }
          current = current->next;
       }

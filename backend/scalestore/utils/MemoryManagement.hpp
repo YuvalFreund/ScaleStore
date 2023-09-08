@@ -74,8 +74,10 @@ class MonotonicBufferResource : public std::pmr::memory_resource
          bufferPosition = (char*)bufferPosition + bytes;
          sizeLeft -= bytes;
          auto iptr = reinterpret_cast<std::uintptr_t>(result);
-         if((iptr % alignment) != 0)
-            throw std::runtime_error("Alignment failed");
+         if((iptr % alignment) != 0){
+             std::cout<<"YUVAL CHECK 2"<<std::endl;
+             throw std::runtime_error("Alignment failed");
+         }
          return result;
       }
       throw std::bad_alloc();
