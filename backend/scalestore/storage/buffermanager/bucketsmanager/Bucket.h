@@ -108,7 +108,7 @@ public:
     }
 
     uint64_t getPageSSDSlotByPageId(uint64_t pageId){
-        return SSDSlotStart + (pageIdToSlot.at(pageId) * PAGE_SIZE_IN_BYTES);
+        return SSDSlotStart + (pageIdToSlot.at(pageId) );
     }
 
     ~Bucket(){

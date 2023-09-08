@@ -48,7 +48,7 @@ void AsyncWriteBuffer::add(BufferFrame& bf, uint64_t ssdSlot, uint64_t epoch_add
    bf.page->magicDebuggingNumber = epoch_added;
   
    void* write_buffer_slot_ptr = bf.page;
-   io_prep_pwrite(&iocbs[slot], fd, write_buffer_slot_ptr, page_size,  ssdSlot);
+   io_prep_pwrite(&iocbs[slot], fd, write_buffer_slot_ptr, page_size,  ssdSlot*page_size);
    iocbs[slot].data = write_buffer_slot_ptr;
    iocbs_ptr[slot_ptr] = &iocbs[slot];
 }

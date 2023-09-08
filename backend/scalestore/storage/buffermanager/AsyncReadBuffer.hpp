@@ -145,7 +145,7 @@ struct aio_ring {
       bf.page->magicDebuggingNumber = pid;
       std::cout<< " just making sure this code is called"<< std::endl;
       void* write_buffer_slot_ptr = bf.page;
-      io_prep_pread(&iocbs[slot], fd, write_buffer_slot_ptr, page_size, ssdSlot);
+      io_prep_pread(&iocbs[slot], fd, write_buffer_slot_ptr, page_size, ssdSlot * page_size);
       iocbs[slot].data = write_buffer_slot_ptr;
       iocbs_ptr[slot_ptr] = &iocbs[slot];
    }
