@@ -19,7 +19,7 @@
 #include "GenericDisjointSets.h"
 
 //Macros
-#define MAX_BUCKETS 80
+#define MAX_BUCKETS 100
 #define BUCKETS_NUM_TO_INIT 80
 #define SLOT_SIZE_IN_BYTE 268435456
 #define RAND_MASK 0x0000000000000FFF
