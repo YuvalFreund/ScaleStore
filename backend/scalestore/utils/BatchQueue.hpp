@@ -146,8 +146,10 @@ struct BatchQueue {
       while (try_pop_full(full_batch)) {
          full_batch->container.reset();
          auto rc = try_push_empty(full_batch);
-         if (!rc)
-            throw std::runtime_error("Cannot push to empty queue");
+         if (!rc){
+             std::cout<<"YUVAL CHECK 5"<<std::endl;
+             throw std::runtime_error("Cannot push to empty queue");
+         }
       }
       assert(full.size == 0);
       assert_no_duplicates();

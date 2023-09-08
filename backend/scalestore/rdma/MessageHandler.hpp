@@ -138,9 +138,11 @@ struct MessageHandler {
          ensure(guard.frame->latch.isLatched());
          ensure(guard.frame->page != nullptr);
          if(async_read_buffer.full()){
-               throw std::runtime_error("read buffer is full ");
+             std::cout<<"YUVAL CHECK 4"<<std::endl;
+
+             throw std::runtime_error("read buffer is full ");
             }
-         
+
          guard.frame->state = BF_STATE::HOT;
          guard.frame->epoch = bm.globalEpoch.load();
          guard.frame->possession = POSSESSION::SHARED;
