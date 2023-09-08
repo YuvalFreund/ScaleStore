@@ -330,9 +330,8 @@ public:
     }
 
     void makeStackOfSSDSlotsForBuckets() {
-        for(int i = 0; i<MAX_BUCKETS; i++){
+        for(int i = 0; i<BUCKETS_NUM_TO_INIT; i++){
             bucketsFreeSSDSlots.push(i*SLOT_SIZE_IN_BYTE);
-            std::cout<<"slot no: " << i << " slot address: "<<i*SLOT_SIZE_IN_BYTE <<std::endl;
 
         }
     }
