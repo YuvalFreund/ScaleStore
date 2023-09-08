@@ -432,7 +432,9 @@ void PageProvider::startThread() {
                            guard.frame->possessors.shared.reset(request.bmId);
                            guard.frame->possessors.shared.set(bm.nodeId);
                         } else {
-                           throw std::runtime_error("Invalid possession state");
+                            std::cout<<"YUVAL CHECK 9"<<std::endl;
+
+                            throw std::runtime_error("Invalid possession state");
                         }
                      }
                   }else{
@@ -478,7 +480,9 @@ void PageProvider::startThread() {
                   if (guard.frame->state == BF_STATE::EVICTED) {
                      ensure(guard.frame->page == nullptr);
                      if (privatePageBuffer.empty()) {
-                        throw std::runtime_error("Private page buffer empty");
+                         std::cout<<"YUVAL CHECK 8"<<std::endl;
+
+                         throw std::runtime_error("Private page buffer empty");
                         while (!privatePageBuffer.full())
                            privatePageBuffer.add(bm.pageFreeList.pop(threads::ThreadContext::my().page_handle));
                      }

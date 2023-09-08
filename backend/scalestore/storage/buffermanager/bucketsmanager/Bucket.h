@@ -98,6 +98,7 @@ public:
         readWriteLock.lock();
         auto iter = pageIdToSlot.find(pageId);
         if(iter == pageIdToSlot.end()){
+            std::cout<<"YUVAL CHECK 7"<<std::endl;
             throw std::runtime_error("Page doesnt exist");
         }
         auto enterValue  = iter->second;
