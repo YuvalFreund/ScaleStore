@@ -108,10 +108,11 @@ public:
     }
 
     uint64_t getPageSSDSlotByPageId(uint64_t pageId){
+        uint64_t retVal;
         readWriteLock.lock();
-        return SSDSlotStart + (pageIdToSlot.at(pageId) );
+        retVal = SSDSlotStart + (pageIdToSlot.at(pageId) );
         readWriteLock.unlock();
-
+        return retVal;
     }
 
     ~Bucket(){
