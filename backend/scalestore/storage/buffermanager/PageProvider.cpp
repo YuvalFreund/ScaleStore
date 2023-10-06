@@ -480,7 +480,6 @@ void PageProvider::startThread() {
                   if (guard.frame->state == BF_STATE::EVICTED) {
                      ensure(guard.frame->page == nullptr);
                      if (privatePageBuffer.empty()) {
-                         std::cout<<"YUVAL CHECK 8"<<std::endl;
 
                          throw std::runtime_error("Private page buffer empty");
                         while (!privatePageBuffer.full())

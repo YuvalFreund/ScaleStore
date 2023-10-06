@@ -22,6 +22,7 @@ AsyncWriteBuffer::AsyncWriteBuffer(int fd, u64 page_size, u64 batch_max_size) : 
       throw std::runtime_error(("io_setup failed, ret code = " + std::to_string(ret)));
    }
    // init free slots
+   std::cout<<"batch max size: " << batch_max_size<<std::endl;
    for(uint64_t s_i = 0; s_i < batch_max_size; ++s_i)
       free_slots.add(s_i);
 }
@@ -41,8 +42,7 @@ void AsyncWriteBuffer::add(BufferFrame& bf, uint64_t ssdSlot, uint64_t epoch_add
    ensure(u64(bf.page) % 512 == 0);
    ensure((outstanding_ios + ready_to_submit) <= (int64_t)batch_max_size);
    // -------------------------------------------------------------------------------------
-   std::cout<<"ssdslot: "<< ssdSlot<< " page size: "<< page_size <<" result: " <<ssdSlot*page_size<<std::endl;
-   auto slot = ssdSlot*page_size; // todo yuval - changed here
+   auto slot = free_slots.remove();
    auto slot_ptr = ready_to_submit++;
    write_buffer_commands[slot].bf = &bf;
    write_buffer_commands[slot].epoch_added = epoch_added;
