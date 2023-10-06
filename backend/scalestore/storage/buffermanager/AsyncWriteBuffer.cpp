@@ -41,6 +41,7 @@ void AsyncWriteBuffer::add(BufferFrame& bf, uint64_t ssdSlot, uint64_t epoch_add
    ensure(u64(bf.page) % 512 == 0);
    ensure((outstanding_ios + ready_to_submit) <= (int64_t)batch_max_size);
    // -------------------------------------------------------------------------------------
+   std::cout<<"ssdslot: "<< ssdSlot<< " page size: "<< page_size <<" result: " <<ssdSlot*page_size<<std::endl;
    auto slot = ssdSlot*page_size; // todo yuval - changed here
    auto slot_ptr = ready_to_submit++;
    write_buffer_commands[slot].bf = &bf;
