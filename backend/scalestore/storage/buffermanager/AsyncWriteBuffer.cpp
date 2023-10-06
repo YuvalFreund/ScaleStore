@@ -41,7 +41,7 @@ void AsyncWriteBuffer::add(BufferFrame& bf, uint64_t ssdSlot, uint64_t epoch_add
    ensure(u64(bf.page) % 512 == 0);
    ensure((outstanding_ios + ready_to_submit) <= (int64_t)batch_max_size);
    // -------------------------------------------------------------------------------------
-   auto slot = free_slots.remove();
+   auto slot = ssdSlot; // todo yuval - changed here
    auto slot_ptr = ready_to_submit++;
    write_buffer_commands[slot].bf = &bf;
    write_buffer_commands[slot].epoch_added = epoch_added;
