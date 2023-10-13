@@ -92,9 +92,11 @@ void AsyncWriteBuffer::getWrittenBfs(std::function<void(BufferFrame&, uint64_t)>
       const auto slot = ((iocb*)(events[i].obj)) - (((iocbs.get())));
       free_slots.add(slot);
       // -------------------------------------------------------------------------------------
-      std::cout<<"read page size : " << events[i].res <<std::endl;
-      std::cout<<"slot : " << slot <<std::endl;
-      ensure(events[i].res == page_size);
+      //std::cout<<"read page size : " << events[i].res <<std::endl;
+      //std::cout<<"slot : " << slot <<std::endl;
+      std::cout<<"event 2 : " << events[i].res2 <<std::endl;
+
+       ensure(events[i].res == page_size);
       if(!(events[i].res2 == 0)){
          raise(SIGTRAP);
       }
