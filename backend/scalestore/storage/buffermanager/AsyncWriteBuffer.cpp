@@ -60,7 +60,7 @@ u64 AsyncWriteBuffer::submit()
    if (ready_to_submit > 0) {
        std::cout<< "from submit: ready to submit : "  << ready_to_submit <<std::endl;
        int ret_code = io_submit(aio_context, ready_to_submit, iocbs_ptr.get());
-       std::cout<< "from submit: success " <<std::endl;
+       std::cout<< "from submit: retcode:  "<<ret_code <<std::endl;
 
        ensure(ret_code == s32(ready_to_submit));
       outstanding_ios += ready_to_submit;
