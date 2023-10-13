@@ -47,7 +47,7 @@ void AsyncWriteBuffer::add(BufferFrame& bf, uint64_t ssdSlot, uint64_t epoch_add
    write_buffer_commands[slot].bf = &bf;
    write_buffer_commands[slot].epoch_added = epoch_added;
    bf.page->magicDebuggingNumber = epoch_added;
-   std::cout<< "ssd slot" << ssdSlot << " ssd*page size " << ssdSlot * page_size <<std::endl;
+   //std::cout<< "ssd slot" << ssdSlot << " ssd*page size " << ssdSlot * page_size <<std::endl;
    std::cout<< " buffer slot"  << slot <<std::endl;
    void* write_buffer_slot_ptr = bf.page;
    io_prep_pwrite(&iocbs[slot], fd, write_buffer_slot_ptr, page_size,  ssdSlot*page_size);
@@ -58,7 +58,8 @@ void AsyncWriteBuffer::add(BufferFrame& bf, uint64_t ssdSlot, uint64_t epoch_add
 u64 AsyncWriteBuffer::submit()
 {
    if (ready_to_submit > 0) {
-      int ret_code = io_submit(aio_context, ready_to_submit, iocbs_ptr.get());
+       std::cout<< "from submit: ready tp submit : "  << ready_to_submit <<std::endl;
+       int ret_code = io_submit(aio_context, ready_to_submit, iocbs_ptr.get());
       ensure(ret_code == s32(ready_to_submit));
       outstanding_ios += ready_to_submit;
       ready_to_submit = 0;
