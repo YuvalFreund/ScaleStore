@@ -58,9 +58,11 @@ void AsyncWriteBuffer::add(BufferFrame& bf, uint64_t ssdSlot, uint64_t epoch_add
 u64 AsyncWriteBuffer::submit()
 {
    if (ready_to_submit > 0) {
-       std::cout<< "from submit: ready tp submit : "  << ready_to_submit <<std::endl;
+       std::cout<< "from submit: ready to submit : "  << ready_to_submit <<std::endl;
        int ret_code = io_submit(aio_context, ready_to_submit, iocbs_ptr.get());
-      ensure(ret_code == s32(ready_to_submit));
+       std::cout<< "from submit: success " <<std::endl;
+
+       ensure(ret_code == s32(ready_to_submit));
       outstanding_ios += ready_to_submit;
       ready_to_submit = 0;
       return ret_code;
