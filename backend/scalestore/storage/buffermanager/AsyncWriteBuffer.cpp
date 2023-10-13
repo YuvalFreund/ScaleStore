@@ -63,7 +63,9 @@ u64 AsyncWriteBuffer::submit()
        std::cout<< "from submit: retcode:  "<<ret_code <<std::endl;
 
        ensure(ret_code == s32(ready_to_submit));
-      outstanding_ios += ready_to_submit;
+       std::cout<< "from submit: after ensure:  "<<ret_code <<std::endl;
+
+       outstanding_ios += ready_to_submit;
       ready_to_submit = 0;
       return ret_code;
    }
