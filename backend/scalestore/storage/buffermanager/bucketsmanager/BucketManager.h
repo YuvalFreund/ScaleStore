@@ -251,7 +251,7 @@ public:
     ///////COMMUNICATIONS WITH OTHER BUCKETS///////////
     ///////////////////////////////////////////////////
 
-    void nodeLeftOrJoinedCluster(bool nodeJoined, int leftOrJoinedNodeId){
+    void nodeLeftOrJoinedCluster(bool nodeJoined, uint64_t leftOrJoinedNodeId){
         updateConsistentHashingData(nodeJoined,leftOrJoinedNodeId);
         auto mergableBucketsByNode = getBucketsIdsAndSizeToSendToNodes();
         for (auto & [key, value] : mergableBucketsByNode) {
@@ -354,7 +354,9 @@ public:
     ///////////////GENERAL UTILS //////////////////////
     ///////////////////////////////////////////////////
 
-    void updateConsistentHashingData(bool newNodeJoined,int nodeId){
+    void updateConsistentHashingData(bool newNodeJoined,uint64_t nodeId){
+        nodeRingLocationsVector.clear();
+        nodesRingLocationMap.clear();
         if(newNodeJoined){
             nodeNum++;
             nodeIdsInCluster.emplace_back(nodeId);
@@ -391,6 +393,11 @@ public:
     uint64_t tripleHash(uint64_t input){
         return FasterHash(FasterHash(FasterHash(input)));
     }
+
+    void putBucketIdToUnionFind(uint64_t newBucketId){
+        disjointSets.addToUnionFind(newBucketId);
+    }
+
 
 };
 

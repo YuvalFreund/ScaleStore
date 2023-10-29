@@ -1,12 +1,8 @@
-//
-// Created by YuvalFreund on 20.03.23.
-//
-
-#ifndef RANGESATTEMPT_GENERICDISJOINTSETS_H
-#define RANGESATTEMPT_GENERICDISJOINTSETS_H
 
 #include <map>
 #include <cstdint>
+#include <iostream>
+
 #define MAX_BUCKETS 420
 
 using namespace std;
@@ -24,6 +20,12 @@ public:
             disjointMap.insert(std::pair<uint64_t,uint64_t>(values[i], values[i]));
         }
     };
+
+    void addToUnionFind(T x){
+        disjointMap.insert(std::pair<uint64_t,uint64_t>(x, x));
+
+    }
+
     T find(T x)
     {
         if (disjointMap.find(x)->second != x) {
@@ -32,11 +34,26 @@ public:
         return disjointMap.find(x)->second;
     }
 
-    void Union(T big, T small)
-    {
+    void Union(T big, T small){
         auto it = disjointMap.find(small);
         if (it != disjointMap.end())
             it->second = big;
     }
+
+    void printUnionFindToPrompt(){
+        for (auto const& x : disjointMap){
+            std::cout << x.first  // string (key)
+                      << ':'
+                      << x.second // string's value
+                      << std::endl;
+        }
+    }
+
+    uint64_t getUnionFindSize(){
+        return disjointMap.size();
+    }
+
+    std::map<T,T>  getMap(){
+        return  disjointMap;
+    }
 };
-#endif //RANGESATTEMPT_GENERICDISJOINTSETS_H
