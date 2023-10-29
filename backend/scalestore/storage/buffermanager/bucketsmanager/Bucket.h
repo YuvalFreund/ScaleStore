@@ -77,7 +77,7 @@ public:
     }
 
     bool canBucketBeMerged(Bucket* bucketToMerge){
-        bool retVal;
+        bool retVal = true;
         if(bucketToMerge->getPagesNumInBucket() + getFreeSlotsNum() > MAX_PAGES){
             retVal = false;
         }
