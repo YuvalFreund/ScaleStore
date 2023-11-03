@@ -94,7 +94,7 @@ void AsyncWriteBuffer::getWrittenBfs(std::function<void(BufferFrame&, uint64_t)>
       // -------------------------------------------------------------------------------------
       //std::cout<<"read page size : " << events[i].res <<std::endl;
       //std::cout<<"slot : " << slot <<std::endl;
-      std::cout<<"event 2 : " << events[i].res2 <<std::endl;
+      //std::cout<<"event 2 : " << events[i].res2 <<std::endl;
 
        ensure(events[i].res == page_size);
       if(!(events[i].res2 == 0)){
