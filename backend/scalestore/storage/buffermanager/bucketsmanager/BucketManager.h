@@ -20,7 +20,7 @@
 
 //Macros
 #define MAX_BUCKETS 420
-#define BUCKETS_NUM_TO_INIT 60
+#define BUCKETS_NUM_TO_INIT 80
 #define SLOT_SIZE_IN_BYTE 65536
 #define RAND_MASK 0x0000000000000FFF
 #define NUM_NODES 8
@@ -219,7 +219,7 @@ public:
             newBucketId = givenBucketId;
         }
         uint64_t SSDSlotStart = bucketsFreeSSDSlots.top();
-        std::cout<<"bucket id: " <<newBucketId << "ssd slot start" << SSDSlotStart<<std::endl;
+        //std::cout<<"bucket id: " <<newBucketId << "ssd slot start" << SSDSlotStart<<std::endl;
         // create new bucket
         bucketsMap.try_emplace(newBucketId, newBucketId, SSDSlotStart);
         bucketsNum++;
@@ -345,7 +345,7 @@ public:
             createNewBucket(true,ZERO);
             availableBucketsBitSet.set(i);
             if(i % 500 == 0){
-                std::cout<<"finished " << i << " buckets"<<std::endl;
+                //std::cout<<"finished " << i << " buckets"<<std::endl;
             }
         }
     }
