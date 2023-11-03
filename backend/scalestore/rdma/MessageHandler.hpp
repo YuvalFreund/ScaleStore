@@ -449,6 +449,7 @@ struct MessageHandler {
             g.latchState = LATCH_STATE::UNLATCHED;
             return;
          }
+         if(bucketManager == NULL){} // todo yuval remove- this is silly
          // -------------------------------------------------------------------------------------
          if (g.frame->possession != DESIRED_MODE || !(g.frame->isPossessor(nodeId)))
             g.state = STATE::LOCAL_POSSESSION_CHANGE;
