@@ -432,7 +432,6 @@ void PageProvider::startThread() {
                            guard.frame->possessors.shared.reset(request.bmId);
                            guard.frame->possessors.shared.set(bm.nodeId);
                         } else {
-                            std::cout<<"YUVAL CHECK 9"<<std::endl;
 
                             throw std::runtime_error("Invalid possession state");
                         }

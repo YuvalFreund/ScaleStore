@@ -147,7 +147,6 @@ struct BatchQueue {
          full_batch->container.reset();
          auto rc = try_push_empty(full_batch);
          if (!rc){
-             std::cout<<"YUVAL CHECK 5"<<std::endl;
              throw std::runtime_error("Cannot push to empty queue");
          }
       }
@@ -191,7 +190,6 @@ struct BatchQueue {
       while (current) {
          histogram[idx(current)]++;
          if (histogram[idx(current)] > 1) {
-             std::cout<<"YUVAL CHECK 3"<<std::endl;
              throw std::runtime_error("found duplicate at idx " + std::to_string(idx(current)));
          }
          current = current->next;

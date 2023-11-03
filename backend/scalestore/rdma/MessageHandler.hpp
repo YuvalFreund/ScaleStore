@@ -138,8 +138,6 @@ struct MessageHandler {
          ensure(guard.frame->latch.isLatched());
          ensure(guard.frame->page != nullptr);
          if(async_read_buffer.full()){
-             std::cout<<"YUVAL CHECK 4"<<std::endl;
-
              throw std::runtime_error("read buffer is full ");
             }
 
@@ -451,7 +449,6 @@ struct MessageHandler {
             g.latchState = LATCH_STATE::UNLATCHED;
             return;
          }
-         if(bucketManager == NULL){} // todo yuval remove- this is silly
          // -------------------------------------------------------------------------------------
          if (g.frame->possession != DESIRED_MODE || !(g.frame->isPossessor(nodeId)))
             g.state = STATE::LOCAL_POSSESSION_CHANGE;
