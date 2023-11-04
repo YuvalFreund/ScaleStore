@@ -92,6 +92,7 @@ public:
                         tryNum++;
                     }
                 }catch (const runtime_error& error){
+                    throw std::runtime_error("No empty slots");
                     std::cout<<"runtime error putting new page"<<std::endl;
                     availableBucketFound = false;
                     tryNum++;
@@ -124,9 +125,6 @@ public:
         uint64_t bucketId = pageId & BUCKET_ID_MASK;
         uint64_t realBucketId = disjointSets.find(bucketId);
         retVal = bucketsMap.find(realBucketId)->second.getPageSSDSlotByPageId(pageId); // this is the actual mapping
-        if(pageId % 10==0){
-            //std::cout<<"Got ssd slot for page:  " << pageId <<"slot id:" <<retVal <<std::endl;
-        }
         if(retVal > maxSlot){
             std::cout<<"max slot threshold crossed!" <<std::endl;
         }
@@ -148,9 +146,9 @@ public:
     uint64_t getNodeIdOfPage(uint64_t pageId){
 
         uint64_t bucketId = pageId & BUCKET_ID_MASK;
-        uint64_t nodeId = getNodeIdOfBucket(bucketId);
+        uint64_t foundNodeId = getNodeIdOfBucket(bucketId);
 
-        return nodeId;
+        return foundNodeId;
     }
 
     uint64_t getNodeIdOfPage(PID pid){
