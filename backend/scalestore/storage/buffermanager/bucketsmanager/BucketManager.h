@@ -62,8 +62,6 @@ public:
     //caching
     std::map<uint64_t, uint64_t> bucketIdToNodeCache;
 
-
-
     //node constructor
     BucketManager(uint64_t nodeId, std::vector<uint64_t> nodeIdsInput): nodeId(nodeId){
         fullNodeInit(nodeIdsInput);
