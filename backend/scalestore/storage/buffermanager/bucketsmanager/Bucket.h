@@ -81,8 +81,8 @@ public:
         }
         bucketToMergeIn->isBucketMergedIntoAnotherBucket = true;
         for(auto & iter : bucketToMergeIn->pageIdToSlot){
-            uint64_t destSsdSlot = addPageWithPageIdWithNoLock(iter.first);
-            uint64_t srcSsdSlot = bucketToMergeIn->getPageSSDSlotByPageIdNoLock(iter.first);
+            //uint64_t destSsdSlot = addPageWithPageIdWithNoLock(iter.first);
+            //uint64_t srcSsdSlot = bucketToMergeIn->getPageSSDSlotByPageIdNoLock(iter.first);
 
             // todo - actually copying the data!
         }
