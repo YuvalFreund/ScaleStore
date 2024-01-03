@@ -476,11 +476,11 @@ void BucketManagerMessageHandler::sendBucketToNode(uint64_t bucketId, uint64_t n
     if(mapOfNode[bucketId] != BUCKET_ALREADY_MERGED){
         smallBucket = &(bucketManager->bucketsMap.find(mapOfNode[bucketId])->second);
         smallBucket->bucketLock.lock();
-        uint64_t smallBucketSsdSlotsStart = smallBucket-> SSDSlotStart;
-        for (auto const& [key, val] : smallBucket->pageIdToSlot){
+        //uint64_t smallBucketSsdSlotsStart = smallBucket-> SSDSlotStart;
+        //for (auto const& [key, val] : smallBucket->pageIdToSlot){
             //uint64_t oldSsdSlot = smallBucketSsdSlotsStart + val;
             // todo yuval -  actually do something with it here
-        }
+        //}
         smallBucket->destroyBucketData();
         smallBucket->bucketLock.unlock();
         bucketManager->deleteBucket(smallBucket->getBucketId());
