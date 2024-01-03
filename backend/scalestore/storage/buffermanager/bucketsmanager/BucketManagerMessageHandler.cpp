@@ -464,11 +464,11 @@ void BucketManagerMessageHandler::sendBucketToNode(uint64_t bucketId, uint64_t n
 
     // dealing with big bucket first
     bigBucket->bucketLock.lock();
-    uint64_t bigBucketSsdSlotsStart = bigBucket-> SSDSlotStart;
-    for (auto const& [key, val] : bigBucket->pageIdToSlot){
+    //uint64_t bigBucketSsdSlotsStart = bigBucket-> SSDSlotStart;
+    //for (auto const& [key, val] : bigBucket->pageIdToSlot){
         //uint64_t oldSsdSlot = bigBucketSsdSlotsStart + val;
         // todo yuval -  actually do something with it here
-    }
+    //}
     bigBucket->destroyBucketData();
     bigBucket->bucketLock.unlock();
     bucketManager->deleteBucket(bucketId);
