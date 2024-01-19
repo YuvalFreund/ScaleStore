@@ -171,8 +171,9 @@ void Buffermanager::reclaimPage(BufferFrame& frame) {
    uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
    if(pidOwner == nodeId){
       removeFrame(frame, [&](BufferFrame& frame){
-                        // todo yuval - remove page from bucket manager
-                         pidFreeList.push(frame.pid, threads::ThreadContext::my().pid_handle);
+                        // todo yuval - DONE remove page from bucket manager
+                         //pidFreeList.push(frame.pid, threads::ThreadContext::my().pid_handle);
+                         bucketManager->removePage(frame.pid);
                          pageFreeList.push(frame.page, threads::ThreadContext::my().page_handle);
                       });
    }else{
