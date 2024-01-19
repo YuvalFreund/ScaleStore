@@ -87,6 +87,7 @@ Buffermanager::Buffermanager(rdma::CM<rdma::InitMessage>& cm, NodeID nodeId, s32
    });
    // -------------------------------------------------------------------------------------
    // free list PIDs
+   // todo yuval - consider unnecessary free list PID
    uint64_t ssdPages = (FLAGS_ssd_gib * 1024 * 1024 * 1024) / sizeof(Page);
    ensure(dramPoolNumberPages < ssdPages);
    utils::Parallelize::parallelRange(1, ssdPages, [&](uint64_t pid_b, uint64_t pid_e) {
@@ -122,7 +123,7 @@ Buffermanager::Buffermanager(rdma::CM<rdma::InitMessage>& cm, NodeID nodeId, s32
 // returns a latched bufferframe & fresh page from owner
 BufferFrame& Buffermanager::newPage() {
    //-------------------------------------------------------------------------------------
-   //PID pid = pidFreeList.pop(threads::ThreadContext::my().pid_handle);
+   //PID pid = pidFreeList.pop(threads::ThreadContext::my().pid_handle); yuval
    PID pid = PID(this->bucketManager->addNewPage());
    Page* page = pageFreeList.pop(threads::ThreadContext::my().page_handle);
    BufferFrame& frame =insertFrame(pid, [&](BufferFrame& frame){
@@ -170,6 +171,7 @@ void Buffermanager::reclaimPage(BufferFrame& frame) {
    uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
    if(pidOwner == nodeId){
       removeFrame(frame, [&](BufferFrame& frame){
+                        // todo yuval - remove page from bucket manager
                          pidFreeList.push(frame.pid, threads::ThreadContext::my().pid_handle);
                          pageFreeList.push(frame.page, threads::ThreadContext::my().page_handle);
                       });
