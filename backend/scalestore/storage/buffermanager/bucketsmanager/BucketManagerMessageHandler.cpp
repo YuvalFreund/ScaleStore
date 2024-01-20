@@ -541,7 +541,7 @@ void BucketManagerMessageHandler::sendBucketToNode(RemoteBucketShuffleJob bucket
     bigBucket->bucketLock.lock();
     uint64_t bigBucketSsdSlotsStart = bigBucket-> SSDSlotStart;
     for (auto const& [key, val] : bigBucket->pageIdToSlot){
-        uint64_t oldSsdSlot = bigBucketSsdSlotsStart + val;
+        //uint64_t oldSsdSlot = bigBucketSsdSlotsStart + val;
         // todo yuval -  actually do something with it here
     }
     bigBucket->destroyBucketData();
@@ -553,7 +553,7 @@ void BucketManagerMessageHandler::sendBucketToNode(RemoteBucketShuffleJob bucket
         smallBucket->bucketLock.lock();
         uint64_t smallBucketSsdSlotsStart = smallBucket-> SSDSlotStart;
         for (auto const& [key, val] : smallBucket->pageIdToSlot){
-            uint64_t oldSsdSlot = smallBucketSsdSlotsStart + val;
+            //uint64_t oldSsdSlot = smallBucketSsdSlotsStart + val;
             // todo yuval -  actually do something with it here
         }
         smallBucket->destroyBucketData();
