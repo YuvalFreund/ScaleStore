@@ -10,14 +10,19 @@
 #include <cstdio>
 #include <ios>
 #include <fstream>
+#include <cmath>
 #include "BucketManager.h"
 #include "Message.h"
+#include "RemoteBucketShuffleJob.h"
+#include "LocalBucketsMergeJob.h"
 
 struct BucketManagerMessageHandler{
     std::bitset<CONSENSUS_VEC_SIZE> consensusVec[25];
     BucketManager* bucketManager;
     vector<uint64_t> nodeIdsForMessages;
     set<uint64_t> bucketsToReceiveFromNodes;
+    int unionFindTotalAmount;
+    bool bucketWereMerged;
 
 public:
     BucketManagerMessageHandler(BucketManager* bucketManager){
@@ -25,6 +30,8 @@ public:
         for (auto & element : this->bucketManager->nodeIdsInCluster) {
             nodeIdsForMessages.emplace_back(element);
         }
+        unionFindTotalAmount = 0;
+        bucketWereMerged = false;
     }
     std::mutex * firstMtx;//todo DFD
     std::mutex * secondMtx;//todo DFD
@@ -53,10 +60,10 @@ public:
     void handleNodeLeftTheCLusterLeave(Message msg);
 
     void handleNewHashingStateSynchronizedLeave(Message msg);
-
+    void handleUnionFindDataAmount(Message msg);
     void handleIncomingUnionFindDataLeave(Message msg);
 
-    void handleUnionFindDataFinishedLeave(Message msg);
+    void handleUnionFindDataFinishedAllNodesLeave(Message msg);
 
     void handleBucketAmountsDataLeave(Message msg);
 
@@ -64,7 +71,7 @@ public:
     void handleBucketAmountsApprovedLeave(Message msg);
     //sending buckets handlers
 
-    void handleBeginNewBucket(Message msg);
+    void handleRequestToStartSendingBucket(Message msg);
 
     void handleApproveNewBucketReadyToReceive(Message msg);
 
@@ -72,6 +79,7 @@ public:
 
     void handleNodeFinishedReceivingBuckets(Message msg);
 
+    void handleBucketMovedToNewNode(Message msg);
     ///////// Node joined / leaving functions /////////
 
 
@@ -90,7 +98,7 @@ public:
 ///////// Union Find functions /////////
 
     void gossipLocalUnionFindData(MessagesEnum msgEnum);
-
+    void gossipUnionFindAmounts();
     vector<pair<uint64_t,uint64_t>>* prepareUnionFindData();
     void addIncomingUnionFindData(Message msg) ;
 
@@ -103,10 +111,11 @@ public:
     bool markBitAndReturnAreAllNodesIncludingSelfTrue(const Message msg);
 ///////// buckets sending functions functions /////////
 
-    void prepareNodesForIncomingBuckets();
+    void prepareOtherNodesForIncomingBuckets();
 
-    void sendBucketToNode(uint64_t bucketId, uint64_t nodeId);
+    void sendBucketToNode(RemoteBucketShuffleJob bucketShuffleJob);
 
+    void gossipBucketMoved(uint64_t bucketId, uint64_t nodeId);
 
 
 ///////// Misc functions /////////
@@ -121,7 +130,9 @@ public:
     // utils
 
     void breakDownUint64ToBytes(uint64_t input, byte retVal[8]);
+    void breakDownBucketIdToBytes(uint64_t input, byte retVal[6]);
     uint64_t convertBytesBackToUint64(byte input[8]);
+    uint64_t convertBytesBackToBucketId(byte input[6]);
 
     void doStuff();
 };

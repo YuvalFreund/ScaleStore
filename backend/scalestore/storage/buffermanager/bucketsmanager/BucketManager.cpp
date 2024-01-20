@@ -51,14 +51,8 @@ uint64_t BucketManager::getPageSSDSlotInSelfNode(uint64_t pageId) {
     uint64_t retVal;
     uint64_t bucketId = pageId & BUCKET_ID_MASK;
     uint64_t realBucketId = disjointSets.find(bucketId);
-    try {
-        retVal = bucketsMap.find(realBucketId)->second.getPageSSDSlotByPageId(pageId); // this is the actual mapping
-    } catch (const runtime_error &error){ // if we reach this cache, bucket was merged into another bucket!
+    retVal = bucketsMap.find(realBucketId)->second.getPageSSDSlotByPageId(pageId); // this is the actual mapping
 
-    }
-    if(retVal > maxSlot){
-        std::cout<<"max slot threshold crossed!" <<std::endl;
-    }
     return retVal;
 }
 
@@ -113,19 +107,20 @@ uint64_t BucketManager::getNodeIdOfBucket(uint64_t bucketId,bool fromInitStage, 
 //////////////BUCKETS MANAGEMENT///////////////////
 
 // we merge small bucket into the big bucket
-void BucketManager::mergeSmallBucketIntoBigBucket(uint64_t bigBucketId, uint64_t smallBucketId){
+void BucketManager::mergeSmallBucketIntoBigBucket(LocalBucketsMergeJob localBucketMergeJob){
     bucketManagerMtx.lock();
-    auto bigBucket = bucketsMap.find(bigBucketId);
-    auto smallBucket = bucketsMap.find(smallBucketId);
+    auto bigBucket = bucketsMap.find(localBucketMergeJob.bigBucket);
+    auto smallBucket = bucketsMap.find(localBucketMergeJob.smallBucket);
     //std::cout << "Merging buckets! Big bucket:  " << bigBucketId << " Small bucket: " << smallBucketId << std::endl;
 
     bigBucket->second.mergeBucketIn(&smallBucket->second);
-    disjointSets.Union(bigBucketId,smallBucketId);
-    deleteBucket(smallBucketId);
+    disjointSets.Union(localBucketMergeJob.bigBucket,localBucketMergeJob.smallBucket);
+    deleteBucket(localBucketMergeJob.smallBucket);
     bucketManagerMtx.unlock();
 }
 
-void BucketManager::createNewBucket(bool isNewBucketIdNeeded, uint64_t givenBucketId){
+uint64_t BucketManager::createNewBucket(bool isNewBucketIdNeeded, uint64_t givenBucketId){
+    uint64_t retVal;
     bucketManagerMtx.lock(); //todo yuval - how to get this lock without causing problem
     uint64_t newBucketId;
     if(isNewBucketIdNeeded){
@@ -136,17 +131,13 @@ void BucketManager::createNewBucket(bool isNewBucketIdNeeded, uint64_t givenBuck
     }else{
         newBucketId = givenBucketId;
     }
-    uint64_t SSDSlotStart = bucketsFreeSSDSlots.top();
+    retVal = bucketsFreeSSDSlots.top();
     //std::cout<<"bucket id: " <<newBucketId << "ssd slot start: " << SSDSlotStart<<std::endl;
     // create new bucket
-    bucketsMap.try_emplace(newBucketId, newBucketId, SSDSlotStart);
+    bucketsMap.try_emplace(newBucketId, newBucketId, retVal);
     bucketsNum++;
     bucketManagerMtx.unlock(); //todo yuval - how to get this lock without causing problem
-}
-
-uint64_t BucketManager::getNodeIdOfPage(PID pid){
-
-    return getNodeIdOfPage(pid.id);
+    return retVal;
 }
 
  map<uint64_t, uint64_t> BucketManager::findMergableBuckets(vector<pair<uint64_t, uint64_t>> bucketsSizes, int * nonMergedBucketsAmount){
@@ -309,7 +300,8 @@ void BucketManager::mergeOwnBuckets() {
         if(nodeIdForMergingBuckets.first == nodeId){
             for(auto bucketsPair : nodeIdForMergingBuckets.second){
                 if(bucketsPair.second != BUCKET_ALREADY_MERGED){
-                    mergeSmallBucketIntoBigBucket(bucketsPair.first,bucketsPair.second);
+
+                    //mergeSmallBucketIntoBigBucket(bucketsPair.first,bucketsPair.second);
                 }
             }
             break;
@@ -383,12 +375,12 @@ void BucketManager::duplicateDisjointSetsAndMergeNew() {
     }
 }
 
-bool BucketManager::updateAndCheckRequestedBucketNum(uint64_t newBucketsAmount){
-    bool retVal = true;
+bool BucketManager::updateRequestedBucketNumAndIsMergeNeeded(uint64_t newBucketsAmount){
+    bool retVal = false;
     aggregatedBucketNum += newBucketsAmount;
 
     if((aggregatedBucketNum - bucketsLeavingNum) > MAX_BUCKETS ){
-        throw std::runtime_error("not enough room for new buckets");
+       retVal = false;
     }
     return retVal;
 }

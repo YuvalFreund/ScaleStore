@@ -80,12 +80,12 @@ public:
             throw std::runtime_error("Not enough empty slots to merge");
         }
         bucketToMergeIn->isBucketMergedIntoAnotherBucket = true;
-        //for(auto & iter : bucketToMergeIn->pageIdToSlot){
-            //uint64_t destSsdSlot = addPageWithPageIdWithNoLock(iter.first);
-            //uint64_t srcSsdSlot = bucketToMergeIn->getPageSSDSlotByPageIdNoLock(iter.first);
+        for(auto & iter : bucketToMergeIn->pageIdToSlot){
+            uint64_t destSsdSlot = addPageWithPageIdWithNoLock(iter.first);
+            uint64_t srcSsdSlot = bucketToMergeIn->getPageSSDSlotByPageIdNoLock(iter.first);
 
-            // todo yuval - actually copying the data!
-        //}
+            // todo - actually copying the data!
+        }
         bucketToMergeIn-> destroyBucketData();
         bucketToMergeIn->bucketLock.unlock();
         bucketLock.unlock();

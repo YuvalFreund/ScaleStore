@@ -19,12 +19,13 @@
 #include "Bucket.h"
 #include "GenericDisjointSets.h"
 #include "MessagesEnum.h"
+#include "LocalBucketsMergeJob.h"
+
 
 //Macros
 #define MAX_BUCKETS 420
-#define BUCKETS_NUM_TO_INIT 60
+#define BUCKETS_NUM_TO_INIT 62
 #define SLOT_SIZE_IN_BYTE 65536
-#define MAX_NUM_NODES 8
 #define BUCKET_ALREADY_MERGED 1000000000
 #define INVALID_NODE_ID 1000000000
 #define MAX_TRY_TO_ADD_TO_BUCKET 5
@@ -108,14 +109,12 @@ public:
 
     uint64_t getNodeIdOfBucket(uint64_t bucketId,bool fromInitStage, bool forceNewState);
 
-    uint64_t getNodeIdOfPage(PID pid);
-
     //////////////BUCKETS MANAGEMENT///////////////////
 
     // we merge small bucket into the big bucket
-    void mergeSmallBucketIntoBigBucket(uint64_t bigBucketId, uint64_t smallBucketId);
+    void mergeSmallBucketIntoBigBucket(LocalBucketsMergeJob localBucketMergeJob);
 
-    void createNewBucket(bool isNewBucketIdNeeded, uint64_t givenBucketId);
+    uint64_t createNewBucket(bool isNewBucketIdNeeded, uint64_t givenBucketId);
 
     map<uint64_t, uint64_t> findMergableBuckets(vector<pair<uint64_t, uint64_t>> bucketsSizes, int * bucketsNumberNotMatched);
 
@@ -149,7 +148,6 @@ public:
 
     void printNodeData();
 
-
     static inline uint64_t FasterHash(uint64_t input);
 
     uint64_t tripleHash(uint64_t input);
@@ -165,7 +163,7 @@ public:
 
     void duplicateDisjointSetsAndMergeNew();
 
-    bool updateAndCheckRequestedBucketNum(uint64_t newBucketsAmount);
+    bool updateRequestedBucketNumAndIsMergeNeeded(uint64_t newBucketsAmount);
 
     void mergeOwnBuckets();
 
