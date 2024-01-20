@@ -247,7 +247,7 @@ void BucketManagerMessageHandler::handleRequestToStartSendingBucket(Message msg)
     messageData[MSG_SND_IDX] = (byte) bucketManager->nodeId;
     messageData[MSG_RCV_IDX] = msg.messageData[MSG_SND_IDX];
     breakDownUint64ToBytes(newBucketId,&messageData[BUCKET_ID_START_INDEX]);
-    breakDownUint64ToBytes(ssdStartingAddressForNewNode,&messageData[BUCKET_ID_START_INDEX]);
+    breakDownUint64ToBytes(ssdStartingAddressForNewNode,&messageData[SSD_SLOT_START_INDEX]);
     auto approveBucketMsg = Message(messageData);
     sendMessage(approveBucketMsg);
 }
@@ -256,7 +256,7 @@ void BucketManagerMessageHandler::handleApproveNewBucketReadyToReceive(Message m
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleApproveNewBucketReadyToReceive. \n" ;//todo DFD
     logActivity(logMsg);
     uint64_t bucketToSend = convertBytesBackToUint64(&msg.messageData[BUCKET_ID_START_INDEX]);
-    uint64_t newNodeSsdStartingAddress = convertBytesBackToUint64(&msg.messageData[BUCKET_ID_START_INDEX]);
+    uint64_t newNodeSsdStartingAddress = convertBytesBackToUint64(&msg.messageData[SSD_SLOT_START_INDEX]);
     auto receivingNode = (uint64_t) msg.messageData[MSG_SND_IDX];
     RemoteBucketShuffleJob remoteBucketShuffleJob = RemoteBucketShuffleJob(bucketToSend,receivingNode,newNodeSsdStartingAddress);
     sendBucketToNode(remoteBucketShuffleJob);
@@ -532,7 +532,7 @@ void BucketManagerMessageHandler::prepareOtherNodesForIncomingBuckets(){ //pair 
 
 void BucketManagerMessageHandler::sendBucketToNode(RemoteBucketShuffleJob bucketShuffleJob){
     uint64_t bucketId = bucketShuffleJob.bucketId;
-    uint64_t nodeId = bucketShuffleJob.bucketId;
+    uint64_t nodeId = bucketShuffleJob.nodeId;
     map<uint64_t, uint64_t> mapOfNode = bucketManager->mergableBucketsForEachNode[nodeId];
     Bucket* bigBucket = &(bucketManager->bucketsMap.find(bucketId)->second);
     Bucket* smallBucket;
