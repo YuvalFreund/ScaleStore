@@ -4,15 +4,14 @@
 
 #ifndef LOCALTHESIS_BUCKET_H
 #define LOCALTHESIS_BUCKET_H
-#define MAX_PAGES 65536
-#define BUCKET_ID_MASK 0xFFFFFFFFFFFF0000
+
 #include <string>
 #include <map>
 #include <set>
 #include <iostream>
 #include <stack>
 #include <mutex>
-
+#include "BucketManagerDefs.h"
 struct Bucket{
 public:
     uint64_t BucketId;

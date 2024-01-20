@@ -15,9 +15,11 @@
 #include "Message.h"
 #include "RemoteBucketShuffleJob.h"
 #include "LocalBucketsMergeJob.h"
+#include "BucketManagerDefs.h"
+
 
 struct BucketManagerMessageHandler{
-    std::bitset<CONSENSUS_VEC_SIZE> consensusVec[25];
+    std::bitset<CONSENSUS_VEC_SIZE> consensusVec[MESSAGE_ENUM_AMOUNT];
     BucketManager* bucketManager;
     vector<uint64_t> nodeIdsForMessages;
     set<uint64_t> bucketsToReceiveFromNodes;

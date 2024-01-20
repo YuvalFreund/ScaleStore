@@ -9,8 +9,8 @@
 #include <cstdint>
 #include <iostream>
 
-#define MAX_BUCKETS 420
-#define BUCKETS_NUM_TO_INIT 60
+#include "BucketManagerDefs.h"
+
 
 using namespace std;
 

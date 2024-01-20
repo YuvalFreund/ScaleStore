@@ -20,17 +20,7 @@
 #include "GenericDisjointSets.h"
 #include "MessagesEnum.h"
 #include "LocalBucketsMergeJob.h"
-
-
-//Macros
-#define MAX_BUCKETS 420
-#define BUCKETS_NUM_TO_INIT 62
-#define SLOT_SIZE_IN_BYTE 65536
-#define BUCKET_ALREADY_MERGED 1000000000
-#define INVALID_NODE_ID 1000000000
-#define MAX_TRY_TO_ADD_TO_BUCKET 5
-#define ZERO 0
-#define CONSISTENT_HASHING_WEIGHT 10
+#include "BucketManagerDefs.h"
 
 
 
