@@ -37,11 +37,11 @@ public:
     uint64_t bucketsNum = 0;
     uint64_t nodeId;
     uint64_t freeBucketIdIndex = 0;
-    uint64_t maxSlot;
     int64_t aggregatedBucketNum = 0;
     int64_t bucketsLeavingNum = 0;
     std::set<uint64_t> nodeIdsInCluster;
-
+    int maxPagesByParameter;
+    uint64_t bucketIdMaskByParameter;
     //caching
     std::map<uint64_t, uint64_t> bucketIdToNodeCache;
 
@@ -80,7 +80,8 @@ public:
     //node constructor
     BucketManager(uint64_t nodeId, std::vector<uint64_t> nodeIdsInput) : nodeId(nodeId) {
         std::srand (std::time (0));
-
+        // todo yuval - read from flag
+        initBucketSizeDataByParameter(6);
         managerState.store(normal);
         fullBucketManagerInit(nodeIdsInput);
         nodeIsToBeDeleted = false;
@@ -162,6 +163,7 @@ public:
     ///////////////shuffling functions //////////////////////
 
     vector<pair<uint64_t,uint64_t>>  getBucketsShufflePrioritiesAndNodes();
+    void initBucketSizeDataByParameter(int bucketIdByteSize);
 
 
 };

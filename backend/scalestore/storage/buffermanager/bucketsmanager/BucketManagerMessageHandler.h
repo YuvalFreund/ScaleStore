@@ -12,7 +12,7 @@
 #include <fstream>
 #include <cmath>
 #include "BucketManager.h"
-#include "Message.h"
+#include "BucketMessage.h"
 #include "RemoteBucketShuffleJob.h"
 #include "LocalBucketsMergeJob.h"
 #include "BucketManagerDefs.h"
@@ -38,50 +38,50 @@ public:
     std::mutex * firstMtx;//todo DFD
     std::mutex * secondMtx;//todo DFD
     std::mutex * thirdMtx;//todo DFD
-    queue<Message> * firstMessageQueue; //todo DFD
-    queue<Message> * secondMessageQueue; //todo DFD
-    queue<Message> * thirdMessageQueue; //todo DFD
+    queue<BucketMessage> * firstMessageQueue; //todo DFD
+    queue<BucketMessage> * secondMessageQueue; //todo DFD
+    queue<BucketMessage> * thirdMessageQueue; //todo DFD
 
 
-    void handleIncomingMessage(Message msg);
+    void handleIncomingMessage(BucketMessage msg);
     //node joining handlers
 
-    void handleNewNodeJoinedEnter(Message msg);
+    void handleNewNodeJoinedEnter(BucketMessage msg);
 
-    void handleNewHashingStateSynchronizedEnter(Message msg);
+    void handleNewHashingStateSynchronizedEnter(BucketMessage msg);
 
-    void handleIncomingUnionFindDataEnter(Message msg);
+    void handleIncomingUnionFindDataEnter(BucketMessage msg);
 
-    void handleUnionFindDataFinishedEnter(Message msg);
+    void handleUnionFindDataFinishedEnter(BucketMessage msg);
 
-    void handleBucketAmountsDataEnter(Message msg);
+    void handleBucketAmountsDataEnter(BucketMessage msg);
 
-    void handleBucketAmountsApprovedEnter(Message msg);
+    void handleBucketAmountsApprovedEnter(BucketMessage msg);
     //node leaving handlers
 
-    void handleNodeLeftTheCLusterLeave(Message msg);
+    void handleNodeLeftTheCLusterLeave(BucketMessage msg);
 
-    void handleNewHashingStateSynchronizedLeave(Message msg);
-    void handleUnionFindDataAmount(Message msg);
-    void handleIncomingUnionFindDataLeave(Message msg);
+    void handleNewHashingStateSynchronizedLeave(BucketMessage msg);
+    void handleUnionFindDataAmount(BucketMessage msg);
+    void handleIncomingUnionFindDataLeave(BucketMessage msg);
 
-    void handleUnionFindDataFinishedAllNodesLeave(Message msg);
+    void handleUnionFindDataFinishedAllNodesLeave(BucketMessage msg);
 
-    void handleBucketAmountsDataLeave(Message msg);
+    void handleBucketAmountsDataLeave(BucketMessage msg);
 
 
-    void handleBucketAmountsApprovedLeave(Message msg);
+    void handleBucketAmountsApprovedLeave(BucketMessage msg);
     //sending buckets handlers
 
-    void handleRequestToStartSendingBucket(Message msg);
+    void handleRequestToStartSendingBucket(BucketMessage msg);
 
-    void handleApproveNewBucketReadyToReceive(Message msg);
+    void handleApproveNewBucketReadyToReceive(BucketMessage msg);
 
-    void handleFinishBucketReceive(Message msg);
+    void handleFinishBucketReceive(BucketMessage msg);
 
-    void handleNodeFinishedReceivingBuckets(Message msg);
+    void handleNodeFinishedReceivingBuckets(BucketMessage msg);
 
-    void handleBucketMovedToNewNode(Message msg);
+    void handleBucketMovedToNewNode(BucketMessage msg);
     ///////// Node joined / leaving functions /////////
 
 
@@ -102,15 +102,15 @@ public:
     void gossipLocalUnionFindData(MessagesEnum msgEnum);
     void gossipUnionFindAmounts();
     vector<pair<uint64_t,uint64_t>>* prepareUnionFindData();
-    void addIncomingUnionFindData(Message msg) ;
+    void addIncomingUnionFindData(BucketMessage msg) ;
 
     void gossipFinishedUnionFind(MessagesEnum msgEnum);
 
 ///////// Consensus Vector functions /////////
 
-    bool markBitAndReturnAreAllNodesExcludingSelfTrue(const Message msg);
+    bool markBitAndReturnAreAllNodesExcludingSelfTrue(const BucketMessage msg);
 
-    bool markBitAndReturnAreAllNodesIncludingSelfTrue(const Message msg);
+    bool markBitAndReturnAreAllNodesIncludingSelfTrue(const BucketMessage msg);
 ///////// buckets sending functions functions /////////
 
     void prepareOtherNodesForIncomingBuckets();
@@ -122,9 +122,9 @@ public:
 
 ///////// Misc functions /////////
 
-    void gossipMessage(Message msg);
+    void gossipMessage(BucketMessage msg);
     void checkMailbox();
-    void sendMessage(Message msg);
+    void sendMessage(BucketMessage msg);
 
     void logActivity(string const str);
 

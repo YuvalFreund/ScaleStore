@@ -19,12 +19,16 @@ public:
     std::stack<uint16_t> freeSlots;
     std::map<uint64_t,uint16_t> pageIdToSlot; // mapping of page id to SSD slot
     std::mutex bucketLock;
+    int maxPagesByParameter;
+    uint64_t bucketIdMaskByParameter;
 
     Bucket(){}
     Bucket(uint64_t BucketId,uint64_t SSDSlotStart):
             BucketId(BucketId), SSDSlotStart(SSDSlotStart){
         //empty slots stack is fulled of all the available slots
-        for(int64_t i = MAX_PAGES-1; i >=0 ; i--) {
+        // todo yuval - this needs to be read from the flags
+        initBucketSizeDataByParameter(6);
+        for(int64_t i = maxPagesByParameter-1; i >=0 ; i--) {
             freeSlots.push(i);
         }
     }
@@ -54,13 +58,10 @@ public:
         }
 
         auto freeSlot = freeSlots.top();
-        retVal = BucketId & BUCKET_ID_MASK;
+        retVal = BucketId & bucketIdMaskByParameter;
         retVal = freeSlot | retVal;
         freeSlots.pop();
         pageIdToSlot.insert(std::pair<uint64_t,uint16_t>(retVal,freeSlot));
-        if(retVal % 10000 == 0 ){
-            //std::cout<<"add page id: "<< retVal << "to bucket id: "<<BucketId <<std::endl;
-        }
         bucketLock.unlock();
 
         return retVal;
@@ -78,9 +79,9 @@ public:
         }
         for(auto & iter : bucketToMergeIn->pageIdToSlot){
             //uint64_t destSsdSlot = addPageWithPageIdWithNoLock(iter.first);
-           // uint64_t srcSsdSlot = bucketToMergeIn->getPageSSDSlotByPageIdNoLock(iter.first);
+            //uint64_t srcSsdSlot = bucketToMergeIn->getPageSSDSlotByPageIdNoLock(iter.first);
 
-            // todo yuval - actually copying the data!
+            // todo - actually copying the data!
         }
         bucketToMergeIn-> destroyBucketData();
         bucketToMergeIn->bucketLock.unlock();
@@ -154,7 +155,7 @@ public:
         return freeSlots.empty();
     }
     bool isBucketEmpty(){
-        return freeSlots.size() == MAX_PAGES;
+        return freeSlots.size() == maxPagesByParameter;
     }
     void printBucketData(){
         std::cout<<"Bucket: " << BucketId << " has "<< getPagesNumInBucket() <<" pages, and "<< freeSlots.size() << " free slots." << std::endl;
@@ -165,7 +166,7 @@ public:
     }
 
     int getPagesNumInBucket(){
-        return MAX_PAGES - freeSlots.size();
+        return maxPagesByParameter - freeSlots.size();
     }
     uint16_t getSlotIdFromPageId(uint64_t pageId){
         return pageIdToSlot.find(pageId)->second;
@@ -205,5 +206,21 @@ public:
         return retVal;
     }
 
+    void initBucketSizeDataByParameter(int bucketIdByteSize){
+        switch(bucketIdByteSize){
+            case 5:
+                maxPagesByParameter = MAX_PAGES_5_BYTES_BUCKET_ID;
+                bucketIdMaskByParameter = BUCKET_ID_MASK_5_BYTES_BUCKET_ID;
+                break;
+            case 6:
+                maxPagesByParameter = MAX_PAGES_6_BYTES_BUCKET_ID;
+                bucketIdMaskByParameter = BUCKET_ID_MASK_6_BYTES_BUCKET_ID;
+                break;
+            case 7:
+                maxPagesByParameter = MAX_PAGES_7_BYTES_BUCKET_ID;
+                bucketIdMaskByParameter = BUCKET_ID_MASK_7_BYTES_BUCKET_ID;
+                break;
+        }
+    }
 };
 #endif //LOCALTHESIS_BUCKET_H

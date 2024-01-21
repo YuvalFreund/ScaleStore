@@ -1,7 +1,7 @@
 
 #include "BucketManagerMessageHandler.h"
 
-void BucketManagerMessageHandler::handleIncomingMessage(Message msg){
+void BucketManagerMessageHandler::handleIncomingMessage(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleIncomingMessage. \n" ;//todo DFD
     logActivity(logMsg);
     switch(msg.messageEnum){
@@ -84,7 +84,7 @@ void BucketManagerMessageHandler::handleIncomingMessage(Message msg){
 
 //node joining handlers
 
-void BucketManagerMessageHandler::handleNewNodeJoinedEnter(Message msg){
+void BucketManagerMessageHandler::handleNewNodeJoinedEnter(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleNewNodeJoinedEnter. \n" ;//todo DFD
     logActivity(logMsg);
 
@@ -94,11 +94,11 @@ void BucketManagerMessageHandler::handleNewNodeJoinedEnter(Message msg){
     byte messageData[MESSAGE_SIZE];
     messageData[MSG_ENUM_IDX] = (byte) CONSISTENT_HASHING_INFORMATION_SYNCED_ENTER;
     messageData[MSG_SND_IDX] = (byte) bucketManager->nodeId;
-    auto consistentHashingCompleted = Message(messageData);
+    auto consistentHashingCompleted = BucketMessage(messageData);
     gossipMessage(consistentHashingCompleted);
 }
 
-void BucketManagerMessageHandler::handleNewHashingStateSynchronizedEnter(Message msg){
+void BucketManagerMessageHandler::handleNewHashingStateSynchronizedEnter(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleNewHashingStateSynchronizedEnter. \n" ;//todo DFD
     logActivity(logMsg);
 
@@ -108,7 +108,7 @@ void BucketManagerMessageHandler::handleNewHashingStateSynchronizedEnter(Message
     }
 }
 
-void BucketManagerMessageHandler::handleIncomingUnionFindDataEnter(Message msg){
+void BucketManagerMessageHandler::handleIncomingUnionFindDataEnter(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleIncomingUnionFindDataEnter. \n" ;//todo DFD
     logActivity(logMsg);
 
@@ -119,7 +119,7 @@ void BucketManagerMessageHandler::handleIncomingUnionFindDataEnter(Message msg){
     }
 }
 
-void BucketManagerMessageHandler::handleUnionFindDataFinishedEnter(Message msg){
+void BucketManagerMessageHandler::handleUnionFindDataFinishedEnter(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleUnionFindDataFinishedEnter. \n" ;//todo DFD
     logActivity(logMsg);
 
@@ -129,7 +129,7 @@ void BucketManagerMessageHandler::handleUnionFindDataFinishedEnter(Message msg){
     }
 }
 
-void BucketManagerMessageHandler::handleBucketAmountsDataEnter(Message msg){
+void BucketManagerMessageHandler::handleBucketAmountsDataEnter(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleBucketAmountsDataEnter. \n" ;//todo DFD
     logActivity(logMsg);
     bucketManager->updateRequestedBucketNumAndIsMergeNeeded((uint64_t) msg.messageData[MSG_DATA_START_IDX]);
@@ -139,7 +139,7 @@ void BucketManagerMessageHandler::handleBucketAmountsDataEnter(Message msg){
     }
 }
 
-void BucketManagerMessageHandler::handleBucketAmountsApprovedEnter(Message msg){
+void BucketManagerMessageHandler::handleBucketAmountsApprovedEnter(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleBucketAmountsApprovedEnter. \n" ;//todo DFD
     logActivity(logMsg);
 
@@ -153,7 +153,7 @@ void BucketManagerMessageHandler::handleBucketAmountsApprovedEnter(Message msg){
 
 //node leaving handlers
 
-void BucketManagerMessageHandler::handleNodeLeftTheCLusterLeave(Message msg){
+void BucketManagerMessageHandler::handleNodeLeftTheCLusterLeave(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleNodeLeftTheCLusterLeave. \n" ;//todo DFD
     logActivity(logMsg);
 
@@ -163,11 +163,11 @@ void BucketManagerMessageHandler::handleNodeLeftTheCLusterLeave(Message msg){
     byte messageData[MESSAGE_SIZE];
     messageData[MSG_ENUM_IDX] = (byte) CONSISTENT_HASHING_INFORMATION_SYNCED_LEAVE;
     messageData[MSG_SND_IDX] = (byte) bucketManager->nodeId;
-    auto consistentHashingCompleted = Message(messageData);
+    auto consistentHashingCompleted = BucketMessage(messageData);
     gossipMessage(consistentHashingCompleted);
 }
 
-void BucketManagerMessageHandler::handleNewHashingStateSynchronizedLeave(Message msg){
+void BucketManagerMessageHandler::handleNewHashingStateSynchronizedLeave(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleNewHashingStateSynchronizedLeave. \n" ;//todo DFD
     logActivity(logMsg);
     bool allNodesUpdated = markBitAndReturnAreAllNodesExcludingSelfTrue(msg);
@@ -177,7 +177,7 @@ void BucketManagerMessageHandler::handleNewHashingStateSynchronizedLeave(Message
     }
 }
 
-void BucketManagerMessageHandler::handleIncomingUnionFindDataLeave(Message msg){
+void BucketManagerMessageHandler::handleIncomingUnionFindDataLeave(BucketMessage msg){
     // if this is the leaving bucket, there is no need for to add the union find data to it - it will be deleted
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleIncomingUnionFindDataLeave. \n" ;//todo DFD
     logActivity(logMsg);
@@ -186,14 +186,14 @@ void BucketManagerMessageHandler::handleIncomingUnionFindDataLeave(Message msg){
     }
 }
 
-void BucketManagerMessageHandler::handleUnionFindDataAmount(Message msg){
+void BucketManagerMessageHandler::handleUnionFindDataAmount(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleUnionFindDataAmount. \n" ;//todo DFD
     logActivity(logMsg);
     uint64_t amount = convertBytesBackToUint64(&msg.messageData[MSG_DATA_START_IDX]);
     this->unionFindTotalAmount += (int) amount;
 }
 
-void BucketManagerMessageHandler::handleUnionFindDataFinishedAllNodesLeave(Message msg){
+void BucketManagerMessageHandler::handleUnionFindDataFinishedAllNodesLeave(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleUnionFindDataFinishedAllNodesLeave. \n" ;//todo DFD
     logActivity(logMsg);
 
@@ -203,7 +203,7 @@ void BucketManagerMessageHandler::handleUnionFindDataFinishedAllNodesLeave(Messa
     }
 }
 
-void BucketManagerMessageHandler::handleBucketAmountsDataLeave(Message msg){
+void BucketManagerMessageHandler::handleBucketAmountsDataLeave(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleBucketAmountsDataLeave. \n" ;//todo DFD
     logActivity(logMsg);
 
@@ -222,7 +222,7 @@ void BucketManagerMessageHandler::handleBucketAmountsDataLeave(Message msg){
     }
 }
 
-void BucketManagerMessageHandler::handleBucketAmountsApprovedLeave(Message msg){
+void BucketManagerMessageHandler::handleBucketAmountsApprovedLeave(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleBucketAmountsApprovedLeave. \n" ;//todo DFD
     logActivity(logMsg);
 
@@ -236,7 +236,7 @@ void BucketManagerMessageHandler::handleBucketAmountsApprovedLeave(Message msg){
 
 //sending buckets handlers
 
-void BucketManagerMessageHandler::handleRequestToStartSendingBucket(Message msg){
+void BucketManagerMessageHandler::handleRequestToStartSendingBucket(BucketMessage msg){
     uint64_t newBucketId = convertBytesBackToUint64(&msg.messageData[BUCKET_ID_START_INDEX]);
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleBeginNewBucket. Bucket id:" +std::to_string(newBucketId)+ " \n" ;//todo DFD
     logActivity(logMsg);
@@ -248,11 +248,11 @@ void BucketManagerMessageHandler::handleRequestToStartSendingBucket(Message msg)
     messageData[MSG_RCV_IDX] = msg.messageData[MSG_SND_IDX];
     breakDownUint64ToBytes(newBucketId,&messageData[BUCKET_ID_START_INDEX]);
     breakDownUint64ToBytes(ssdStartingAddressForNewNode,&messageData[SSD_SLOT_START_INDEX]);
-    auto approveBucketMsg = Message(messageData);
+    auto approveBucketMsg = BucketMessage(messageData);
     sendMessage(approveBucketMsg);
 }
 
-void BucketManagerMessageHandler::handleApproveNewBucketReadyToReceive(Message msg) {
+void BucketManagerMessageHandler::handleApproveNewBucketReadyToReceive(BucketMessage msg) {
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleApproveNewBucketReadyToReceive. \n" ;//todo DFD
     logActivity(logMsg);
     uint64_t bucketToSend = convertBytesBackToUint64(&msg.messageData[BUCKET_ID_START_INDEX]);
@@ -263,7 +263,7 @@ void BucketManagerMessageHandler::handleApproveNewBucketReadyToReceive(Message m
 
 }
 
-void BucketManagerMessageHandler::handleFinishBucketReceive(Message msg){
+void BucketManagerMessageHandler::handleFinishBucketReceive(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleFinishBucketReceive. Buckets left: " + std::to_string( bucketsToReceiveFromNodes.size()) +"\n";//todo DFD
 
     logActivity(logMsg);
@@ -275,7 +275,7 @@ void BucketManagerMessageHandler::handleFinishBucketReceive(Message msg){
         byte messageData[MESSAGE_SIZE];
         messageData[MSG_ENUM_IDX] = (byte) NODE_FINISHED_RECEIVING_BUCKETS;
         messageData[MSG_SND_IDX] = (byte) bucketManager->nodeId;
-        auto finishedReceivingBucketsMsg = Message(messageData);
+        auto finishedReceivingBucketsMsg = BucketMessage(messageData);
         gossipMessage(finishedReceivingBucketsMsg);
         //todo case for the last one - maybe DFD?
         consensusVec[NODE_FINISHED_RECEIVING_BUCKETS].set(bucketManager->nodeId - 1);
@@ -285,7 +285,7 @@ void BucketManagerMessageHandler::handleFinishBucketReceive(Message msg){
     }
 }
 
-void BucketManagerMessageHandler::handleBucketMovedToNewNode(Message msg){
+void BucketManagerMessageHandler::handleBucketMovedToNewNode(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleBucketMovedToNewNode \n";//todo DFD
     logActivity(logMsg);
 
@@ -295,7 +295,7 @@ void BucketManagerMessageHandler::handleBucketMovedToNewNode(Message msg){
     bucketManager->bucketIdToNodeCache[bucketId] = nodeId;
 }
 
-void BucketManagerMessageHandler::handleNodeFinishedReceivingBuckets(Message msg){
+void BucketManagerMessageHandler::handleNodeFinishedReceivingBuckets(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleNodeFinishedReceivingBuckets. \n" ;//todo DFD
     logActivity(logMsg);
     bool allNodesUpdated = markBitAndReturnAreAllNodesExcludingSelfTrue(msg);
@@ -318,14 +318,14 @@ void BucketManagerMessageHandler::gossipNodeJoined() {
     messageDataForJoinedNode[MSG_ENUM_IDX] = (byte) NODE_JOINED_THE_CLUSTER_ENTER;
     messageDataForJoinedNode[MSG_SND_IDX] = (byte) bucketManager->nodeId;
     messageDataForJoinedNode[MSG_DATA_START_IDX] = (byte) bucketManager->nodeId;
-    auto bucketAmountFinishedMsg = Message(messageDataForJoinedNode);
+    auto bucketAmountFinishedMsg = BucketMessage(messageDataForJoinedNode);
     gossipMessage(bucketAmountFinishedMsg);
     bucketManager->nodeLeftOrJoinedCluster(true,bucketManager->nodeId);
     bucketManager->getOldConsistentHashingInfoForNewNode();
     byte messageDataForConsistentHashing[MESSAGE_SIZE];
     messageDataForConsistentHashing[MSG_ENUM_IDX] = (byte) CONSISTENT_HASHING_INFORMATION_SYNCED_ENTER;
     messageDataForConsistentHashing[MSG_SND_IDX] = (byte) bucketManager->nodeId;
-    auto consistentHashingCompleted = Message(messageDataForConsistentHashing);
+    auto consistentHashingCompleted = BucketMessage(messageDataForConsistentHashing);
     gossipMessage(consistentHashingCompleted);
 }
 
@@ -337,13 +337,13 @@ void BucketManagerMessageHandler::gossipNodeLeft(){
     messageDataForLeavingNode[MSG_ENUM_IDX] = (byte) NODE_LEAVING_THE_CLUSTER_LEAVE;
     messageDataForLeavingNode[MSG_SND_IDX] = (byte) bucketManager->nodeId;
     messageDataForLeavingNode[MSG_DATA_START_IDX] = (byte) bucketManager->nodeId;
-    auto bucketAmountFinishedMsg = Message(messageDataForLeavingNode);
+    auto bucketAmountFinishedMsg = BucketMessage(messageDataForLeavingNode);
     gossipMessage(bucketAmountFinishedMsg);
     bucketManager->nodeLeftOrJoinedCluster(false,bucketManager->nodeId);
     byte messageDataForConsistentHashing[MESSAGE_SIZE];
     messageDataForConsistentHashing[MSG_ENUM_IDX] = (byte) CONSISTENT_HASHING_INFORMATION_SYNCED_LEAVE;
     messageDataForConsistentHashing[MSG_SND_IDX] = (byte) bucketManager->nodeId;
-    auto consistentHashingCompleted = Message(messageDataForConsistentHashing);
+    auto consistentHashingCompleted = BucketMessage(messageDataForConsistentHashing);
     gossipMessage(consistentHashingCompleted);
 }
 
@@ -358,7 +358,7 @@ void BucketManagerMessageHandler::spreadBucketAmountsToNodes(MessagesEnum msgEnu
         messageData[MSG_ENUM_IDX] = (byte) msgEnum;
         messageData[MSG_SND_IDX] = (byte) bucketManager->nodeId;
         messageData[MSG_RCV_IDX] = (byte) itr;
-        auto bucketAmountToNodeMsg = Message(messageData);
+        auto bucketAmountToNodeMsg = BucketMessage(messageData);
 
         // if this a node that just joined he will have 0 buckets to send to others. it is planned this way.
         byte value = (byte) 0;
@@ -380,7 +380,7 @@ void BucketManagerMessageHandler::gossipBucketAmountFinishedEnter(){
     messageData[MSG_ENUM_IDX] = (byte) BUCKETS_AMOUNTS_APPROVED_ENTER;
     messageData[MSG_SND_IDX] = (byte) bucketManager->nodeId;
 
-    auto bucketAmountFinishedMsg = Message(messageData);
+    auto bucketAmountFinishedMsg = BucketMessage(messageData);
     gossipMessage(bucketAmountFinishedMsg);
 }
 
@@ -392,7 +392,7 @@ void BucketManagerMessageHandler::gossipBucketAmountFinishedLeave(){
     messageData[MSG_ENUM_IDX] = (byte) BUCKETS_AMOUNTS_APPROVED_LEAVE;
     messageData[MSG_SND_IDX] = (byte) bucketManager->nodeId;
 
-    auto bucketAmountFinishedMsg = Message(messageData);
+    auto bucketAmountFinishedMsg = BucketMessage(messageData);
     gossipMessage(bucketAmountFinishedMsg);
 }
 
@@ -405,7 +405,7 @@ void BucketManagerMessageHandler::gossipUnionFindAmounts() {
     messageData[MSG_SND_IDX] = (byte) bucketManager->nodeId;
     uint64_t unionFindAmount = bucketManager->getDisjointSets().getUnionFindSize();
     breakDownUint64ToBytes(unionFindAmount, &messageData[MSG_DATA_START_IDX]);
-    auto unionFindDataToGossip = Message(messageData);
+    auto unionFindDataToGossip = BucketMessage(messageData);
     gossipMessage(unionFindDataToGossip);
 
     if (bucketManager->nodeIsToBeDeleted) {
@@ -433,7 +433,7 @@ void BucketManagerMessageHandler::gossipLocalUnionFindData(MessagesEnum msgEnum)
             breakDownBucketIdToBytes(unionFindLocalData->at(runningVectorIndex).second,&messageData[MSG_DATA_START_IDX + (6 * j) + 6]);
             runningVectorIndex++;
         }
-        auto unionFindDataToGossip = Message(messageData);
+        auto unionFindDataToGossip = BucketMessage(messageData);
         gossipMessage(unionFindDataToGossip);
     }
 }
@@ -450,7 +450,7 @@ vector<pair<uint64_t,uint64_t>>* BucketManagerMessageHandler::prepareUnionFindDa
     return retVal;
 }
 
-void BucketManagerMessageHandler::addIncomingUnionFindData(Message msg) {
+void BucketManagerMessageHandler::addIncomingUnionFindData(BucketMessage msg) {
 
     byte numberOfBucketDataInMessage = msg.messageData[UNION_FIND_BUCKET_DATA_SENT_IDX];
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "addIncomingUnionFindData. Buckets data left: " + std::to_string(unionFindTotalAmount) + "number of buckets arriving: " +  std::to_string((int)numberOfBucketDataInMessage) + "\n" ;//todo DFD
@@ -473,14 +473,14 @@ void BucketManagerMessageHandler::gossipFinishedUnionFind(MessagesEnum msgEnum){
     byte messageData[MESSAGE_SIZE];
     messageData[MSG_ENUM_IDX] = (byte) msgEnum;
     messageData[MSG_SND_IDX] = (byte) bucketManager->nodeId;
-    auto unionFindFinishedMsg = Message(messageData);
+    auto unionFindFinishedMsg = BucketMessage(messageData);
     gossipMessage(unionFindFinishedMsg);
 }
 
 
 ///////// Consensus Vector functions /////////
 
-bool BucketManagerMessageHandler::markBitAndReturnAreAllNodesExcludingSelfTrue(const Message msg){
+bool BucketManagerMessageHandler::markBitAndReturnAreAllNodesExcludingSelfTrue(const BucketMessage msg){
 
     int sendingNode = (int)msg.messageData[MSG_SND_IDX];
     consensusVec[msg.messageEnum].set(sendingNode - 1);
@@ -493,7 +493,7 @@ bool BucketManagerMessageHandler::markBitAndReturnAreAllNodesExcludingSelfTrue(c
     }
 }
 
-bool BucketManagerMessageHandler::markBitAndReturnAreAllNodesIncludingSelfTrue(const Message msg){
+bool BucketManagerMessageHandler::markBitAndReturnAreAllNodesIncludingSelfTrue(const BucketMessage msg){
     int sendingNode = (int)msg.messageData[MSG_SND_IDX];
     consensusVec[msg.messageEnum].set(sendingNode - 1);
     if(consensusVec[msg.messageEnum].all()){
@@ -516,7 +516,7 @@ void BucketManagerMessageHandler::prepareOtherNodesForIncomingBuckets(){ //pair 
         messageData[MSG_SND_IDX] = (byte) bucketManager->nodeId;
         messageData[MSG_RCV_IDX] = (byte) pair.second;
         breakDownUint64ToBytes(pair.first,&messageData[BUCKET_ID_START_INDEX]);
-        auto newBucketIdToNodeMsg = Message(messageData);
+        auto newBucketIdToNodeMsg = BucketMessage(messageData);
         sendMessage(newBucketIdToNodeMsg);
     }
     // this is to ensure that consensus is reached also considering the leaving node -
@@ -525,7 +525,7 @@ void BucketManagerMessageHandler::prepareOtherNodesForIncomingBuckets(){ //pair 
         byte messageData[MESSAGE_SIZE];
         messageData[MSG_ENUM_IDX] = (byte) NODE_FINISHED_RECEIVING_BUCKETS;
         messageData[MSG_SND_IDX] = (byte) bucketManager->nodeId;
-        auto finishedReceivingBucketsMsg = Message(messageData);
+        auto finishedReceivingBucketsMsg = BucketMessage(messageData);
         gossipMessage(finishedReceivingBucketsMsg);
     }
 }
@@ -568,7 +568,7 @@ void BucketManagerMessageHandler::sendBucketToNode(RemoteBucketShuffleJob bucket
     messageData[MSG_ENUM_IDX] = (byte) FINISHED_BUCKET;
     messageData[MSG_SND_IDX] = (byte) bucketManager->nodeId;
     messageData[MSG_RCV_IDX] = (byte) nodeId;
-    auto finishedBucketMsg = Message(messageData);
+    auto finishedBucketMsg = BucketMessage(messageData);
     sendMessage(finishedBucketMsg);
     gossipBucketMoved(bucketId,nodeId);
 }
@@ -581,13 +581,13 @@ void BucketManagerMessageHandler::gossipBucketMoved(uint64_t bucketId, uint64_t 
     messageData[MSG_SND_IDX] = (byte) bucketManager->nodeId;
     breakDownUint64ToBytes(bucketId,&messageData[BUCKET_ID_START_INDEX]);
     breakDownUint64ToBytes(nodeId, &messageData[NODE_ID_START_INDEX]);
-    auto bucketMovedMsg = Message(messageData);
+    auto bucketMovedMsg = BucketMessage(messageData);
     gossipMessage(bucketMovedMsg);
 }
 
 ///////// Misc functions /////////
 
-void BucketManagerMessageHandler::gossipMessage(Message msg){
+void BucketManagerMessageHandler::gossipMessage(BucketMessage msg){
     for(uint64_t nodeId: nodeIdsForMessages){
         msg.messageData[MSG_RCV_IDX] = (byte) nodeId;
         sendMessage(msg);
@@ -601,7 +601,7 @@ void BucketManagerMessageHandler::checkMailbox() { //todo DFD
 
         if(firstMessageQueue->empty() == false){
 
-            Message msg = firstMessageQueue->front();
+            BucketMessage msg = firstMessageQueue->front();
             auto receivingNodeId = (uint64_t) msg.messageData[MSG_SND_IDX];//todo DFD
             string readMsg = "\nread msg from node: " + std::to_string(receivingNodeId);
             string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "read msg from node: " +  std::to_string(receivingNodeId) + "\n" ;//todo DFD
@@ -617,7 +617,7 @@ void BucketManagerMessageHandler::checkMailbox() { //todo DFD
         secondMtx->lock();
         if(secondMessageQueue->empty() == false){
 
-            Message msg = secondMessageQueue->front();
+            BucketMessage msg = secondMessageQueue->front();
             auto receivingNodeId = (uint64_t) msg.messageData[MSG_SND_IDX];//todo DFD
             string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "read msg from node: " +  std::to_string(receivingNodeId) + "\n" ;//todo DFD
             logActivity(logMsg);
@@ -633,7 +633,7 @@ void BucketManagerMessageHandler::checkMailbox() { //todo DFD
         thirdMtx->lock();
         if(thirdMessageQueue->empty() == false){
 
-            Message msg = thirdMessageQueue->front();
+            BucketMessage msg = thirdMessageQueue->front();
             auto receivingNodeId = (uint64_t) msg.messageData[MSG_SND_IDX];//todo DFD
             string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "read msg from node: " +  std::to_string(receivingNodeId) + "\n" ;//todo DFD
             logActivity(logMsg);
@@ -647,7 +647,7 @@ void BucketManagerMessageHandler::checkMailbox() { //todo DFD
     }
 }
 
-void BucketManagerMessageHandler::sendMessage(Message msg) { //todo DFD
+void BucketManagerMessageHandler::sendMessage(BucketMessage msg) { //todo DFD
     auto receivingNodeId = (uint64_t) msg.messageData[MSG_RCV_IDX];
     string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "write msg to node: " +  std::to_string(receivingNodeId) + "\n" ;//todo DFD
     if(receivingNodeId == bucketManager->nodeId) return; // avoiding sending self messages

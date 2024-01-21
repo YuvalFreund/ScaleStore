@@ -384,7 +384,7 @@ void MessageHandler::startThread() {
                      break;
                   }
                   case MESSAGE_TYPE::BMMSG : {
-                      auto& request = *reinterpret_cast<PossessionUpdateRequest*>(ctx.request);
+                      auto& request = *reinterpret_cast<BucketManagerMessage*>(ctx.request);
 
 
 

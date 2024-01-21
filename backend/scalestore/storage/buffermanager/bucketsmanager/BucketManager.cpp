@@ -39,7 +39,7 @@ uint64_t BucketManager::addNewPage(){
 }
 
 void BucketManager::removePage(uint64_t pageId){
-    uint64_t bucketId = pageId & BUCKET_ID_MASK;
+    uint64_t bucketId = pageId & bucketIdMaskByParameter;
     uint64_t realBucketId = disjointSets.find(bucketId);
     auto wantedBucket = bucketsMap.find(realBucketId);
     wantedBucket->second.removePageId(pageId);
@@ -49,7 +49,8 @@ void BucketManager::removePage(uint64_t pageId){
 
 uint64_t BucketManager::getPageSSDSlotInSelfNode(uint64_t pageId) {
     uint64_t retVal;
-    uint64_t bucketId = pageId & BUCKET_ID_MASK;
+    uint64_t bucketId = pageId & bucketIdMaskByParameter;
+    // TODO YUVAL - THIS CAN BE REPLACED WITH SOME OPTIMISTIC WAY SKIPPING LOOK UP
     uint64_t realBucketId = disjointSets.find(bucketId);
     retVal = bucketsMap.find(realBucketId)->second.getPageSSDSlotByPageId(pageId); // this is the actual mapping
 
@@ -59,7 +60,7 @@ uint64_t BucketManager::getPageSSDSlotInSelfNode(uint64_t pageId) {
 
 uint64_t BucketManager::getNodeIdOfPage(uint64_t pageId){
 
-    uint64_t bucketId = pageId & BUCKET_ID_MASK;
+    uint64_t bucketId = pageId & bucketIdMaskByParameter;
     uint64_t foundNodeId = getNodeIdOfBucket(bucketId, false, false);
 
     return foundNodeId;
@@ -126,7 +127,7 @@ uint64_t BucketManager::createNewBucket(bool isNewBucketIdNeeded, uint64_t given
     if(isNewBucketIdNeeded){
         bucketsFreeSSDSlots.pop();
         newBucketId = bucketIds[freeBucketIdIndex];
-        newBucketId = newBucketId& BUCKET_ID_MASK;
+        newBucketId = newBucketId& bucketIdMaskByParameter;
         freeBucketIdIndex++;
     }else{
         newBucketId = givenBucketId;
@@ -152,7 +153,7 @@ uint64_t BucketManager::createNewBucket(bool isNewBucketIdNeeded, uint64_t given
             if(bucketsSizes[j].first == BUCKET_ALREADY_MERGED){
                 continue; // this mean this bucket was already matched, therefore continue
             }
-            if(bucketsSizes[i].first + bucketsSizes[j].first < MAX_PAGES){ // buckets can be merged
+            if(bucketsSizes[i].first + bucketsSizes[j].first < maxPagesByParameter){ // buckets can be merged
                 bucketsSizes[i].first = BUCKET_ALREADY_MERGED;
                 bucketsSizes[j].first = BUCKET_ALREADY_MERGED;
                 retVal.insert(make_pair(bucketsSizes[i].second,bucketsSizes[j].second));
@@ -213,6 +214,7 @@ std::map<uint64_t,std::vector<pair<uint64_t,uint64_t>>> BucketManager::getBucket
 
 
 void BucketManager::fullBucketManagerInit(const std::vector<uint64_t> nodeIdsInput){
+
     for(const unsigned long long & i : nodeIdsInput){
         nodeIdsInCluster.insert(i);
     }
@@ -231,11 +233,11 @@ void BucketManager::initFreeListOfBucketIds(){
     for(int i = 0; i< MAX_BUCKETS; i++){
         randSalt = rand();
         temp = tripleHash(randSalt);
-        while(getNodeIdOfBucket(temp & BUCKET_ID_MASK, true, false) != nodeId){
+        while(getNodeIdOfBucket(temp & bucketIdMaskByParameter, true, false) != nodeId){
             temp = tripleHash(randSalt);
             randSalt = rand();
         }
-        bucketIdToEnter = temp & BUCKET_ID_MASK;
+        bucketIdToEnter = temp & bucketIdMaskByParameter;
         bucketIds[i]= bucketIdToEnter;
     }
 }
@@ -267,16 +269,12 @@ void BucketManager::makeStackOfSSDSlotsForBuckets() {
     for(int i = 0; i<BUCKETS_NUM_TO_INIT+1; i++){
         bucketsFreeSSDSlots.push(i*SLOT_SIZE_IN_BYTE);
     }
-    maxSlot = bucketsFreeSSDSlots.top(); // todo dfd
 }
 
 void BucketManager::initAllBuckets(){
     for(int i = 0; i<BUCKETS_NUM_TO_INIT; i++){
         createNewBucket(true,ZERO);
         availableBucketsBitSet.set(i);
-        if(i % 20 == 0){
-            //std::cout<<"finished " << i << " buckets"<<std::endl;
-        }
     }
 }
 
@@ -418,4 +416,20 @@ void BucketManager::atomicallyMoveToNormal(){
     //
 }
 
+void BucketManager::initBucketSizeDataByParameter(int bucketIdByteSize){
+    switch(bucketIdByteSize){
+        case 5:
+            maxPagesByParameter = MAX_PAGES_5_BYTES_BUCKET_ID;
+            bucketIdMaskByParameter = BUCKET_ID_MASK_5_BYTES_BUCKET_ID;
+            break;
+        case 6:
+            maxPagesByParameter = MAX_PAGES_6_BYTES_BUCKET_ID;
+            bucketIdMaskByParameter = BUCKET_ID_MASK_6_BYTES_BUCKET_ID;
+            break;
+        case 7:
+            maxPagesByParameter = MAX_PAGES_7_BYTES_BUCKET_ID;
+            bucketIdMaskByParameter = BUCKET_ID_MASK_7_BYTES_BUCKET_ID;
+            break;
+    }
+}
 
