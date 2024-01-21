@@ -25,6 +25,8 @@ struct BucketManagerMessageHandler{
     set<uint64_t> bucketsToReceiveFromNodes;
     int unionFindTotalAmount;
     bool bucketWereMerged;
+    std::queue<LocalBucketsMergeJob> localBucketsMergeJobQueue;
+    std::queue<RemoteBucketShuffleJob> remoteBucketShufflingQueue;
 
 public:
     BucketManagerMessageHandler(BucketManager* bucketManager){

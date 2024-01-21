@@ -16,6 +16,9 @@
 #include "threads/WorkerPool.hpp"
 #include "scalestore/storage/buffermanager/bucketsmanager/BucketManager.h"
 #include "scalestore/storage/buffermanager/bucketsmanager/BucketManagerMessageHandler.h"
+#include "scalestore/storage/buffermanager/bucketsmanager/LocalBucketsMergeJob.h"
+#include "scalestore/storage/buffermanager/bucketsmanager/RemoteBucketShuffleJob.h"
+
 // -------------------------------------------------------------------------------------
 #include <memory>
 
@@ -55,6 +58,7 @@ class ScaleStore
    // -------------------------------------------------------------------------------------
    NodeID getNodeID() { return nodeId; }
    // -------------------------------------------------------------------------------------
+   BucketManagerMessageHandler getBucketManagerMessageHandler(){return bucketManagerMessageHandler;}
    s32 getSSDFD() { return ssd_fd; }
    // -------------------------------------------------------------------------------------
    void startProfiler(profiling::WorkloadInfo& wlInfo) {
