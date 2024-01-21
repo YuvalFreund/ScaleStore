@@ -383,11 +383,16 @@ void MessageHandler::startThread() {
                      writeMsg(clientId, response, threads::ThreadContext::my().page_handle);
                      break;
                   }
+                  // bucket manager message
                   case MESSAGE_TYPE::BMMSG : {
                       auto& incomingBucketMessage = *reinterpret_cast<BucketManagerMessage*>(ctx.request);
                       auto bucketMessage = BucketMessage(incomingBucketMessage.payload);
                       vector<BucketMessage> messagesToSend = bucketManagerMessageHandler->handleIncomingMessage(bucketMessage);
-
+                      for (auto & bucketMsg : messagesToSend) {
+                          // todo yuval - check about client id and thread context..
+                          auto& preparedBucketMsgToSend = *MessageFabric::createMessage<rdma::BucketManagerMessage>(ctx.response, bucketMsg.messageData);
+                          writeMsg(clientId, preparedBucketMsgToSend,threads::ThreadContext::my().page_handle);
+                      }
                       break;
                   }
 
