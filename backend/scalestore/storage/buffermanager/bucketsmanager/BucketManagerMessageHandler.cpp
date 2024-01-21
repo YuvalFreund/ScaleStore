@@ -350,6 +350,7 @@ vector<BucketMessage> BucketManagerMessageHandler::handleBucketMovedToNewNode(Bu
     //uint64_t bucketId = convertBytesBackToUint64(&msg.messageData[BUCKET_ID_START_INDEX]);
     //uint64_t nodeId = convertBytesBackToUint64(&msg.messageData[NODE_ID_START_INDEX]);
     // todo yuval implement this properly- this to be locked!
+    msg.messageData;
     //bucketManager->bucketIdToNodeCache[bucketId] = nodeId;
     return retVal;
 }
