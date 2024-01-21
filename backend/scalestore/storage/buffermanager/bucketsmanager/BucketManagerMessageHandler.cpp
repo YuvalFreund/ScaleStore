@@ -343,14 +343,13 @@ vector<BucketMessage> BucketManagerMessageHandler::handleFinishBucketReceive(Buc
 }
 
 vector<BucketMessage> BucketManagerMessageHandler::handleBucketMovedToNewNode(BucketMessage msg){
-    string logMsg = "Node " + std::to_string(bucketManager->nodeId) + " log: " + "handleBucketMovedToNewNode \n";//todo DFD
+    string logMsg = "Node " + std::to_string(bucketManager->nodeId) + std::to_string(msg.messageEnum) + " log: " + "handleBucketMovedToNewNode \n";//todo DFD
     logActivity(logMsg);
     vector<BucketMessage> retVal;
 
     //uint64_t bucketId = convertBytesBackToUint64(&msg.messageData[BUCKET_ID_START_INDEX]);
     //uint64_t nodeId = convertBytesBackToUint64(&msg.messageData[NODE_ID_START_INDEX]);
     // todo yuval implement this properly- this to be locked!
-    msg.messageData[0];
     //bucketManager->bucketIdToNodeCache[bucketId] = nodeId;
     return retVal;
 }
