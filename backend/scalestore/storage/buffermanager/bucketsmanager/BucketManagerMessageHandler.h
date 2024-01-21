@@ -35,6 +35,8 @@ public:
         unionFindTotalAmount = 0;
         bucketWereMerged = false;
     }
+    BucketManagerMessageHandler();
+
     std::mutex * firstMtx;//todo DFD
     std::mutex * secondMtx;//todo DFD
     std::mutex * thirdMtx;//todo DFD
