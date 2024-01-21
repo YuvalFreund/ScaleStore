@@ -31,7 +31,7 @@ public:
 
     //////////////INNER VARIABLES /////////////////////
     ///////// locks /////////
-    std::mutex bucketManagerMtx; //todo yuval - how to get this lock without causing problem
+    std::mutex * bucketManagerMtx; //todo yuval - how to get this lock without causing problem
 
     ///////// variables /////////
     uint64_t bucketsNum = 0;

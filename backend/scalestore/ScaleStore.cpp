@@ -39,8 +39,10 @@ ScaleStore::ScaleStore(){
    ensure(fcntl(ssd_fd, F_GETFL) != -1);
    // -------------------------------------------------------------------------------------
    // order of construction is important
+   std::mutex mtxForBucketManager; // todo yuval - how to get rid of this?
     vector<uint64_t> nodesInCluster = {nodeId};
     bucketManager = BucketManager(nodeId,nodesInCluster); //todo yuval - how to get node id and all node ids
+    bucketManager.bucketManagerMtx = &mtxForBucketManager;
     bucketManagerMessageHandler = BucketManagerMessageHandler(&bucketManager);
     cm = std::make_unique<rdma::CM<rdma::InitMessage>>();
     bm = std::make_unique<storage::Buffermanager>(*cm, nodeId, ssd_fd, &bucketManager);
