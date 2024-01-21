@@ -15,6 +15,7 @@
 #include "threads/CoreManager.hpp"
 #include "threads/WorkerPool.hpp"
 #include "scalestore/storage/buffermanager/bucketsmanager/BucketManager.h"
+#include "scalestore/storage/buffermanager/bucketsmanager/BucketManagerMessageHandler.h"
 // -------------------------------------------------------------------------------------
 #include <memory>
 
@@ -123,6 +124,7 @@ class ScaleStore
    std::unique_ptr<profiling::RDMACounters> rdmaCounters;
    std::unique_ptr<storage::Catalog> catalog;
    BucketManager bucketManager;
+   BucketManagerMessageHandler bucketManagerMessageHandler;
    profiling::ProfilingThread pt;
    std::vector<std::thread> profilingThread;
 };

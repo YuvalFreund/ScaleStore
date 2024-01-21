@@ -383,6 +383,15 @@ void MessageHandler::startThread() {
                      writeMsg(clientId, response, threads::ThreadContext::my().page_handle);
                      break;
                   }
+                  case MESSAGE_TYPE::BMMSG : {
+                      auto& request = *reinterpret_cast<PossessionUpdateRequest*>(ctx.request);
+
+
+
+                      break;
+                  }
+
+
                   default:
                      throw std::runtime_error("Unexpected Message in MB " + std::to_string(mailboxIdx) + " type " +
                                               std::to_string((size_t)ctx.request->type));

@@ -40,7 +40,11 @@ enum class MESSAGE_TYPE : uint8_t {
    PRFRR =15,
    
    // -------------------------------------------------------------------------------------
-   DPMR = 96, // delegate possession request
+   // bucket manager msg
+   BMMSG  = 66,
+   // -------------------------------------------------------------------------------------
+
+    DPMR = 96, // delegate possession request
    // Remote information for delegation
    DR = 97, 
    DRR = 98,
@@ -181,6 +185,15 @@ struct DelegationResponse : public Message  {
    DelegationResponse() : Message(MESSAGE_TYPE::DRR){}
 };
 
+struct BucketManagerMessage : public Message{
+    uint8_t payload [31];
+    BucketManagerMessage (const uint8_t payload [31]) : Message(MESSAGE_TYPE::BMMSG) {
+        for (int i = 0; i < MESSAGE_SIZE; i++) {
+            this->payload[i] = payload[i];
+        }
+    }
+};
+
 // -------------------------------------------------------------------------------------
 // Get size of Largest Message
 union ALLDERIVED{
@@ -195,6 +208,7 @@ union ALLDERIVED{
    RemoteAllocationResponse rarr;
    DelegationRequest dr;
    DelegationResponse drr;
+   BucketManagerMessage bmmsg;
 };
 
 static constexpr uint64_t LARGEST_MESSAGE = sizeof(ALLDERIVED);
