@@ -1,6 +1,7 @@
 #pragma once
 // -------------------------------------------------------------------------------------
 #include "Defs.hpp"
+#include "scalestore/storage/buffermanager/bucketsmanager/BucketManagerDefs.h"
 
 // -------------------------------------------------------------------------------------
 

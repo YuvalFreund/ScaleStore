@@ -446,7 +446,9 @@ struct MessageHandler {
       {
          // -------------------------------------------------------------------------------------
          // Optimistic
-         // -------------------------------------------------------------------------------------
+         // -----------------------------------------------------------------------------------
+          if(bucketManager == NULL){} // todo yuval - is there another way to deal with the check?
+
          auto version = g.frame->latch.optimisticLatchOrRestart();
          if (!version.has_value()) {
             g.state = STATE::RETRY;
@@ -489,7 +491,9 @@ struct MessageHandler {
           // -------------------------------------------------------------------------------------
          // Exclusive
          // -------------------------------------------------------------------------------------
-         if (!g.frame->latch.tryLatchExclusive()) {
+          if(bucketManager == NULL){} // todo yuval - is there another way to deal with the check?
+
+          if (!g.frame->latch.tryLatchExclusive()) {
             g.latchState = LATCH_STATE::UNLATCHED;
             g.state = STATE::RETRY;
             return;
@@ -518,7 +522,9 @@ struct MessageHandler {
           // -------------------------------------------------------------------------------------
          // Exclusive
          // -------------------------------------------------------------------------------------
-         if (!g.frame->latch.tryLatchShared()) {
+          if(bucketManager == NULL){} // todo yuval - is there another way to deal with the check?
+
+          if (!g.frame->latch.tryLatchShared()) {
             g.latchState = LATCH_STATE::UNLATCHED;
             g.state = STATE::RETRY;
             return;
