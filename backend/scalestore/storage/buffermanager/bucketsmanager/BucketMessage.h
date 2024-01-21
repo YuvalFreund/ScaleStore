@@ -12,10 +12,10 @@
 #include "BucketManagerDefs.h"
 
 struct BucketMessage {
-    std::byte messageData[MESSAGE_SIZE];
+    uint8_t messageData[MESSAGE_SIZE];
     MessagesEnum messageEnum;
 
-    explicit BucketMessage(std::byte *newMessageData) {
+    explicit BucketMessage(uint8_t *newMessageData) {
         for (int i = 0; i < MESSAGE_SIZE; i++) {
             this->messageData[i] = newMessageData[i];
         }

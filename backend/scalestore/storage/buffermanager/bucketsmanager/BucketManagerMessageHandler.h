@@ -43,68 +43,68 @@ public:
     queue<BucketMessage> * thirdMessageQueue; //todo DFD
 
 
-    void handleIncomingMessage(BucketMessage msg);
+    vector<BucketMessage> handleIncomingMessage(BucketMessage msg);
     //node joining handlers
 
-    void handleNewNodeJoinedEnter(BucketMessage msg);
+    vector<BucketMessage> handleNewNodeJoinedEnter(BucketMessage msg);
 
-    void handleNewHashingStateSynchronizedEnter(BucketMessage msg);
+    vector<BucketMessage> handleNewHashingStateSynchronizedEnter(BucketMessage msg);
 
-    void handleIncomingUnionFindDataEnter(BucketMessage msg);
+    vector<BucketMessage> handleIncomingUnionFindDataEnter(BucketMessage msg);
 
-    void handleUnionFindDataFinishedEnter(BucketMessage msg);
+    vector<BucketMessage> handleUnionFindDataFinishedEnter(BucketMessage msg);
 
-    void handleBucketAmountsDataEnter(BucketMessage msg);
+    vector<BucketMessage> handleBucketAmountsDataEnter(BucketMessage msg);
 
-    void handleBucketAmountsApprovedEnter(BucketMessage msg);
+    vector<BucketMessage> handleBucketAmountsApprovedEnter(BucketMessage msg);
     //node leaving handlers
 
-    void handleNodeLeftTheCLusterLeave(BucketMessage msg);
+    vector<BucketMessage> handleNodeLeftTheClusterLeave(BucketMessage msg);
 
-    void handleNewHashingStateSynchronizedLeave(BucketMessage msg);
-    void handleUnionFindDataAmount(BucketMessage msg);
-    void handleIncomingUnionFindDataLeave(BucketMessage msg);
+    vector<BucketMessage> handleNewHashingStateSynchronizedLeave(BucketMessage msg);
+    vector<BucketMessage> handleUnionFindDataAmount(BucketMessage msg);
+    vector<BucketMessage> handleIncomingUnionFindDataLeave(BucketMessage msg);
 
-    void handleUnionFindDataFinishedAllNodesLeave(BucketMessage msg);
+    vector<BucketMessage> handleUnionFindDataFinishedAllNodesLeave(BucketMessage msg);
 
-    void handleBucketAmountsDataLeave(BucketMessage msg);
+    vector<BucketMessage> handleBucketAmountsDataLeave(BucketMessage msg);
 
 
-    void handleBucketAmountsApprovedLeave(BucketMessage msg);
+    vector<BucketMessage> handleBucketAmountsApprovedLeave(BucketMessage msg);
     //sending buckets handlers
 
-    void handleRequestToStartSendingBucket(BucketMessage msg);
+    vector<BucketMessage> handleRequestToStartSendingBucket(BucketMessage msg);
 
-    void handleApproveNewBucketReadyToReceive(BucketMessage msg);
+    vector<BucketMessage> handleApproveNewBucketReadyToReceive(BucketMessage msg);
 
-    void handleFinishBucketReceive(BucketMessage msg);
+    vector<BucketMessage> handleFinishBucketReceive(BucketMessage msg);
 
-    void handleNodeFinishedReceivingBuckets(BucketMessage msg);
+    vector<BucketMessage> handleNodeFinishedReceivingBuckets(BucketMessage msg);
 
-    void handleBucketMovedToNewNode(BucketMessage msg);
+    vector<BucketMessage> handleBucketMovedToNewNode(BucketMessage msg);
     ///////// Node joined / leaving functions /////////
 
 
-    void gossipNodeJoined();
+    vector<BucketMessage> gossipNodeJoined();
 
-    void gossipNodeLeft();
+    vector<BucketMessage> gossipNodeLeft();
 
 
 ///////// Buckets amounts functions /////////
 
-    void spreadBucketAmountsToNodes(MessagesEnum msgEnum);
+    vector<BucketMessage> prepareBucketAmountsToNodesMessages(MessagesEnum msgEnum);
 
-    void gossipBucketAmountFinishedEnter();
+    vector<BucketMessage> gossipBucketAmountFinishedEnter();
 
-    void gossipBucketAmountFinishedLeave();
+    vector<BucketMessage> gossipBucketAmountFinishedLeave();
 ///////// Union Find functions /////////
 
-    void gossipLocalUnionFindData(MessagesEnum msgEnum);
-    void gossipUnionFindAmounts();
+    vector<BucketMessage> gossipLocalUnionFindData(MessagesEnum msgEnum);
+    vector<BucketMessage> prepareGossipUnionFindAmountsMessages();
     vector<pair<uint64_t,uint64_t>>* prepareUnionFindData();
-    void addIncomingUnionFindData(BucketMessage msg) ;
+    vector<BucketMessage> addIncomingUnionFindData(BucketMessage msg) ;
 
-    void gossipFinishedUnionFind(MessagesEnum msgEnum);
+    vector<BucketMessage> gossipFinishedUnionFind(MessagesEnum msgEnum);
 
 ///////// Consensus Vector functions /////////
 
@@ -113,16 +113,16 @@ public:
     bool markBitAndReturnAreAllNodesIncludingSelfTrue(const BucketMessage msg);
 ///////// buckets sending functions functions /////////
 
-    void prepareOtherNodesForIncomingBuckets();
+    vector<BucketMessage> prepareOtherNodesForIncomingBuckets();
 
     void sendBucketToNode(RemoteBucketShuffleJob bucketShuffleJob);
 
-    void gossipBucketMoved(uint64_t bucketId, uint64_t nodeId);
+    vector<BucketMessage> gossipBucketMoved(uint64_t bucketId, uint64_t nodeId);
 
 
 ///////// Misc functions /////////
 
-    void gossipMessage(BucketMessage msg);
+    vector<BucketMessage> collectMessagesToGossip(BucketMessage msg);
     void checkMailbox();
     void sendMessage(BucketMessage msg);
 
@@ -131,12 +131,10 @@ public:
     void moveAtomicallyToNormalState();
     // utils
 
-    void breakDownUint64ToBytes(uint64_t input, byte retVal[8]);
-    void breakDownBucketIdToBytes(uint64_t input, byte retVal[6]);
-    uint64_t convertBytesBackToUint64(byte input[8]);
-    uint64_t convertBytesBackToBucketId(byte input[6]);
-
-    void doStuff();
+    void breakDownUint64ToBytes(uint64_t input, uint8_t retVal[8]);
+    void breakDownBucketIdToBytes(uint64_t input, uint8_t retVal[6]);
+    uint64_t convertBytesBackToUint64(uint8_t input[8]);
+    uint64_t convertBytesBackToBucketId(uint8_t input[6]);
 };
 
 #endif //LOCALTHESIS_BUCKETMANAGERMESSAGEHANDLER_H

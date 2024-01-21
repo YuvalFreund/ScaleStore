@@ -384,9 +384,9 @@ void MessageHandler::startThread() {
                      break;
                   }
                   case MESSAGE_TYPE::BMMSG : {
-                      auto& request = *reinterpret_cast<BucketManagerMessage*>(ctx.request);
-                      BucketMessage
-
+                      auto& incomingBucketMessage = *reinterpret_cast<BucketManagerMessage*>(ctx.request);
+                      auto bucketMessage = BucketMessage(incomingBucketMessage.payload);
+                      vector<BucketMessage> messagesToSend = bucketManagerMessageHandler->handleIncomingMessage(bucketMessage);
 
                       break;
                   }
