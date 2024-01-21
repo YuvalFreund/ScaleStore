@@ -40,7 +40,7 @@ public:
     int64_t aggregatedBucketNum = 0;
     int64_t bucketsLeavingNum = 0;
     std::set<uint64_t> nodeIdsInCluster;
-    int maxPagesByParameter;
+    uint32_t maxPagesByParameter;
     uint64_t bucketIdMaskByParameter;
     //caching
     std::map<uint64_t, uint64_t> bucketIdToNodeCache;

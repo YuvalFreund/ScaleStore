@@ -19,7 +19,7 @@ public:
     std::stack<uint16_t> freeSlots;
     std::map<uint64_t,uint16_t> pageIdToSlot; // mapping of page id to SSD slot
     std::mutex bucketLock;
-    int maxPagesByParameter;
+    uint32_t maxPagesByParameter;
     uint64_t bucketIdMaskByParameter;
 
     Bucket(){}
@@ -77,12 +77,12 @@ public:
             bucketLock.unlock();
             throw std::runtime_error("Not enough empty slots to merge");
         }
-        for(auto & iter : bucketToMergeIn->pageIdToSlot){
+        //for(auto & iter : bucketToMergeIn->pageIdToSlot){
             //uint64_t destSsdSlot = addPageWithPageIdWithNoLock(iter.first);
             //uint64_t srcSsdSlot = bucketToMergeIn->getPageSSDSlotByPageIdNoLock(iter.first);
 
             // todo - actually copying the data!
-        }
+        //}
         bucketToMergeIn-> destroyBucketData();
         bucketToMergeIn->bucketLock.unlock();
         bucketLock.unlock();

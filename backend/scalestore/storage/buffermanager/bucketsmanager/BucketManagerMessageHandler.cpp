@@ -347,9 +347,9 @@ vector<BucketMessage> BucketManagerMessageHandler::handleBucketMovedToNewNode(Bu
     logActivity(logMsg);
     vector<BucketMessage> retVal;
 
-    uint64_t bucketId = convertBytesBackToUint64(&msg.messageData[BUCKET_ID_START_INDEX]);
-    uint64_t nodeId = convertBytesBackToUint64(&msg.messageData[NODE_ID_START_INDEX]);
-    // todo - this to be locked!
+    //uint64_t bucketId = convertBytesBackToUint64(&msg.messageData[BUCKET_ID_START_INDEX]);
+    //uint64_t nodeId = convertBytesBackToUint64(&msg.messageData[NODE_ID_START_INDEX]);
+    // todo yuval implement this properly- this to be locked!
     //bucketManager->bucketIdToNodeCache[bucketId] = nodeId;
     return retVal;
 }
@@ -634,6 +634,7 @@ vector<BucketMessage> BucketManagerMessageHandler::prepareOtherNodesForIncomingB
 }
 
 void BucketManagerMessageHandler::sendBucketToNode(RemoteBucketShuffleJob bucketShuffleJob){
+    /*
     uint64_t bucketId = bucketShuffleJob.bucketId;
     uint64_t nodeId = bucketShuffleJob.nodeId;
     map<uint64_t, uint64_t> mapOfNode = bucketManager->mergableBucketsForEachNode[nodeId];
@@ -674,6 +675,7 @@ void BucketManagerMessageHandler::sendBucketToNode(RemoteBucketShuffleJob bucket
     auto finishedBucketMsg = BucketMessage(messageData);
     sendMessage(finishedBucketMsg);
     gossipBucketMoved(bucketId,nodeId);
+    */
 }
 
 vector<BucketMessage> BucketManagerMessageHandler::gossipBucketMoved(uint64_t bucketId, uint64_t nodeId){
