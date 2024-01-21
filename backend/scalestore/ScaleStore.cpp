@@ -41,7 +41,7 @@ ScaleStore::ScaleStore(){
    // order of construction is important
     std::mutex mtxForBucketManager;
     vector<uint64_t> nodesInCluster = {nodeId};
-    bucketManager = BucketManager(nodeId,nodesInCluster); //todo yuval - how to get node id and all node ids
+    bucketManager = std::make_unique<BucketManager>(nodeId,nodesInCluster); //todo yuval - how to get node id and all node ids
     bucketManager.bucketManagerMtx = &mtxForBucketManager;
     bucketManagerMessageHandler = BucketManagerMessageHandler(&bucketManager);
     cm = std::make_unique<rdma::CM<rdma::InitMessage>>();
