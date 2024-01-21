@@ -127,7 +127,7 @@ class ScaleStore
    std::unique_ptr<profiling::BMCounters> bmCounters;
    std::unique_ptr<profiling::RDMACounters> rdmaCounters;
    std::unique_ptr<storage::Catalog> catalog;
-   BucketManager bucketManager;
+    std::unique_ptr<BucketManager> bucketManager;
    BucketManagerMessageHandler bucketManagerMessageHandler;
    profiling::ProfilingThread pt;
    std::vector<std::thread> profilingThread;
