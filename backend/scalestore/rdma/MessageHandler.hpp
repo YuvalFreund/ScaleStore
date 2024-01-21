@@ -3,6 +3,9 @@
 #include "CommunicationManager.hpp"
 #include "scalestore/storage/buffermanager/Buffermanager.hpp"
 #include "scalestore/storage/buffermanager/AsyncReadBuffer.hpp"
+#include "scalestore/storage/buffermanager/bucketsmanager/BucketMessage.h"
+#include "scalestore/storage/buffermanager/bucketsmanager/BucketManagerMessageHandler.h"
+
 // -------------------------------------------------------------------------------------
 #include <bitset>
 #include <iostream>
@@ -76,7 +79,7 @@ struct MessageHandler {
       std::mutex inflightCRMutex;
    };
    // -------------------------------------------------------------------------------------
-   MessageHandler(rdma::CM<InitMessage>& cm, storage::Buffermanager& bm, NodeID nodeId, BucketManager* bucketManager);
+   MessageHandler(rdma::CM<InitMessage>& cm, storage::Buffermanager& bm, NodeID nodeId, BucketManager* bucketManager,BucketManagerMessageHandler* bmmh);
    ~MessageHandler();
    // -------------------------------------------------------------------------------------
    void startThread();
@@ -93,7 +96,8 @@ struct MessageHandler {
    std::vector<MailboxPartition> mbPartitions;
    std::atomic<uint64_t> connectedClients = 0;
    std::atomic<bool> finishedInit = false;
-    BucketManager* bucketManager;
+   BucketManager* bucketManager;
+   BucketManagerMessageHandler* bucketManagerMessageHandler;
 
     // -------------------------------------------------------------------------------------
    
@@ -449,7 +453,6 @@ struct MessageHandler {
             g.latchState = LATCH_STATE::UNLATCHED;
             return;
          }
-         if(bucketManager == NULL){} // todo yuval remove- this is silly
          // -------------------------------------------------------------------------------------
          if (g.frame->possession != DESIRED_MODE || !(g.frame->isPossessor(nodeId)))
             g.state = STATE::LOCAL_POSSESSION_CHANGE;
@@ -483,7 +486,6 @@ struct MessageHandler {
    struct Invalidation {
       void operator()(Guard& g, [[maybe_unused]] NodeID nodeId,BucketManager*&  bucketManager)
       {
-          if(bucketManager == NULL){} // todo yuval remove- this is silly
           // -------------------------------------------------------------------------------------
          // Exclusive
          // -------------------------------------------------------------------------------------
@@ -513,7 +515,6 @@ struct MessageHandler {
    struct Copy {
       void operator()(Guard& g, [[maybe_unused]] NodeID nodeId, BucketManager*&  bucketManager)
       {
-          if(bucketManager == NULL){} // todo yuval remove- this is silly
           // -------------------------------------------------------------------------------------
          // Exclusive
          // -------------------------------------------------------------------------------------

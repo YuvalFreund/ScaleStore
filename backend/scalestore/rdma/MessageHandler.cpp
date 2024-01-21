@@ -8,8 +8,8 @@
 
 namespace scalestore {
 namespace rdma {
-MessageHandler::MessageHandler(rdma::CM<InitMessage>& cm, storage::Buffermanager& bm, NodeID nodeId, BucketManager* bucketManager)
-    : cm(cm), bm(bm), nodeId(nodeId), mbPartitions(FLAGS_messageHandlerThreads), bucketManager(bucketManager)
+MessageHandler::MessageHandler(rdma::CM<InitMessage>& cm, storage::Buffermanager& bm, NodeID nodeId, BucketManager* bucketManager, BucketManagerMessageHandler* bmmh)
+    : cm(cm), bm(bm), nodeId(nodeId), mbPartitions(FLAGS_messageHandlerThreads), bucketManager(bucketManager), bucketManagerMessageHandler(bmmh)
     // todo yuval - avoiding copy constrcutor?
             {
    // partition mailboxes
@@ -385,7 +385,7 @@ void MessageHandler::startThread() {
                   }
                   case MESSAGE_TYPE::BMMSG : {
                       auto& request = *reinterpret_cast<BucketManagerMessage*>(ctx.request);
-
+                      BucketMessage
 
 
                       break;
