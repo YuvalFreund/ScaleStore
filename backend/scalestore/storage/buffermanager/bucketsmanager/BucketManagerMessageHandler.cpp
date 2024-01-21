@@ -634,6 +634,7 @@ vector<BucketMessage> BucketManagerMessageHandler::prepareOtherNodesForIncomingB
 }
 
 void BucketManagerMessageHandler::sendBucketToNode(RemoteBucketShuffleJob bucketShuffleJob){
+    std::cout << bucketShuffleJob.nodeId; // todo yuval - this is just so the check will go away WILL BE REMOVED;
     /*
     uint64_t bucketId = bucketShuffleJob.bucketId;
     uint64_t nodeId = bucketShuffleJob.nodeId;
