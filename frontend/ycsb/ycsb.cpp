@@ -103,16 +103,15 @@ int main(int argc, char* argv[])
 {
    using K = uint64_t;
    using V = BytesPayload<128>;
-
-   gflags::SetUsageMessage("Catalog Test");
    gflags::ParseCommandLineFlags(&argc, &argv, true);
-   // -------------------------------------------------------------------------------------
+   gflags::SetUsageMessage("Catalog Test");
+    // -------------------------------------------------------------------------------------
    // prepare workload
    std::vector<std::string> workload_type; // warm up or benchmark
    std::vector<uint32_t> workloads;
    std::vector<double> zipfs;
    if(FLAGS_YCSB_all_workloads){
-      workloads.push_back(5); 
+      workloads.push_back(5);
       workloads.push_back(50); 
       workloads.push_back(95);
       workloads.push_back(100);
@@ -120,8 +119,9 @@ int main(int argc, char* argv[])
       workloads.push_back(FLAGS_YCSB_read_ratio);
    }
 
-   
-   if(FLAGS_YCSB_warm_up){
+    int shuffleRatio = FLAGS_YCSB_shuffle_ratio;
+
+    if(FLAGS_YCSB_warm_up){
       workload_type.push_back("YCSB_warm_up");
       workload_type.push_back("YCSB_txn");
    }else{
@@ -247,20 +247,23 @@ int main(int argc, char* argv[])
                      K key = zipf_random->rand(zipf_offset);
                      ensure(key < YCSB_tuple_count);
                      V result;
-
-                     if (READ_RATIO == 100 || utils::RandomGenerator::getRandU64(0, 100) < READ_RATIO) {
-                        auto start = utils::getTimePoint();
-                        auto success = tree.lookup_opt(key, result);
-                        ensure(success);
-                        auto end = utils::getTimePoint();
-                        threads::Worker::my().counters.incr_by(profiling::WorkerCounters::latency, (end - start));
-                     } else {
-                        V payload;
-                        utils::RandomGenerator::getRandString(reinterpret_cast<u8*>(&payload), sizeof(V));
-                        auto start = utils::getTimePoint();
-                        tree.insert(key, payload);
-                        auto end = utils::getTimePoint();
-                        threads::Worker::my().counters.incr_by(profiling::WorkerCounters::latency, (end - start));
+                     if(utils::RandomGenerator::getRandU64(0, 100) < FLAGS_YCSB_shuffle_ratio) { // worker will go and shuffle
+                         scalestore.
+                     } else{
+                         if (READ_RATIO == 100 || utils::RandomGenerator::getRandU64(0, 100) < READ_RATIO) {
+                             auto start = utils::getTimePoint();
+                             auto success = tree.lookup_opt(key, result);
+                             ensure(success);
+                             auto end = utils::getTimePoint();
+                             threads::Worker::my().counters.incr_by(profiling::WorkerCounters::latency, (end - start));
+                         } else {
+                             V payload;
+                             utils::RandomGenerator::getRandString(reinterpret_cast<u8*>(&payload), sizeof(V));
+                             auto start = utils::getTimePoint();
+                             tree.insert(key, payload);
+                             auto end = utils::getTimePoint();
+                             threads::Worker::my().counters.incr_by(profiling::WorkerCounters::latency, (end - start));
+                         }
                      }
                      threads::Worker::my().counters.incr(profiling::WorkerCounters::tx_p);
                   }

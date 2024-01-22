@@ -45,11 +45,11 @@ ScaleStore::ScaleStore(){
     bucketManager->bucketManagerMtx = &mtxForBucketManager;
     bucketManagerMessageHandler = std::make_unique<BucketManagerMessageHandler>(*bucketManager);
     cm = std::make_unique<rdma::CM<rdma::InitMessage>>();
-    bm = std::make_unique<storage::Buffermanager>(*cm, nodeId, ssd_fd, &bucketManager);
+    bm = std::make_unique<storage::Buffermanager>(*cm, nodeId, ssd_fd, *bucketManager);
     storage::BM::global = bm.get();
-    mh = std::make_unique<rdma::MessageHandler>(*cm, *bm, nodeId,&bucketManager,&bucketManagerMessageHandler);
+    mh = std::make_unique<rdma::MessageHandler>(*cm, *bm, nodeId,*bucketManager,*bucketManagerMessageHandler);
     workerPool = std::make_unique<threads::WorkerPool>(*cm, nodeId);
-    pp = std::make_unique<storage::PageProvider>(*cm, *bm, mh->mbPartitions, ssd_fd,&bucketManager);
+    pp = std::make_unique<storage::PageProvider>(*cm, *bm, mh->mbPartitions, ssd_fd,*bucketManager);
     rGuard =std::make_unique<RemoteGuard>(mh->connectedClients);
     bmCounters = std::make_unique<profiling::BMCounters>(*bm);
     rdmaCounters = std::make_unique<profiling::RDMACounters>();
