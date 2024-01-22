@@ -12,7 +12,7 @@ namespace storage {
 PageProvider::PageProvider(CM<rdma::InitMessage>& cm,
                            storage::Buffermanager& bm,
                            std::vector<MessageHandler::MailboxPartition>& mhPartitions,
-                           s32 ssd_fd, BucketManager* bucketManager)
+                           s32 ssd_fd, BucketManager& bucketManager)
     : cm(cm),
       bm(bm),
       mhPartitions(mhPartitions),

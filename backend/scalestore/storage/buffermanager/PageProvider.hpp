@@ -73,14 +73,14 @@ struct PageProvider {
    const uint64_t coolingBFLimit;
    s32 ssd_fd;
    std::vector<std::thread> pp_threads;
-   BucketManager* bucketManager;
+   BucketManager& bucketManager;
    void startThread();
    void stopThread();
    void init();
    PageProvider(CM<rdma::InitMessage>& cm,
                 storage::Buffermanager& bm,
                 std::vector<MessageHandler::MailboxPartition>& mhPartitions,
-                s32 ssd_fd, BucketManager* bucketManager);
+                s32 ssd_fd, BucketManager& bucketManager);
    ~PageProvider();
 
 
