@@ -20,7 +20,7 @@
 
 struct BucketManagerMessageHandler{
     std::bitset<CONSENSUS_VEC_SIZE> consensusVec[MESSAGE_ENUM_AMOUNT];
-    BucketManager* bucketManager;
+    BucketManager& bucketManager;
     vector<uint64_t> nodeIdsForMessages;
     set<uint64_t> bucketsToReceiveFromNodes;
     int unionFindTotalAmount;
@@ -29,9 +29,8 @@ struct BucketManagerMessageHandler{
     std::queue<RemoteBucketShuffleJob> remoteBucketShufflingQueue;
 
 public:
-    BucketManagerMessageHandler(BucketManager* bucketManager){
-        this->bucketManager = bucketManager;
-        for (auto & element : this->bucketManager->nodeIdsInCluster) {
+    BucketManagerMessageHandler(BucketManager& bucketManager) : bucketManager(bucketManager){
+        for (auto & element : this->bucketManager.nodeIdsInCluster) {
             nodeIdsForMessages.emplace_back(element);
         }
         unionFindTotalAmount = 0;
