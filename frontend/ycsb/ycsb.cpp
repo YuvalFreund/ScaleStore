@@ -119,7 +119,10 @@ int main(int argc, char* argv[])
       workloads.push_back(FLAGS_YCSB_read_ratio);
    }
 
-    int shuffleRatio = FLAGS_YCSB_shuffle_ratio;
+    uint64_t shuffleRatio = 0;
+    if(FLAGS_YCSB_shuffle_ratio){
+        shuffleRatio = FLAGS_YCSB_shuffle_ratio;
+    }
 
     if(FLAGS_YCSB_warm_up){
       workload_type.push_back("YCSB_warm_up");
