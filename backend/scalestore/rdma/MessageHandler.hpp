@@ -442,12 +442,12 @@ struct MessageHandler {
    // Protocol functor which is injected to Buffermanager find frame;
    template <POSSESSION DESIRED_MODE>
    struct Protocol {
-      void operator()(Guard& g, [[maybe_unused]] NodeID nodeId,BucketManager*&  bucketManager)
+      void operator()(Guard& g, [[maybe_unused]] NodeID nodeId,BucketManager&  bucketManager1)
       {
          // -------------------------------------------------------------------------------------
          // Optimistic
          // -----------------------------------------------------------------------------------
-          if(bucketManager == NULL){} // todo yuval - is there another way to deal with the check?
+          if(bucketManager1 == NULL){} // todo yuval - is there another way to deal with the check?
 
          auto version = g.frame->latch.optimisticLatchOrRestart();
          if (!version.has_value()) {
@@ -486,12 +486,12 @@ struct MessageHandler {
 
    // Protocol functor which is injected to Buffermanager find frame;
    struct Invalidation {
-      void operator()(Guard& g, [[maybe_unused]] NodeID nodeId,BucketManager*&  bucketManager)
+      void operator()(Guard& g, [[maybe_unused]] NodeID nodeId,BucketManager&  bucketManager1)
       {
           // -------------------------------------------------------------------------------------
          // Exclusive
          // -------------------------------------------------------------------------------------
-          if(bucketManager == NULL){} // todo yuval - is there another way to deal with the check?
+          if(bucketManager1 == NULL){} // todo yuval - is there another way to deal with the check?
 
           if (!g.frame->latch.tryLatchExclusive()) {
             g.latchState = LATCH_STATE::UNLATCHED;
@@ -517,12 +517,12 @@ struct MessageHandler {
 
    // Protocol functor which is injected to Buffermanager find frame;
    struct Copy {
-      void operator()(Guard& g, [[maybe_unused]] NodeID nodeId, BucketManager*&  bucketManager)
+      void operator()(Guard& g, [[maybe_unused]] NodeID nodeId, BucketManager&  bucketManager1)
       {
           // -------------------------------------------------------------------------------------
          // Exclusive
          // -------------------------------------------------------------------------------------
-          if(bucketManager == NULL){} // todo yuval - is there another way to deal with the check?
+          if(bucketManager1 == nullptr){} // todo yuval - is there another way to deal with the check?
 
           if (!g.frame->latch.tryLatchShared()) {
             g.latchState = LATCH_STATE::UNLATCHED;
