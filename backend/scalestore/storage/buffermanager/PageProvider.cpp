@@ -177,7 +177,7 @@ void PageProvider::startThread() {
             // local pages shared somewhere else
              //todo Yuval - DONE replace with call to buckets manager
              //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
-             uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
+             uint64_t pidOwner = bucketManager.getNodeIdOfPage(frame.pid);
             if ((pidOwner == bm.nodeId) && (frame.state == BF_STATE::HOT) && (frame.possession == POSSESSION::SHARED) &&
                 !frame.latch.isLatched()) {
                if ((frame.isPossessor(bm.nodeId)) && (frame.possessors.shared.count() > 1)) { return true; }
@@ -245,7 +245,7 @@ void PageProvider::startThread() {
                   }
                   if (!frame.latch.tryDowngradeExclusiveToShared()) return true;
                   ensure(!frame.latch.isLatched());
-                   uint64_t ssdSlotOfPage = bucketManager->getPageSSDSlotInSelfNode(frame.pid);
+                   uint64_t ssdSlotOfPage = bucketManager.getPageSSDSlotInSelfNode(frame.pid);
                    async_write_buffer.add(frame, ssdSlotOfPage, epoch);
                   return true;
                }
@@ -331,7 +331,7 @@ void PageProvider::startThread() {
                       auto version = frame.latch.version.load();
                       frame.latch.unlatchShared();
                       counters.incr(profiling::WorkerCounters::ssd_pages_written);
-                      uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
+                      uint64_t pidOwner = bucketManager.getNodeIdOfPage(frame.pid);
 
                       if (epoch_added != frame.epoch.load()) { return; }
                       if ((frame.pid == EMPTY_PID) || (frame.state == BF_STATE::FREE) || (frame.state == BF_STATE::EVICTED)) { return; }
@@ -592,7 +592,7 @@ void PageProvider::startThread() {
                             ensure(frame.state != BF_STATE::FREE);
                             ensure(frame.state != BF_STATE::EVICTED);
                             // -------------------------------------------------------------------------------------
-                             uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
+                             uint64_t pidOwner = bucketManager.getNodeIdOfPage(frame.pid);
                              if ((pidOwner == bm.nodeId)) {
                                auto rc = evict_owner_page(frame, epoch);
                                if (!rc) break;  // encountered dirty page and we cannot write it to the buffer
