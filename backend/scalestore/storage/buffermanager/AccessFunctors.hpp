@@ -9,7 +9,7 @@ namespace storage {
 struct Exclusive {
    LATCH_STATE type = LATCH_STATE::EXCLUSIVE;
 
-   void operator()(Guard& g, NodeID nodeId, BucketManager*& bucketManager) {
+   void operator()(Guard& g, NodeID nodeId, BucketManager& bucketManager) {
       // -------------------------------------------------------------------------------------
       // Optimistic
       // -------------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ struct Exclusive {
       // -------------------------------------------------------------------------------------
        //todo Yuval -  DONE replace with call to buckets manager
        //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
-       uint64_t pidOwner = bucketManager->getNodeIdOfPage(g.frame->pid);
+       uint64_t pidOwner = bucketManager.getNodeIdOfPage(g.frame->pid);
        if (g.frame->possession != POSSESSION::EXCLUSIVE || !(g.frame->isPossessor(nodeId))) {
          g.state = (pidOwner == nodeId) ? STATE::LOCAL_POSSESSION_CHANGE : STATE::REMOTE_POSSESSION_CHANGE;
       } else
@@ -52,7 +52,7 @@ struct Exclusive {
 };
 struct Shared {
    LATCH_STATE type = LATCH_STATE::SHARED;
-   void operator()(Guard& g, NodeID nodeId, BucketManager*& bucketManager) {
+   void operator()(Guard& g, NodeID nodeId, BucketManager& bucketManager) {
       // -------------------------------------------------------------------------------------
       // Optimistic
       // -------------------------------------------------------------------------------------
@@ -114,7 +114,7 @@ struct Shared {
 struct Optimistic {
    LATCH_STATE type = LATCH_STATE::OPTIMISTIC;
 
-   void operator()(Guard& g, NodeID nodeId, BucketManager*&  bucketManager) {
+   void operator()(Guard& g, NodeID nodeId, BucketManager&  bucketManager) {
       // -------------------------------------------------------------------------------------
       // Optimistic
       // -------------------------------------------------------------------------------------
@@ -130,7 +130,7 @@ struct Optimistic {
        //todo Yuval - Done replace with call to buckets manager
        //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
        // todo - how to actually call it from here?
-       uint64_t pidOwner = bucketManager->getNodeIdOfPage(g.frame->pid);
+       uint64_t pidOwner = bucketManager.getNodeIdOfPage(g.frame->pid);
        if (!(g.frame->isPossessor(nodeId))) {
          g.state = (pidOwner == nodeId) ? STATE::LOCAL_POSSESSION_CHANGE : STATE::REMOTE_POSSESSION_CHANGE;
       } else
