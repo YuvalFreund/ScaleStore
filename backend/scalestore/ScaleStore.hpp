@@ -60,6 +60,10 @@ class ScaleStore
    // -------------------------------------------------------------------------------------
    s32 getSSDFD() { return ssd_fd; }
    // -------------------------------------------------------------------------------------
+   BucketManagerMessageHandler& getBucketManagerMessageHandler() { return *bucketManagerMessageHandler;}
+   // -------------------------------------------------------------------------------------
+   rdma::MessageHandler& getMessageHandler(){return *mh};
+   // -------------------------------------------------------------------------------------
    void startProfiler(profiling::WorkloadInfo& wlInfo) {
       pt.running = true;
       profilingThread.emplace_back(&profiling::ProfilingThread::profile, &pt, nodeId, std::ref(wlInfo), std::ref(*bm));

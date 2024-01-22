@@ -24,7 +24,6 @@ struct BucketManagerMessageHandler{
     vector<uint64_t> nodeIdsForMessages;
     set<uint64_t> bucketsToReceiveFromNodes;
     int unionFindTotalAmount;
-    bool bucketWereMerged;
     std::queue<LocalBucketsMergeJob> localBucketsMergeJobQueue;
     std::queue<RemoteBucketShuffleJob> remoteBucketShufflingQueue;
     std::atomic<unsigned long> localMergeJobsCounter; // todo yuval - replace with an optimisitic lock!

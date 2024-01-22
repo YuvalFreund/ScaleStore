@@ -10,7 +10,6 @@ namespace scalestore {
 namespace rdma {
 MessageHandler::MessageHandler(rdma::CM<InitMessage>& cm, storage::Buffermanager& bm, NodeID nodeId, BucketManager& bucketManager, BucketManagerMessageHandler& bmmh)
     : cm(cm), bm(bm), nodeId(nodeId), mbPartitions(FLAGS_messageHandlerThreads), bucketManager(bucketManager), bucketManagerMessageHandler(bmmh)
-    // todo yuval - avoiding copy constrcutor?
             {
    // partition mailboxes
    size_t n = (FLAGS_worker) * (FLAGS_nodes - 1);
@@ -388,6 +387,7 @@ void MessageHandler::startThread() {
                       auto& incomingBucketMessage = *reinterpret_cast<BucketManagerMessage*>(ctx.request);
                       auto bucketMessage = BucketMessage(incomingBucketMessage.payload);
                       vector<BucketMessage> messagesToSend = bucketManagerMessageHandler.handleIncomingMessage(bucketMessage);
+                      writeMsgsForBucketManager(messagesToSend);
                       for (auto & bucketMsg : messagesToSend) {
                           // todo yuval - check about client id and thread context..
                           auto& preparedBucketMsgToSend = *MessageFabric::createMessage<rdma::BucketManagerMessage>(ctx.response, bucketMsg.messageData);

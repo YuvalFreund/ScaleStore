@@ -439,6 +439,16 @@ struct MessageHandler {
       wqe++;
    }
    // -------------------------------------------------------------------------------------
+   void writeMsgsForBucketManager(vector<BucketMessage> msgs){
+       for (auto & bucketMsg : msgs) {
+           // todo yuval - check about client id and thread context..
+           int clientId=5;
+           auto& ctx = cctxs[clientId];
+           auto& preparedBucketMsgToSend = *MessageFabric::createMessage<rdma::BucketManagerMessage>(ctx.response, bucketMsg.messageData);
+           writeMsg(clientId, preparedBucketMsgToSend,threads::ThreadContext::my().page_handle);
+       }
+   }
+
    // Protocol functor which is injected to Buffermanager find frame;
    template <POSSESSION DESIRED_MODE>
    struct Protocol {
