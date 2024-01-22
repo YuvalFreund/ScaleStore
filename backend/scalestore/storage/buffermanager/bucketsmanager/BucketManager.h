@@ -31,7 +31,7 @@ public:
 
     //////////////INNER VARIABLES /////////////////////
     ///////// locks /////////
-    std::mutex * bucketManagerMtx;
+    std::mutex bucketManagerMtx;
 
     ///////// variables /////////
     uint64_t bucketsNum = 0;
