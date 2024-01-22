@@ -447,7 +447,7 @@ struct MessageHandler {
          // -------------------------------------------------------------------------------------
          // Optimistic
          // -----------------------------------------------------------------------------------
-          if(bucketManager1 == NULL){} // todo yuval - is there another way to deal with the check?
+          if(bucketManager1.nodeIsToBeDeleted){} // todo yuval - is there another way to deal with the check?
 
          auto version = g.frame->latch.optimisticLatchOrRestart();
          if (!version.has_value()) {
@@ -491,7 +491,7 @@ struct MessageHandler {
           // -------------------------------------------------------------------------------------
          // Exclusive
          // -------------------------------------------------------------------------------------
-          if(bucketManager1 == NULL){} // todo yuval - is there another way to deal with the check?
+          if(bucketManager1.nodeIsToBeDeleted){} // todo yuval - is there another way to deal with the check?
 
           if (!g.frame->latch.tryLatchExclusive()) {
             g.latchState = LATCH_STATE::UNLATCHED;
@@ -522,7 +522,7 @@ struct MessageHandler {
           // -------------------------------------------------------------------------------------
          // Exclusive
          // -------------------------------------------------------------------------------------
-          if(bucketManager1 == nullptr){} // todo yuval - is there another way to deal with the check?
+          if(bucketManager1.nodeIsToBeDeleted){} // todo yuval - is there another way to deal with the check?
 
           if (!g.frame->latch.tryLatchShared()) {
             g.latchState = LATCH_STATE::UNLATCHED;
