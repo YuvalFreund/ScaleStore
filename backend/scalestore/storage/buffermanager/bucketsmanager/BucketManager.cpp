@@ -109,7 +109,7 @@ uint64_t BucketManager::getNodeIdOfBucket(uint64_t bucketId,bool fromInitStage, 
 
 // we merge small bucket into the big bucket
 void BucketManager::mergeSmallBucketIntoBigBucket(LocalBucketsMergeJob localBucketMergeJob){
-    bucketManagerMtx->lock();
+    bucketManagerMtx.lock();
     auto bigBucket = bucketsMap.find(localBucketMergeJob.bigBucket);
     auto smallBucket = bucketsMap.find(localBucketMergeJob.smallBucket);
     //std::cout << "Merging buckets! Big bucket:  " << bigBucketId << " Small bucket: " << smallBucketId << std::endl;
@@ -117,12 +117,12 @@ void BucketManager::mergeSmallBucketIntoBigBucket(LocalBucketsMergeJob localBuck
     bigBucket->second.mergeBucketIn(&smallBucket->second);
     disjointSets.Union(localBucketMergeJob.bigBucket,localBucketMergeJob.smallBucket);
     deleteBucket(localBucketMergeJob.smallBucket);
-    bucketManagerMtx->unlock();
+    bucketManagerMtx.unlock();
 }
 
 uint64_t BucketManager::createNewBucket(bool isNewBucketIdNeeded, uint64_t givenBucketId){
     uint64_t retVal;
-    bucketManagerMtx->lock(); //todo yuval - how to get this lock without causing problem
+    bucketManagerMtx.lock(); //todo yuval - how to get this lock without causing problem
     uint64_t newBucketId;
     if(isNewBucketIdNeeded){
         bucketsFreeSSDSlots.pop();
@@ -137,7 +137,7 @@ uint64_t BucketManager::createNewBucket(bool isNewBucketIdNeeded, uint64_t given
     // create new bucket
     bucketsMap.try_emplace(newBucketId, newBucketId, retVal);
     bucketsNum++;
-    bucketManagerMtx->unlock(); //todo yuval - how to get this lock without causing problem
+    bucketManagerMtx.unlock(); //todo yuval - how to get this lock without causing problem
     return retVal;
 }
 
