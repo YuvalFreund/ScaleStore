@@ -58,7 +58,6 @@ class ScaleStore
    // -------------------------------------------------------------------------------------
    NodeID getNodeID() { return nodeId; }
    // -------------------------------------------------------------------------------------
-   BucketManagerMessageHandler getBucketManagerMessageHandler(){return bucketManagerMessageHandler;}
    s32 getSSDFD() { return ssd_fd; }
    // -------------------------------------------------------------------------------------
    void startProfiler(profiling::WorkloadInfo& wlInfo) {
