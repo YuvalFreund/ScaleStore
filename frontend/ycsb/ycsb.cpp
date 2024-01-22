@@ -247,8 +247,7 @@ int main(int argc, char* argv[])
                      K key = zipf_random->rand(zipf_offset);
                      ensure(key < YCSB_tuple_count);
                      V result;
-                     if(utils::RandomGenerator::getRandU64(0, 100) < FLAGS_YCSB_shuffle_ratio) { // worker will go and shuffle
-                         scalestore.
+                     if(utils::RandomGenerator::getRandU64(0, 100) < shuffleRatio) { // worker will go and shuffle
                      } else{
                          if (READ_RATIO == 100 || utils::RandomGenerator::getRandU64(0, 100) < READ_RATIO) {
                              auto start = utils::getTimePoint();
