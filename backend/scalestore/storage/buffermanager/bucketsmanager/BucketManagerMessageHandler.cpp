@@ -247,20 +247,21 @@ vector<BucketMessage> BucketManagerMessageHandler::handleBucketAmountsDataLeave(
     string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleBucketAmountsDataLeave. \n" ;//todo DFD
     logActivity(logMsg);
     vector<BucketMessage> retVal;
-
-    bool isMergeNeeded = bucketManager.updateRequestedBucketNumAndIsMergeNeeded(
-            (uint64_t) msg.messageData[MSG_DATA_START_IDX]);
-    if (isMergeNeeded && bucketWereMerged == false){
-        // todo yuval - add this to the
-        // todo yuval - consider with atomic
-        // todo yuval - when mergign is done, send message
-        bucketWereMerged = true;
-        localBucketsMergeJobQueue = bucketManager. getJobsForMergingOwnBuckets();
-    }
     bool allNodesUpdated = markBitAndReturnAreAllNodesExcludingSelfTrue(msg);
     if(allNodesUpdated){
-        retVal = gossipBucketAmountFinishedLeave();
+        bool isMergeNeeded = bucketManager.updateRequestedBucketNumAndIsMergeNeeded(
+                (uint64_t) msg.messageData[MSG_DATA_START_IDX]);
+        if (isMergeNeeded){
+            bucketWereMerged = true;
+            mtxForLocalJobsQueue.lock();
+            localBucketsMergeJobQueue = bucketManager.getJobsForMergingOwnBuckets();
+            localMergeJobsCounter.store(localBucketsMergeJobQueue.size());
+            mtxForLocalJobsQueue.unlock();
+        }else{
+            retVal = gossipBucketAmountFinishedLeave();
+        }
     }
+
     return retVal;
 
 }
@@ -312,8 +313,10 @@ vector<BucketMessage> BucketManagerMessageHandler::handleApproveNewBucketReadyTo
     uint64_t newNodeSsdStartingAddress = convertBytesBackToUint64(&msg.messageData[SSD_SLOT_START_INDEX]);
     auto receivingNode = (uint64_t) msg.messageData[MSG_SND_IDX];
     RemoteBucketShuffleJob remoteBucketShuffleJob = RemoteBucketShuffleJob(bucketToSend,receivingNode,newNodeSsdStartingAddress);
-    remoteBucketShufflingQueue.push(remoteBucketShuffleJob); //todo yuval - lock!
-    //sendBucketToNode(remoteBucketShuffleJob); // todo yuval - this needs to be replaced with adding to some queue
+    mtxForShuffleJobsQueue.lock();
+    remoteBucketShufflingQueue.push(remoteBucketShuffleJob);
+    remoteShuffleJobsCounter++;
+    mtxForShuffleJobsQueue.unlock();
     return retVal;
 
 }
@@ -602,7 +605,7 @@ bool BucketManagerMessageHandler::markBitAndReturnAreAllNodesIncludingSelfTrue(c
     }
 }
 
-///////// buckets sending functions functions /////////
+///////// buckets sending functions /////////
 
 vector<BucketMessage> BucketManagerMessageHandler::prepareOtherNodesForIncomingBuckets(){ //pair is <bucket id , node>
     string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "prepareOtherNodesForIncomingBuckets. \n" ;//todo DFD
@@ -701,7 +704,7 @@ vector<BucketMessage> BucketManagerMessageHandler::collectMessagesToGossip(Bucke
     vector<BucketMessage> retVal;
 
     for(uint64_t nodeId: nodeIdsForMessages){
-        BucketMessage bucketMsg = BucketMessage(msg.messageData);
+        auto bucketMsg = BucketMessage(msg.messageData);
         msg.messageData[MSG_RCV_IDX] = (uint8_t) nodeId;
         retVal.emplace_back(bucketMsg);
         sendMessage(msg); // todo -DFD
@@ -848,4 +851,46 @@ uint64_t BucketManagerMessageHandler::convertBytesBackToBucketId(uint8_t input[6
     return retVal;
 }
 
+vector<BucketMessage> BucketManagerMessageHandler::checkAndMerge2BucketsLocally(){
+    // todo yuval - is there a less time consuming way of doing this?
+    vector<BucketMessage> retVal;
+    bool updateMessageIsRequired;
+    unsigned long queueSize = localMergeJobsCounter.load();
+    if(queueSize > 0){
+        mtxForLocalJobsQueue.lock();
+        if(localBucketsMergeJobQueue.empty() == false){
+            LocalBucketsMergeJob bucketsMergeJob = localBucketsMergeJobQueue.front();
+            localBucketsMergeJobQueue.pop();
+            localMergeJobsCounter.store(localBucketsMergeJobQueue.size());
+            updateMessageIsRequired = localBucketsMergeJobQueue.empty();
+            mtxForLocalJobsQueue.unlock();
+            bucketManager.mergeSmallBucketIntoBigBucket(bucketsMergeJob);
+            if(updateMessageIsRequired){
+                retVal = gossipBucketAmountFinishedLeave();
+            }
+        }else{
+            mtxForLocalJobsQueue.unlock();
+        }
+    }
+    return retVal;
+}
+vector<BucketMessage> BucketManagerMessageHandler::checkAndShuffleBucketToRemoteNode(){
+    // todo yuval - is there a less time consuming way of doing this?
 
+    vector<BucketMessage> retVal;
+    unsigned long queueSize = remoteShuffleJobsCounter.load();
+    if(queueSize > 0){
+        mtxForShuffleJobsQueue.lock();
+        if(remoteBucketShufflingQueue.empty() == false){
+            RemoteBucketShuffleJob shuffleJob = remoteBucketShufflingQueue.front();
+            remoteBucketShufflingQueue.pop();
+            remoteShuffleJobsCounter.store(remoteBucketShufflingQueue.size());
+            mtxForShuffleJobsQueue.unlock();
+            sendBucketToNode(shuffleJob);
+            retVal = gossipBucketMoved(shuffleJob.bucketId,shuffleJob.nodeId);
+        }else{
+            mtxForShuffleJobsQueue.unlock();
+        }
+    }
+    return retVal;
+}

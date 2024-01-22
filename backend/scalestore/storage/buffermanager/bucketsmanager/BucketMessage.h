@@ -21,5 +21,6 @@ struct BucketMessage {
         }
         messageEnum = static_cast<MessagesEnum>((int) messageData[MSG_ENUM_IDX]);
     }
+    BucketMessage();
 };
 #endif //LOCALTHESIS_BUCKETMESSAGE_H

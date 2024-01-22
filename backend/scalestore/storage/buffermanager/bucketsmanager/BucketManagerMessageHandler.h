@@ -27,6 +27,9 @@ struct BucketManagerMessageHandler{
     bool bucketWereMerged;
     std::queue<LocalBucketsMergeJob> localBucketsMergeJobQueue;
     std::queue<RemoteBucketShuffleJob> remoteBucketShufflingQueue;
+    std::atomic<unsigned long> localMergeJobsCounter; // todo yuval - replace with an optimisitic lock!
+    std::atomic<unsigned long> remoteShuffleJobsCounter; // todo yuval - replace with an optimisitic lock!
+
 
 public:
     BucketManagerMessageHandler(BucketManager& bucketManager) : bucketManager(bucketManager){
@@ -37,8 +40,8 @@ public:
         bucketWereMerged = false;
     }
     BucketManagerMessageHandler();
-    std::mutex * mtxForLocalJobsQueue;
-    std::mutex * mtxForShuffleJobsQueue;
+    std::mutex mtxForLocalJobsQueue;
+    std::mutex mtxForShuffleJobsQueue;
     std::mutex * firstMtx;//todo DFD
     std::mutex * secondMtx;//todo DFD
     std::mutex * thirdMtx;//todo DFD
@@ -139,6 +142,10 @@ public:
     void breakDownBucketIdToBytes(uint64_t input, uint8_t retVal[6]);
     uint64_t convertBytesBackToUint64(uint8_t input[8]);
     uint64_t convertBytesBackToBucketId(uint8_t input[6]);
+
+    vector<BucketMessage> checkAndMerge2BucketsLocally();
+    vector<BucketMessage> checkAndShuffleBucketToRemoteNode();
+
 };
 
 #endif //LOCALTHESIS_BUCKETMANAGERMESSAGEHANDLER_H
