@@ -63,7 +63,7 @@ restart:
    g.frame->latch.latchExclusive(); // POSSIBLE ERROR?
    ensure(g.frame->pid == EMPTY_PID);
     //todo Yuval - DONE replace with call to buckets manager
-    uint64_t pidOwner = bucketManager->getNodeIdOfPage(g.frame->pid);
+    uint64_t pidOwner = bucketManager.getNodeIdOfPage(g.frame->pid);
     g.frame->state =
        (pidOwner == nodeId) ? BF_STATE::IO_SSD : BF_STATE::IO_RDMA;  // important to modify state before releasing the hashtable latch
    g.frame->page = page;
