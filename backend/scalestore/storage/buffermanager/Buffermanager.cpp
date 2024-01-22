@@ -7,7 +7,7 @@
 // -------------------------------------------------------------------------------------
 namespace scalestore {
 namespace storage {
-Buffermanager::Buffermanager(rdma::CM<rdma::InitMessage>& cm, NodeID nodeId, s32 ssd_fd,BucketManager* bucketManager)
+Buffermanager::Buffermanager(rdma::CM<rdma::InitMessage>& cm, NodeID nodeId, s32 ssd_fd,BucketManager& bucketManager)
     : dramPoolSize(FLAGS_dramGB * 1024 * 1024 * 1024),
       dramPoolNumberPages(dramPoolSize / sizeof(Page)),
       ssdSlotsSize(((FLAGS_ssd_gib * 1024 * 1024 * 1024) / sizeof(Page))),
@@ -124,7 +124,7 @@ Buffermanager::Buffermanager(rdma::CM<rdma::InitMessage>& cm, NodeID nodeId, s32
 BufferFrame& Buffermanager::newPage() {
    //-------------------------------------------------------------------------------------
    //PID pid = pidFreeList.pop(threads::ThreadContext::my().pid_handle); yuval
-   PID pid = PID(this->bucketManager->addNewPage());
+   PID pid = PID(bucketManager.addNewPage());
    Page* page = pageFreeList.pop(threads::ThreadContext::my().page_handle);
    BufferFrame& frame =insertFrame(pid, [&](BufferFrame& frame){
                   frame.latch.latchExclusive();
@@ -168,12 +168,12 @@ void Buffermanager::reclaimPage(BufferFrame& frame) {
    ensure(frame.latch.isLatched());
    //todo Yuval - DONE replace with call to buckets manager
    //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
-   uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
+   uint64_t pidOwner = bucketManager.getNodeIdOfPage(frame.pid);
    if(pidOwner == nodeId){
       removeFrame(frame, [&](BufferFrame& frame){
                         // todo yuval - DONE remove page from bucket manager
                          //pidFreeList.push(frame.pid, threads::ThreadContext::my().pid_handle);
-                         bucketManager->removePage(frame.pid);
+                         bucketManager.removePage(frame.pid);
                          pageFreeList.push(frame.page, threads::ThreadContext::my().page_handle);
                       });
    }else{
@@ -190,7 +190,7 @@ void Buffermanager::writeAllPages() {
       for (size_t b_i = bf_b; b_i < bf_e; ++b_i) {
          auto& frame = bfs[b_i];
           //todo Yuval DONE- replace with call to buckets manager
-          uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
+          uint64_t pidOwner = bucketManager.getNodeIdOfPage(frame.pid);
           if ((pidOwner == nodeId && frame.state == BF_STATE::HOT)) {
             if (!frame.latch.tryLatchExclusive()) {
                std::cerr << "Background thread working and latched page " << std::endl;
@@ -198,7 +198,7 @@ void Buffermanager::writeAllPages() {
                continue;
             }
             //todo yuval DONE - replace with call to buckets manager
-              uint64_t ssdSlotOfPage = bucketManager->getPageSSDSlotInSelfNode(frame.pid);
+              uint64_t ssdSlotOfPage = bucketManager.getPageSSDSlotInSelfNode(frame.pid);
               if (frame.dirty) {
                const int ret = pwrite(ssd_fd, frame.page, PAGE_SIZE, ssdSlotOfPage*PAGE_SIZE);
                ensure(ret == PAGE_SIZE);
@@ -212,7 +212,7 @@ void Buffermanager::writeAllPages() {
          if (!frame.latch.tryLatchExclusive()) { throw std::runtime_error("still latched"); }
          if (frame.dirty) {
              //todo yuval DONE- replace with call to buckets manager
-             uint64_t ssdSlotOfPage = bucketManager->getPageSSDSlotInSelfNode(frame.pid);
+             uint64_t ssdSlotOfPage = bucketManager.getPageSSDSlotInSelfNode(frame.pid);
             const int ret = pwrite(ssd_fd, frame.page, PAGE_SIZE, ssdSlotOfPage*PAGE_SIZE);
             ensure(ret == PAGE_SIZE);
             frame.dirty = false;
@@ -228,7 +228,7 @@ void Buffermanager::readPageSync(PID pid, uint8_t* destination) {
    do {
        //todo yuval DONE- replace with call to buckets manager
        //todo -  uint64_t pidOwner = bucketManager->getPageSSDSlotInSelfNode(frame.pid);
-       uint64_t ssdSlotOfPage = bucketManager->getPageSSDSlotInSelfNode(pid);
+       uint64_t ssdSlotOfPage = bucketManager.getPageSSDSlotInSelfNode(pid);
 
        const int bytes_read = pread(ssd_fd, destination, bytes_left, ssdSlotOfPage * PAGE_SIZE + (PAGE_SIZE - bytes_left));
       assert(bytes_left > 0);

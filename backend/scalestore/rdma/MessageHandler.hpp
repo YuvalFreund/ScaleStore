@@ -79,7 +79,7 @@ struct MessageHandler {
       std::mutex inflightCRMutex;
    };
    // -------------------------------------------------------------------------------------
-   MessageHandler(rdma::CM<InitMessage>& cm, storage::Buffermanager& bm, NodeID nodeId, BucketManager* bucketManager,BucketManagerMessageHandler* bmmh);
+   MessageHandler(rdma::CM<InitMessage>& cm, storage::Buffermanager& bm, NodeID nodeId, BucketManager& bucketManager,BucketManagerMessageHandler& bmmh);
    ~MessageHandler();
    // -------------------------------------------------------------------------------------
    void startThread();
@@ -149,7 +149,7 @@ struct MessageHandler {
          guard.frame->epoch = bm.globalEpoch.load();
          guard.frame->possession = POSSESSION::SHARED;
          guard.frame->setPossessor(nodeId);
-         uint64_t ssdSlotOfPage = bucketManager->getPageSSDSlotInSelfNode(guard.frame->pid.id);
+         uint64_t ssdSlotOfPage = bucketManager.getPageSSDSlotInSelfNode(guard.frame->pid.id);
           guard.frame->dirty = false;
          async_read_buffer.add(*guard.frame, guard.frame->pid, m_i, true,ssdSlotOfPage);
          counters.incr(profiling::WorkerCounters::mh_msgs_restarted);

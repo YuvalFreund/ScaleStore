@@ -232,7 +232,7 @@ restart:
          uintptr_t pageOffset = (uintptr_t)guard.frame->page;
          // -------------------------------------------------------------------------------------
          //todo Yuval DONE- replace with call to buckets manager
-          uint64_t pidOwner = bucketManager->getNodeIdOfPage(pid);
+          uint64_t pidOwner = bucketManager.getNodeIdOfPage(pid);
           auto& contextT = threads::Worker::my().cctxs[pidOwner];
          auto& request = *MessageFabric::createMessage<PossessionRequest>(
              contextT.outgoing, ((functor.type == LATCH_STATE::EXCLUSIVE) ? MESSAGE_TYPE::PRX : MESSAGE_TYPE::PRS), pid, pageOffset);
@@ -321,7 +321,7 @@ restart:
       case STATE::LOCAL_POSSESSION_CHANGE: {
           //todo Yuval DONE- replace with call to buckets manager
 
-          uint64_t pidOwner = bucketManager->getNodeIdOfPage(pid);
+          uint64_t pidOwner = bucketManager.getNodeIdOfPage(pid);
 
           ensure(pidOwner == nodeId);
          ensure(guard.frame->latch.isLatched());
@@ -421,7 +421,7 @@ restart:
          guard.frame->pVersion++;  // update here to prevent distributed deadlock
          // -------------------------------------------------------------------------------------
           //todo Yuval DONE - replace with call to buckets manager
-          uint64_t pidOwner = bucketManager->getNodeIdOfPage(pid);
+          uint64_t pidOwner = bucketManager.getNodeIdOfPage(pid);
           auto& contextT = threads::Worker::my().cctxs[pidOwner];
          auto& request = *MessageFabric::createMessage<PossessionUpdateRequest>(contextT.outgoing, pid, pVersionOld);
          // -------------------------------------------------------------------------------------
