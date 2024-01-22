@@ -255,7 +255,7 @@ vector<BucketMessage> BucketManagerMessageHandler::handleBucketAmountsDataLeave(
         // todo yuval - consider with atomic
         // todo yuval - when mergign is done, send message
         bucketWereMerged = true;
-        bucketManager-> mergeOwnBuckets();
+        localBucketsMergeJobQueue = bucketManager-> getJobsForMergingOwnBuckets();
     }
     bool allNodesUpdated = markBitAndReturnAreAllNodesExcludingSelfTrue(msg);
     if(allNodesUpdated){
@@ -312,7 +312,8 @@ vector<BucketMessage> BucketManagerMessageHandler::handleApproveNewBucketReadyTo
     uint64_t newNodeSsdStartingAddress = convertBytesBackToUint64(&msg.messageData[SSD_SLOT_START_INDEX]);
     auto receivingNode = (uint64_t) msg.messageData[MSG_SND_IDX];
     RemoteBucketShuffleJob remoteBucketShuffleJob = RemoteBucketShuffleJob(bucketToSend,receivingNode,newNodeSsdStartingAddress);
-    sendBucketToNode(remoteBucketShuffleJob); // todo yuval - this needs to be replaced with adding to some queue
+    remoteBucketShufflingQueue.push(remoteBucketShuffleJob); //todo yuval - lock!
+    //sendBucketToNode(remoteBucketShuffleJob); // todo yuval - this needs to be replaced with adding to some queue
     return retVal;
 
 }

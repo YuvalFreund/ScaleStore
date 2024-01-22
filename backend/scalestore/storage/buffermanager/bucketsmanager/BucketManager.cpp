@@ -293,18 +293,20 @@ void BucketManager::updateConsistentHashingData(bool newNodeJoined,uint64_t node
     initConsistentHashingInfo(false);
 }
 
-void BucketManager::mergeOwnBuckets() {
+std::queue<LocalBucketsMergeJob> BucketManager::getJobsForMergingOwnBuckets() {
+    std::queue<LocalBucketsMergeJob> retVal;
     for (auto nodeIdForMergingBuckets : mergableBucketsForEachNode){
         if(nodeIdForMergingBuckets.first == nodeId){
             for(auto bucketsPair : nodeIdForMergingBuckets.second){
                 if(bucketsPair.second != BUCKET_ALREADY_MERGED){
-
-                    //mergeSmallBucketIntoBigBucket(bucketsPair.first,bucketsPair.second);
+                    LocalBucketsMergeJob jobToAdd = LocalBucketsMergeJob(bucketsPair.first,bucketsPair.second);
+                    retVal.push(jobToAdd);
                 }
             }
             break;
         }
     }
+    return retVal;
 }
 
 void BucketManager::printNodeData() {

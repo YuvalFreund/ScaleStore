@@ -156,7 +156,7 @@ public:
 
     bool updateRequestedBucketNumAndIsMergeNeeded(uint64_t newBucketsAmount);
 
-    void mergeOwnBuckets();
+    std::queue<LocalBucketsMergeJob> getJobsForMergingOwnBuckets();
 
     void atomicallyMoveToNormal();
 

@@ -38,7 +38,8 @@ public:
         bucketWereMerged = false;
     }
     BucketManagerMessageHandler();
-
+    std::mutex * mtxForLocalJobsQueue;
+    std::mutex * mtxForShuffleJobsQueue;
     std::mutex * firstMtx;//todo DFD
     std::mutex * secondMtx;//todo DFD
     std::mutex * thirdMtx;//todo DFD
