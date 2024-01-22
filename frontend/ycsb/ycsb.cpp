@@ -121,9 +121,11 @@ int main(int argc, char* argv[])
    }
 
     uint64_t shuffleRatio = 0;
+    // todo yuval - how to get this flag working?
+    /*
     if(FLAGS_YCSB_shuffle_ratio){
         shuffleRatio = FLAGS_YCSB_shuffle_ratio;
-    }
+    }*/
 
     if(FLAGS_YCSB_warm_up){
       workload_type.push_back("YCSB_warm_up");
