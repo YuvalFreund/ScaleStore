@@ -70,9 +70,10 @@ vector<BucketMessage> BucketManagerMessageHandler::handleIncomingMessage(BucketM
         case APPROVE_NEW_BUCKET_READY_TO_RECEIVE:
             retVal = handleApproveNewBucketReadyToReceive(msg);
             break;
-        case FINISHED_BUCKET:
-            retVal = handleFinishBucketReceive(msg);
+        case ADD_PAGE_ID_TO_BUCKET:
+            retVal = handleAddPageIdToBucket(msg);
             break;
+
         case BUCKET_MOVED_TO_NEW_NODE:
             retVal = handleBucketMovedToNewNode(msg);
             break;
@@ -252,7 +253,6 @@ vector<BucketMessage> BucketManagerMessageHandler::handleBucketAmountsDataLeave(
         bool isMergeNeeded = bucketManager.updateRequestedBucketNumAndIsMergeNeeded(
                 (uint64_t) msg.messageData[MSG_DATA_START_IDX]);
         if (isMergeNeeded){
-            bucketWereMerged = true;
             mtxForLocalJobsQueue.lock();
             localBucketsMergeJobQueue = bucketManager.getJobsForMergingOwnBuckets();
             localMergeJobsCounter.store(localBucketsMergeJobQueue.size());
@@ -320,39 +320,35 @@ vector<BucketMessage> BucketManagerMessageHandler::handleApproveNewBucketReadyTo
     return retVal;
 
 }
-
-vector<BucketMessage> BucketManagerMessageHandler::handleFinishBucketReceive(BucketMessage msg){
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleFinishBucketReceive. Buckets left: " + std::to_string( bucketsToReceiveFromNodes.size()) +"\n";//todo DFD
-    logActivity(logMsg);
-    vector<BucketMessage> retVal;
-
-    uint64_t finishedBucket = convertBytesBackToUint64(&msg.messageData[BUCKET_ID_START_INDEX]);
-    bucketsToReceiveFromNodes.erase(finishedBucket);
-    if(bucketsToReceiveFromNodes.empty()){
-        string finishMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "FINISHED RECEIVING ALL BUCKETS!. \n" ;//todo DFD
-        logActivity(finishMsg);
-        uint8_t messageData[MESSAGE_SIZE];
-        messageData[MSG_ENUM_IDX] = (uint8_t) NODE_FINISHED_RECEIVING_BUCKETS;
-        messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
-        auto finishedReceivingBucketsMsg = BucketMessage(messageData);
-        retVal = collectMessagesToGossip(finishedReceivingBucketsMsg);
-        //todo case for the last one - maybe DFD?
-        consensusVec[NODE_FINISHED_RECEIVING_BUCKETS].set(bucketManager.nodeId - 1);
-        if(consensusVec[NODE_FINISHED_RECEIVING_BUCKETS].all()) {
-            moveAtomicallyToNormalState();
-        }
-    }
-    return retVal;
+vector<BucketMessage> BucketManagerMessageHandler::handleAddPageIdToBucket(BucketMessage msg){
 
 }
+
 
 vector<BucketMessage> BucketManagerMessageHandler::handleBucketMovedToNewNode(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager.nodeId) + std::to_string(msg.messageEnum) + " log: " + "handleBucketMovedToNewNode \n";//todo DFD
     logActivity(logMsg);
     vector<BucketMessage> retVal;
 
-    //uint64_t bucketId = convertBytesBackToUint64(&msg.messageData[BUCKET_ID_START_INDEX]);
-    //uint64_t nodeId = convertBytesBackToUint64(&msg.messageData[NODE_ID_START_INDEX]);
+    uint64_t bucketId = convertBytesBackToUint64(&msg.messageData[BUCKET_ID_START_INDEX]);
+    uint64_t nodeId = convertBytesBackToUint64(&msg.messageData[NODE_ID_START_INDEX]);
+    if(nodeId == bucketManager.nodeId){
+        bucketsToReceiveFromNodes.erase(bucketId);
+        if(bucketsToReceiveFromNodes.empty()){
+            string finishMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "FINISHED RECEIVING ALL BUCKETS!. \n" ;//todo DFD
+            logActivity(finishMsg);
+            uint8_t messageData[MESSAGE_SIZE];
+            messageData[MSG_ENUM_IDX] = (uint8_t) NODE_FINISHED_RECEIVING_BUCKETS;
+            messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
+            auto finishedReceivingBucketsMsg = BucketMessage(messageData);
+            retVal = collectMessagesToGossip(finishedReceivingBucketsMsg);
+            //todo case for the last one - maybe DFD?
+            consensusVec[NODE_FINISHED_RECEIVING_BUCKETS].set(bucketManager.nodeId - 1);
+            if(consensusVec[NODE_FINISHED_RECEIVING_BUCKETS].all()) {
+                moveAtomicallyToNormalState();
+            }
+        }
+    }
     // todo yuval implement this properly- this to be locked!
     //bucketManager.bucketIdToNodeCache[bucketId] = nodeId;
     return retVal;
@@ -851,43 +847,37 @@ uint64_t BucketManagerMessageHandler::convertBytesBackToBucketId(uint8_t input[6
     return retVal;
 }
 
-vector<BucketMessage> BucketManagerMessageHandler::checkAndMerge2BucketsLocally(){
+LocalBucketsMergeJob BucketManagerMessageHandler::getMergeJob(){
     // todo yuval - is there a less time consuming way of doing this?
-    vector<BucketMessage> retVal;
-    bool updateMessageIsRequired;
     unsigned long queueSize = localMergeJobsCounter.load();
+    LocalBucketsMergeJob retVal;
     if(queueSize > 0){
         mtxForLocalJobsQueue.lock();
         if(localBucketsMergeJobQueue.empty() == false){
-            LocalBucketsMergeJob bucketsMergeJob = localBucketsMergeJobQueue.front();
+            retVal = localBucketsMergeJobQueue.front();
             localBucketsMergeJobQueue.pop();
             localMergeJobsCounter.store(localBucketsMergeJobQueue.size());
-            updateMessageIsRequired = localBucketsMergeJobQueue.empty();
+            retVal.lastMerge = localBucketsMergeJobQueue.empty();
             mtxForLocalJobsQueue.unlock();
-            bucketManager.mergeSmallBucketIntoBigBucket(bucketsMergeJob);
-            if(updateMessageIsRequired){
-                retVal = gossipBucketAmountFinishedLeave();
-            }
         }else{
             mtxForLocalJobsQueue.unlock();
         }
     }
     return retVal;
 }
-vector<BucketMessage> BucketManagerMessageHandler::checkAndShuffleBucketToRemoteNode(){
+RemoteBucketShuffleJob BucketManagerMessageHandler::getShuffleJob(){
     // todo yuval - is there a less time consuming way of doing this?
 
-    vector<BucketMessage> retVal;
+    RemoteBucketShuffleJob retVal;
     unsigned long queueSize = remoteShuffleJobsCounter.load();
     if(queueSize > 0){
         mtxForShuffleJobsQueue.lock();
         if(remoteBucketShufflingQueue.empty() == false){
-            RemoteBucketShuffleJob shuffleJob = remoteBucketShufflingQueue.front();
+            retVal = remoteBucketShufflingQueue.front();
+            retVal.needShuffle = true;
             remoteBucketShufflingQueue.pop();
             remoteShuffleJobsCounter.store(remoteBucketShufflingQueue.size());
             mtxForShuffleJobsQueue.unlock();
-            sendBucketToNode(shuffleJob);
-            retVal = gossipBucketMoved(shuffleJob.bucketId,shuffleJob.nodeId);
         }else{
             mtxForShuffleJobsQueue.unlock();
         }

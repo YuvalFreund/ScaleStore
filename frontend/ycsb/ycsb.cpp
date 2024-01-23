@@ -2,6 +2,8 @@
 #include "scalestore/Config.hpp"
 #include "scalestore/ScaleStore.hpp"
 #include "scalestore/rdma/CommunicationManager.hpp"
+#include "scalestore/storage/buffermanager/bucketsmanager/BucketShuffler.h"
+
 #include "scalestore/storage/datastructures/BTree.hpp"
 #include "scalestore/utils/RandomGenerator.hpp"
 #include "scalestore/utils/ScrambledZipfGenerator.hpp"
@@ -242,9 +244,10 @@ int main(int argc, char* argv[])
 
             YCSB_workloadInfo experimentInfo{TYPE, YCSB_tuple_count, READ_RATIO, ZIPF, (FLAGS_YCSB_local_zipf?"local_zipf":"global_zipf")};
             scalestore.startProfiler(experimentInfo);
-
+            storage::Buffermanager& bufferManager = scalestore.getBuffermanager();
             BucketManagerMessageHandler& bmmh = scalestore.getBucketManagerMessageHandler();
             rdma::MessageHandler& mh = scalestore.getMessageHandler();
+            BucketManager& bucketManager = bmmh.bucketManager;
             for (uint64_t t_i = 0; t_i < FLAGS_worker; ++t_i) {
                scalestore.getWorkerPool().scheduleJobAsync(t_i, [&, t_i]() {
                   running_threads_counter++;
@@ -258,16 +261,23 @@ int main(int argc, char* argv[])
                      V result;
                       // worker will try to merge locally - and then to shuffle bucket to remote node
                      if(utils::RandomGenerator::getRandU64(0, 100) < shuffleRatio) { // worker will go and shuffle
-                         vector<BucketMessage> updateMessagesFinishedLocalMerge = bmmh.checkAndMerge2BucketsLocally();
-
-                         if(updateMessagesFinishedLocalMerge.empty() == false){
-                            mh.writeMsgsForBucketManager(updateMessagesFinishedLocalMerge);
+                         LocalBucketsMergeJob mergeJob = bmmh.getMergeJob();
+                         if(mergeJob.needMerge){
+                             BucketShuffler::merge2bucketsLocally();
+                         }
+                         if(mergeJob.lastMerge){
+                             vector<BucketMessage> toGossip = bmmh.gossipBucketAmountFinishedLeave();
+                             mh.writeMsgsForBucketManager(toGossip);
                          }
 
-                         vector<BucketMessage> updateMessageBucketIsMoved =bmmh.checkAndShuffleBucketToRemoteNode();
-                         if(updateMessageBucketIsMoved.empty() == false){
-                             mh.writeMsgsForBucketManager(updateMessageBucketIsMoved);
+                         RemoteBucketShuffleJob remoteJob = bmmh.getShuffleJob();
+                         if(remoteJob.needShuffle){
+                             BucketShuffler::sendBucketToNode(remoteJob,bucketManager,bmmh,bufferManager);
+                             vector<BucketMessage> toGossip = bmmh.gossipBucketMoved(remoteJob.bucketId,remoteJob.nodeId);
+                             mh.writeMsgsForBucketManager(toGossip);
+
                          }
+
                      } else{
                          if (READ_RATIO == 100 || utils::RandomGenerator::getRandU64(0, 100) < READ_RATIO) {
                              auto start = utils::getTimePoint();

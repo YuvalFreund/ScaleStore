@@ -33,10 +33,6 @@ public:
         }
     }
 
-    uint64_t getSsdSlotStart() const {
-        return SSDSlotStart;
-    }
-
 
     uint64_t getBucketId() const {
         return BucketId;
@@ -98,17 +94,6 @@ public:
         return retVal;
     }
 
-    // this function returns the SSD spot for this page
-    // no need to lock! this is called only from the merging function
-    uint64_t addPageWithPageIdWithNoLock(uint64_t newPageId){
-        uint64_t retVal;
-        auto freeSlot = freeSlots.top();
-        pageIdToSlot.insert(std::pair<uint64_t,uint16_t>(newPageId, freeSlot));
-        retVal = SSDSlotStart + freeSlot ;
-        freeSlots.pop();
-        return retVal;
-        // eventually also actually move page
-    }
 
     void removePageId(uint64_t pageId){
         bucketLock.lock();
@@ -123,15 +108,6 @@ public:
         bucketLock.unlock();
     }
 
-    void removePageIdNoLock(uint64_t pageId){
-        auto iter = pageIdToSlot.find(pageId);
-        if(iter == pageIdToSlot.end()){
-            throw std::runtime_error("Page doesnt exist");
-        }
-        auto enterValue  = iter->second;
-        pageIdToSlot.erase(pageId);
-        freeSlots.push(enterValue);
-    }
 
     uint64_t getPageSSDSlotByPageId(uint64_t pageId){
         bucketLock.lock();
@@ -154,9 +130,7 @@ public:
     bool isBucketFull(){
         return freeSlots.empty();
     }
-    bool isBucketEmpty(){
-        return freeSlots.size() == maxPagesByParameter;
-    }
+
     void printBucketData(){
         std::cout<<"Bucket: " << BucketId << " has "<< getPagesNumInBucket() <<" pages, and "<< freeSlots.size() << " free slots." << std::endl;
     }
@@ -168,17 +142,7 @@ public:
     int getPagesNumInBucket(){
         return maxPagesByParameter - freeSlots.size();
     }
-    uint16_t getSlotIdFromPageId(uint64_t pageId){
-        return pageIdToSlot.find(pageId)->second;
-    }
 
-    struct bucketsCompare
-    {
-        inline bool operator() ( Bucket& lhs, Bucket& rhs)
-        {
-            return (lhs.getPagesNumInBucket() < rhs.getPagesNumInBucket());
-        }
-    };
 
     void printBucketDataVerbose(){
         std::cout<<"Printing verbose bucket data. Bucket id: "<<getBucketId() << std::endl;
@@ -193,18 +157,6 @@ public:
         pageIdToSlot.clear();
     }
 
-    uint64_t getPageSSDSlotByPageIdNoLock(uint64_t pageId){
-        uint64_t retVal;
-        uint64_t offset;
-        try {
-            offset = pageIdToSlot.at(pageId);
-        }catch (const std::out_of_range& e) {
-            bucketLock.unlock();
-            throw std::runtime_error("Page doesnt exist!");
-        }
-        retVal = SSDSlotStart + offset ;
-        return retVal;
-    }
 
     void initBucketSizeDataByParameter(int bucketIdByteSize){
         switch(bucketIdByteSize){

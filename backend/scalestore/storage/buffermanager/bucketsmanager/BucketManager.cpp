@@ -28,7 +28,7 @@ uint64_t BucketManager::addNewPage(){
             }
         }
         if(tryNum == MAX_TRY_TO_ADD_TO_BUCKET){
-            // todo - how to lock here the whole system when adding a bucket
+            // todo yuval - this will be replaced with b-tree
             createNewBucket(false,ZERO);
         }
     }
@@ -50,9 +50,19 @@ void BucketManager::removePage(uint64_t pageId){
 uint64_t BucketManager::getPageSSDSlotInSelfNode(uint64_t pageId) {
     uint64_t retVal;
     uint64_t bucketId = pageId & bucketIdMaskByParameter;
-    // TODO YUVAL - THIS CAN BE REPLACED WITH SOME OPTIMISTIC WAY SKIPPING LOOK UP
-    uint64_t realBucketId = disjointSets.find(bucketId);
-    retVal = bucketsMap.find(realBucketId)->second.getPageSSDSlotByPageId(pageId); // this is the actual mapping
+    auto checkBucket = bucketsMap.find(bucketId); //this is not only an optimization but important for when merging buckets
+    if(checkBucket != bucketsMap.end()){
+        try{
+            retVal = checkBucket->second.getPageSSDSlotByPageId(pageId); // this is the actual mapping
+        }catch (const runtime_error& error){
+            uint64_t updatedBucketId = disjointSets.find(bucketId);
+            retVal = bucketsMap.find(updatedBucketId)->second.getPageSSDSlotByPageId(pageId);
+        }
+
+    }else{
+        uint64_t realBucketId = disjointSets.find(bucketId);
+        retVal = bucketsMap.find(realBucketId)->second.getPageSSDSlotByPageId(pageId);
+    }
 
     return retVal;
 }
@@ -122,7 +132,7 @@ void BucketManager::mergeSmallBucketIntoBigBucket(LocalBucketsMergeJob localBuck
 
 uint64_t BucketManager::createNewBucket(bool isNewBucketIdNeeded, uint64_t givenBucketId){
     uint64_t retVal;
-    bucketManagerMtx.lock(); //todo yuval - how to get this lock without causing problem
+    bucketManagerMtx.lock();
     uint64_t newBucketId;
     if(isNewBucketIdNeeded){
         bucketsFreeSSDSlots.pop();
@@ -137,7 +147,7 @@ uint64_t BucketManager::createNewBucket(bool isNewBucketIdNeeded, uint64_t given
     // create new bucket
     bucketsMap.try_emplace(newBucketId, newBucketId, retVal);
     bucketsNum++;
-    bucketManagerMtx.unlock(); //todo yuval - how to get this lock without causing problem
+    bucketManagerMtx.unlock();
     return retVal;
 }
 

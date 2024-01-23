@@ -36,7 +36,6 @@ public:
             nodeIdsForMessages.emplace_back(element);
         }
         unionFindTotalAmount = 0;
-        bucketWereMerged = false;
     }
     BucketManagerMessageHandler();
     std::mutex mtxForLocalJobsQueue;
@@ -83,11 +82,10 @@ public:
 
     vector<BucketMessage> handleApproveNewBucketReadyToReceive(BucketMessage msg);
 
-    vector<BucketMessage> handleFinishBucketReceive(BucketMessage msg);
-
     vector<BucketMessage> handleNodeFinishedReceivingBuckets(BucketMessage msg);
 
     vector<BucketMessage> handleBucketMovedToNewNode(BucketMessage msg);
+    vector<BucketMessage> handleAddPageIdToBucket(BucketMessage msg);
     ///////// Node joined / leaving functions /////////
 
 
@@ -137,13 +135,13 @@ public:
     void moveAtomicallyToNormalState();
     // utils
 
-    void breakDownUint64ToBytes(uint64_t input, uint8_t retVal[8]);
-    void breakDownBucketIdToBytes(uint64_t input, uint8_t retVal[6]);
+    static void breakDownUint64ToBytes(uint64_t input, uint8_t retVal[8]);
+    static void breakDownBucketIdToBytes(uint64_t input, uint8_t retVal[6]);
     uint64_t convertBytesBackToUint64(uint8_t input[8]);
     uint64_t convertBytesBackToBucketId(uint8_t input[6]);
 
-    vector<BucketMessage> checkAndMerge2BucketsLocally();
-    vector<BucketMessage> checkAndShuffleBucketToRemoteNode();
+    LocalBucketsMergeJob getMergeJob();
+    RemoteBucketShuffleJob getShuffleJob();
 
 };
 

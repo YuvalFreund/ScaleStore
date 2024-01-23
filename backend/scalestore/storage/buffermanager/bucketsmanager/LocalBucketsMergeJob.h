@@ -10,8 +10,15 @@
 struct LocalBucketsMergeJob{
     uint64_t bigBucket;
     uint64_t smallBucket;
+    bool lastMerge = false;
+    bool needMerge = false;
 
-    LocalBucketsMergeJob(uint64_t bigBucket, uint64_t smallBucket) : bigBucket(bigBucket), smallBucket(smallBucket) {}
+    LocalBucketsMergeJob(uint64_t bigBucket, uint64_t smallBucket) : bigBucket(bigBucket), smallBucket(smallBucket) {
+    }
+
+    LocalBucketsMergeJob(){
+
+    }
 
 
 };

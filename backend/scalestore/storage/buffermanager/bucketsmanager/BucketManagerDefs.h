@@ -32,7 +32,7 @@
 #define CONSENSUS_VEC_SIZE 3
 #define BUCKET_ID_START_INDEX 16
 #define NODE_ID_START_INDEX 8
-#define PAGE_ID_START_INDEX 24
+#define PAGE_ID_START_INDEX 8
 #define SSD_SLOT_START_INDEX 8
 #define UNION_FIND_BUCKET_DATA_SENT_IDX 3
 #define UNION_FIND_DATA_MAX_AMOUNT 2 // todo - parameterized regarding bucket size
