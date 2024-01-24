@@ -296,7 +296,7 @@ vector<BucketMessage> BucketManagerMessageHandler::handleRequestToStartSendingBu
     messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
     messageData[MSG_RCV_IDX] = msg.messageData[MSG_SND_IDX];
     breakDownUint64ToBytes(newBucketId,&messageData[BUCKET_ID_START_INDEX]);
-    breakDownUint64ToBytes(ssdStartingAddressForNewNode,&messageData[SSD_SLOT_START_INDEX]);
+    breakDownUint64ToBytes(ssdStartingAddressForNewNode,&messageData[BUCKET_SSD_SLOT_START_INDEX]);
     auto approveBucketMsg = BucketMessage(messageData);
     sendMessage(approveBucketMsg); // todo - DFD
     retVal.emplace_back(approveBucketMsg);
@@ -310,7 +310,7 @@ vector<BucketMessage> BucketManagerMessageHandler::handleApproveNewBucketReadyTo
     vector<BucketMessage> retVal;
 
     uint64_t bucketToSend = convertBytesBackToUint64(&msg.messageData[BUCKET_ID_START_INDEX]);
-    uint64_t newNodeSsdStartingAddress = convertBytesBackToUint64(&msg.messageData[SSD_SLOT_START_INDEX]);
+    uint64_t newNodeSsdStartingAddress = convertBytesBackToUint64(&msg.messageData[BUCKET_SSD_SLOT_START_INDEX]);
     auto receivingNode = (uint64_t) msg.messageData[MSG_SND_IDX];
     RemoteBucketShuffleJob remoteBucketShuffleJob = RemoteBucketShuffleJob(bucketToSend,receivingNode,newNodeSsdStartingAddress);
     mtxForShuffleJobsQueue.lock();
@@ -321,7 +321,15 @@ vector<BucketMessage> BucketManagerMessageHandler::handleApproveNewBucketReadyTo
 
 }
 vector<BucketMessage> BucketManagerMessageHandler::handleAddPageIdToBucket(BucketMessage msg){
+    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleAddPageIdToBucket. \n" ;//todo DFD
+    logActivity(logMsg);
+    vector<BucketMessage> retVal;
 
+    uint64_t bucketId = convertBytesBackToUint64(&msg.messageData[BUCKET_ID_START_INDEX]);
+    uint64_t pageId = convertBytesBackToUint64(&msg.messageData[PAGE_ID_START_INDEX]);
+    uint64_t pageSSDSlot = convertBytesBackToUint64(&msg.messageData[PAGE_SSD_SLOT_START_INDEX]);
+
+    return retVal;
 }
 
 
@@ -853,7 +861,7 @@ LocalBucketsMergeJob BucketManagerMessageHandler::getMergeJob(){
     LocalBucketsMergeJob retVal;
     if(queueSize > 0){
         mtxForLocalJobsQueue.lock();
-        if(localBucketsMergeJobQueue.empty() == false){
+        if(localBucketsMergeJobQueue.empty() == false){ // this is to protect fro getting the lock and then queue is empty
             retVal = localBucketsMergeJobQueue.front();
             localBucketsMergeJobQueue.pop();
             localMergeJobsCounter.store(localBucketsMergeJobQueue.size());

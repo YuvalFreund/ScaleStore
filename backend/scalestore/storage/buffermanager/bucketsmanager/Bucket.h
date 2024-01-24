@@ -63,6 +63,18 @@ public:
         return retVal;
     }
 
+    void addNewPageWithPageIdAndSSDSlot(uint64_t pageId, uint16_t slotId){
+        bucketLock.lock();
+        if(freeSlots.empty()){
+            bucketLock.unlock();
+            throw std::runtime_error("No empty slots");
+        }
+        freeSlots.pop();
+        pageIdToSlot.insert(std::pair<uint64_t,uint16_t>(retVal,freeSlot));
+
+    }
+
+
     void mergeBucketIn(Bucket* bucketToMergeIn){
         bucketLock.lock();
         bucketToMergeIn->bucketLock.lock();
@@ -74,8 +86,7 @@ public:
             throw std::runtime_error("Not enough empty slots to merge");
         }
         //for(auto & iter : bucketToMergeIn->pageIdToSlot){
-            //uint64_t destSsdSlot = addPageWithPageIdWithNoLock(iter.first);
-            //uint64_t srcSsdSlot = bucketToMergeIn->getPageSSDSlotByPageIdNoLock(iter.first);
+
 
             // todo - actually copying the data!
         //}
