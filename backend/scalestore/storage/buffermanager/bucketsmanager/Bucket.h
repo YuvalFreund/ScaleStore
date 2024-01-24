@@ -21,6 +21,7 @@ public:
     std::mutex bucketLock;
     uint32_t maxPagesByParameter;
     uint64_t bucketIdMaskByParameter;
+    std::atomic<bool> bucketIsUnderWay;
 
     Bucket(){}
     Bucket(uint64_t BucketId,uint64_t SSDSlotStart):
@@ -31,6 +32,7 @@ public:
         for(int64_t i = maxPagesByParameter-1; i >=0 ; i--) {
             freeSlots.push(i);
         }
+        bucketIsUnderWay.store(false);
     }
 
 
@@ -47,7 +49,7 @@ public:
     uint64_t requestNewPageId(){
         bucketLock.lock();
         uint64_t retVal;
-        if(freeSlots.empty()){
+        if(freeSlots.empty()|| bucketIsUnderWay.load()){ // when bucket is underway, it becomes read only!
             std::cout<<"full bucket"<<std::endl;
             bucketLock.unlock();
             throw std::runtime_error("No empty slots");
@@ -63,15 +65,20 @@ public:
         return retVal;
     }
 
-    void addNewPageWithPageIdAndSSDSlot(uint64_t pageId, uint16_t slotId){
+    void addNewPageWithPageId(uint64_t pageId){
         bucketLock.lock();
-        if(freeSlots.empty()){
+        if(freeSlots.empty() || bucketIsUnderWay.load()){
             bucketLock.unlock();
             throw std::runtime_error("No empty slots");
         }
+        auto freeSlot = freeSlots.top();
         freeSlots.pop();
-        pageIdToSlot.insert(std::pair<uint64_t,uint16_t>(retVal,freeSlot));
+        pageIdToSlot.insert(std::pair<uint64_t,uint16_t>(pageId,freeSlot));
+        bucketLock.unlock();
+    }
 
+    void lockBucketBeforeShuffle(){
+        bucketIsUnderWay.store(true);
     }
 
 

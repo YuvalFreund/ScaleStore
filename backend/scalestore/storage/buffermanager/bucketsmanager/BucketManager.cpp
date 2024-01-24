@@ -6,9 +6,9 @@
 uint64_t BucketManager::addNewPage(){
     bool availableBucketFound = false;
     uint64_t retVal;
-    int tryNum=1;
+    int tryNum = 1;
     while(availableBucketFound == false){
-        uint64_t randIndex = rand() % bucketsNum;
+        uint64_t randIndex = rand() % bucketsNum; // todo yuval - make sure this is updated!
         if(availableBucketsBitSet.test(randIndex)){
             availableBucketFound = true;
             uint64_t chosenBucketId = bucketIds[randIndex];

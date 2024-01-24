@@ -272,7 +272,7 @@ int main(int argc, char* argv[])
 
                          RemoteBucketShuffleJob remoteJob = bmmh.getShuffleJob();
                          if(remoteJob.needShuffle){
-                             BucketShuffler::sendBucketToNode(remoteJob,bucketManager,bmmh,bufferManager);
+                             BucketShuffler::sendBucketToNode(remoteJob,mh,bmmh,bufferManager);
                              vector<BucketMessage> toGossip = bmmh.gossipBucketMoved(remoteJob.bucketId,remoteJob.nodeId);
                              mh.writeMsgsForBucketManager(toGossip);
 

@@ -327,8 +327,8 @@ vector<BucketMessage> BucketManagerMessageHandler::handleAddPageIdToBucket(Bucke
 
     uint64_t bucketId = convertBytesBackToUint64(&msg.messageData[BUCKET_ID_START_INDEX]);
     uint64_t pageId = convertBytesBackToUint64(&msg.messageData[PAGE_ID_START_INDEX]);
-    uint64_t pageSSDSlot = convertBytesBackToUint64(&msg.messageData[PAGE_SSD_SLOT_START_INDEX]);
-
+    auto bucketIter = bucketManager.bucketsMap.find(bucketId);
+    bucketIter->second.addNewPageWithPageId(pageId);
     return retVal;
 }
 
@@ -642,6 +642,7 @@ vector<BucketMessage> BucketManagerMessageHandler::prepareOtherNodesForIncomingB
 }
 
 void BucketManagerMessageHandler::sendBucketToNode(RemoteBucketShuffleJob bucketShuffleJob){
+    // todo yuval - remove this when done this just reference for the old code
     std::cout << bucketShuffleJob.nodeId; // todo yuval - this is just so the check will go away WILL BE REMOVED;
     /*
     uint64_t bucketId = bucketShuffleJob.bucketId;

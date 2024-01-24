@@ -12,25 +12,32 @@
 #include "scalestore/rdma/MessageHandler.hpp"
 #include "scalestore/storage/buffermanager/BufferFrameGuards.hpp"
 #include "scalestore/storage/buffermanager/Buffermanager.hpp"
+#include "scalestore/storage/buffermanager/Guard.hpp"
 
 struct BucketShuffler{
 
-    static void sendBucketToNode(RemoteBucketShuffleJob bucketShuffleJob, BucketManager& bucketManager, BucketManagerMessageHandler& bmmh, scalestore::storage::Buffermanager& bufferManager){
+    static void sendBucketToNode(RemoteBucketShuffleJob bucketShuffleJob,scalestore::rdma::MessageHandler& mh, BucketManagerMessageHandler& bmmh, scalestore::storage::Buffermanager& bm){
 
         uint64_t bucketId = bucketShuffleJob.bucketId;
         uint64_t nodeId = bucketShuffleJob.nodeId;
-        map<uint64_t, uint64_t> mapOfNode = bucketManager.mergableBucketsForEachNode[nodeId];
-        Bucket* bigBucket = &(bucketManager.bucketsMap.find(bucketId)->second);
+        Bucket* bigBucket = &(bmmh.bucketManager.bucketsMap.find(bucketId)->second);
         Bucket* smallBucket;
+        map<uint64_t, uint64_t> mapOfNode = bmmh.bucketManager.mergableBucketsForEachNode[nodeId]; // this data is necessary for getting the bucket that will be merged
 
         // dealing with big bucket first uint64_t bigBucketSsdSlotsStart = bigBucket-> SSDSlotStart;
-        // todo yuval- atomically mark bucket as "being moved" - no more pages are added or removed from this point!
         // bucket will be blocked from adding (suggest other bucket in Random loop), removing will be ignored
         // this the bucket becomes basically "read only"= no problem to iterate over the map
+        bigBucket->lockBucketBeforeShuffle();
         // for efficiency, deleted pages can be ignored
         // todo yuval - export all this to a function. this needs to happen both for small and big bucket
         for (auto const& [key, val] : bigBucket->pageIdToSlot){
+            uint64_t pageId = key;
             // todo yuval - send message to receiving bucket in the new node, with new page id
+            vector<BucketMessage> msgToNewNodeToAddBucketId = preparePageIdToBeAddedInBucketOfNewNodeMsg(pageId,nodeId,bucketId);
+            mh.writeMsgsForBucketManager(msgToNewNodeToAddBucketId);
+            auto guard = bm.findFrame<CONTENTION_METHOD::NON_BLOCKING>(pageId, Invalidation(), ctx.bmId);
+
+
             // todo yuval- send message to new node, ask to add this frame and mark as "ON_THE_WAY" in BF_STATE, Possession will be updated later
             // todo yuval - create new message, that upon receiving will need to open new frame (find or insert from buffer manager)
 
@@ -51,8 +58,9 @@ struct BucketShuffler{
 
                 // case shared also by at least one other nodes
                     // todo yuval - no need to send page - just update the possessors in case leaving node is there
-                    // todo yuval -
-
+                    // todo yuval - send frame to the new node
+            // case exclusive
+                //todo yuval
 
             //uint64_t oldSsdSlot = bigBucketSsdSlotsStart + val;
             // todo yuval -  actually do something with it here
@@ -90,12 +98,11 @@ struct BucketShuffler{
 
     }
 
-    vector<BucketMessage> preparePageIdToBeAddedInBucketOfNewNodeMsg(uint64_t pageId, uint64_t nodeId, uint64_t bucketId, uint64_t designatedSSDSlot){
+    static vector<BucketMessage> preparePageIdToBeAddedInBucketOfNewNodeMsg(uint64_t pageId, uint64_t nodeId, uint64_t bucketId){
         vector<BucketMessage> retVal;
         uint8_t messageData[MESSAGE_SIZE];
         BucketManagerMessageHandler::breakDownUint64ToBytes(bucketId,&messageData[BUCKET_ID_START_INDEX]);
         BucketManagerMessageHandler::breakDownUint64ToBytes(pageId,&messageData[PAGE_ID_START_INDEX]);
-        BucketManagerMessageHandler::breakDownUint64ToBytes(designatedSSDSlot,&messageData[PAGE_SSD_SLOT_START_INDEX]);
         messageData[MSG_ENUM_IDX] = (uint8_t) ADD_PAGE_ID_TO_BUCKET;
         messageData[MSG_RCV_IDX] = (uint8_t) nodeId;
         auto addPageIdToBucketMsg = BucketMessage(messageData);
