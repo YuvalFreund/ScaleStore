@@ -39,13 +39,17 @@ enum class MESSAGE_TYPE : uint8_t {
    // -------------------------------------------------------------------------------------
    PRFR = 14,
    PRFRR =15,
-   
+
+   // -------------------------------------------------------------------------------------
+   // SHUFFLED frame on the way
+   SFOTW = 16,
+
    // -------------------------------------------------------------------------------------
    // bucket manager msg
    BMMSG  = 66,
    // -------------------------------------------------------------------------------------
 
-    DPMR = 96, // delegate possession request
+   DPMR = 96, // delegate possession request
    // Remote information for delegation
    DR = 97, 
    DRR = 98,
@@ -195,6 +199,11 @@ struct BucketManagerMessage : public Message{
     }
 };
 
+struct ShuffledFrameOnTheWay : public Message {
+    uint64_t shuffledPid;
+    ShuffledFrameOnTheWay(uint64_t shuffledPid) : Message(MESSAGE_TYPE::SFOTW),shuffledPid(shuffledPid){}
+};
+
 // -------------------------------------------------------------------------------------
 // Get size of Largest Message
 union ALLDERIVED{
@@ -210,6 +219,8 @@ union ALLDERIVED{
    DelegationRequest dr;
    DelegationResponse drr;
    BucketManagerMessage bmmsg;
+   ShuffledFrameOnTheWay sfotw;
+
 };
 
 static constexpr uint64_t LARGEST_MESSAGE = sizeof(ALLDERIVED);

@@ -13,16 +13,18 @@
 #include "scalestore/storage/buffermanager/BufferFrameGuards.hpp"
 #include "scalestore/storage/buffermanager/Buffermanager.hpp"
 #include "scalestore/storage/buffermanager/Guard.hpp"
+using namespace scalestore;
 
 struct BucketShuffler{
 
-    static void sendBucketToNode(RemoteBucketShuffleJob bucketShuffleJob,scalestore::rdma::MessageHandler& mh, BucketManagerMessageHandler& bmmh, scalestore::storage::Buffermanager& bm){
+    static void sendBucketToNode(RemoteBucketShuffleJob bucketShuffleJob,rdma::MessageHandler& mh, BucketManagerMessageHandler& bmmh, storage::Buffermanager& bm){
 
         uint64_t bucketId = bucketShuffleJob.bucketId;
         uint64_t nodeId = bucketShuffleJob.nodeId;
-        Bucket* bigBucket = &(bmmh.bucketManager.bucketsMap.find(bucketId)->second);
+        BucketManager& bucketManager = bmmh.bucketManager;
+        Bucket* bigBucket = &(bucketManager.bucketsMap.find(bucketId)->second);
         Bucket* smallBucket;
-        map<uint64_t, uint64_t> mapOfNode = bmmh.bucketManager.mergableBucketsForEachNode[nodeId]; // this data is necessary for getting the bucket that will be merged
+        map<uint64_t, uint64_t> mapOfNode = bucketManager.mergableBucketsForEachNode[nodeId]; // this data is necessary for getting the bucket that will be merged
 
         // dealing with big bucket first uint64_t bigBucketSsdSlotsStart = bigBucket-> SSDSlotStart;
         // bucket will be blocked from adding (suggest other bucket in Random loop), removing will be ignored
@@ -35,14 +37,17 @@ struct BucketShuffler{
             // todo yuval - send message to receiving bucket in the new node, with new page id
             vector<BucketMessage> msgToNewNodeToAddBucketId = preparePageIdToBeAddedInBucketOfNewNodeMsg(pageId,nodeId,bucketId);
             mh.writeMsgsForBucketManager(msgToNewNodeToAddBucketId);
-            auto guard = bm.findFrame<CONTENTION_METHOD::NON_BLOCKING>(pageId, Invalidation(), ctx.bmId);
-
 
             // todo yuval- send message to new node, ask to add this frame and mark as "ON_THE_WAY" in BF_STATE, Possession will be updated later
+            auto onTheWayUpdateRequest = *rdma::MessageFabric::createMessage<rdma::ShuffledFrameOnTheWay>(mh.cctxs[nodeId].request,pageId);
+            threads::Worker::my().writeMsg<rdma::ShuffledFrameOnTheWay>(nodeId, onTheWayUpdateRequest);
             // todo yuval - create new message, that upon receiving will need to open new frame (find or insert from buffer manager)
 
             // todo yuval-get frame from buffer manager (find or insert from buffer manager) with exclusive guard
-            // if frame is not found - then regard it as if there no possessors
+            auto guard = bm.findFrame<storage::CONTENTION_METHOD::BLOCKING>(PID(pageId), rdma::MessageHandler::Copy(), nodeId);
+            ensure(guard.state != storage::STATE::UNINITIALIZED);
+            ensure(guard.state != storage::STATE::NOT_FOUND);
+            ensure(guard.state != storage::STATE::RETRY);
             // todo yuval- mark frame at the LOCAL NODE! as "MOVED_TO_NEW" in BF_STATE
 
             //case no possessors:
@@ -66,7 +71,7 @@ struct BucketShuffler{
             // todo yuval -  actually do something with it here
         }
         bigBucket->destroyBucketData();
-        bucketManager.deleteBucket(bucketId);
+        bmmh.bucketManager.deleteBucket(bucketId);
 
         if(mapOfNode[bucketId] != BUCKET_ALREADY_MERGED){
             smallBucket = &(bucketManager.bucketsMap.find(mapOfNode[bucketId])->second);
@@ -78,19 +83,6 @@ struct BucketShuffler{
             smallBucket->destroyBucketData();
             bucketManager.deleteBucket(smallBucket->getBucketId());
         }
-
-        string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "finished sending bucket " + std::to_string(bucketId)+ " to node : " + std::to_string(nodeId)+  " \n" ;//todo DFD
-        logActivity(logMsg);
-        uint8_t messageData[MESSAGE_SIZE];
-        breakDownUint64ToBytes(bucketId,&messageData[BUCKET_ID_START_INDEX]);
-        messageData[MSG_ENUM_IDX] = (uint8_t) FINISHED_BUCKET;
-        messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
-        messageData[MSG_RCV_IDX] = (uint8_t) nodeId;
-        auto finishedBucketMsg = BucketMessage(messageData);
-        sendMessage(finishedBucketMsg);
-        gossipBucketMoved(bucketId,nodeId);
-
-        retVal = gossipBucketMoved(shuffleJob.bucketId,shuffleJob.nodeId);
 
     }
 
@@ -111,6 +103,7 @@ struct BucketShuffler{
         return retVal;
     }
 };
+
 
 
 #endif //SCALESTOREDB_BUCKETSHUFFLER_H

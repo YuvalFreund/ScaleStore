@@ -395,6 +395,10 @@ void MessageHandler::startThread() {
                       }
                       break;
                   }
+                  case MESSAGE_TYPE::SFOTW: {
+                      auto& incomingBucketMessage = *reinterpret_cast<ShuffledFrameOnTheWay*>(ctx.request);
+
+                  }
 
 
                   default:
