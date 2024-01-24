@@ -62,7 +62,7 @@ class ScaleStore
    // -------------------------------------------------------------------------------------
    BucketManagerMessageHandler& getBucketManagerMessageHandler() { return *bucketManagerMessageHandler;}
    // -------------------------------------------------------------------------------------
-   rdma::MessageHandler& getMessageHandler(){return *mh};
+   rdma::MessageHandler& getMessageHandler(){return *mh;}
    // -------------------------------------------------------------------------------------
    void startProfiler(profiling::WorkloadInfo& wlInfo) {
       pt.running = true;
