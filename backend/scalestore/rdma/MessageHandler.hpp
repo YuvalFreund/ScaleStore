@@ -439,10 +439,11 @@ struct MessageHandler {
       wqe++;
    }
    // -------------------------------------------------------------------------------------
-   void writeMsgsForBucketManager(vector<BucketMessage> msgs){
+    // todo yuval ask tobi - does it make sense to send messages this way?
+    void writeMsgsForBucketManager(vector<BucketMessage> msgs){
        for (auto & bucketMsg : msgs) {
            // todo yuval - check about client id and thread context..
-           int clientId=5;
+           int clientId = 5;
            auto& ctx = cctxs[clientId];
            auto& preparedBucketMsgToSend = *MessageFabric::createMessage<rdma::BucketManagerMessage>(ctx.response, bucketMsg.messageData);
            writeMsg(clientId, preparedBucketMsgToSend,threads::ThreadContext::my().page_handle);

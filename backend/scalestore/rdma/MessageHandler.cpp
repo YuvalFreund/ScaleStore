@@ -389,14 +389,15 @@ void MessageHandler::startThread() {
                       vector<BucketMessage> messagesToSend = bucketManagerMessageHandler.handleIncomingMessage(bucketMessage);
                       writeMsgsForBucketManager(messagesToSend);
                       for (auto & bucketMsg : messagesToSend) {
-                          // todo yuval - check about client id and thread context..
+                          // todo yuval ask tobi- check about client id and thread context..
                           auto& preparedBucketMsgToSend = *MessageFabric::createMessage<rdma::BucketManagerMessage>(ctx.response, bucketMsg.messageData);
                           writeMsg(clientId, preparedBucketMsgToSend,threads::ThreadContext::my().page_handle);
                       }
                       break;
                   }
-                  case MESSAGE_TYPE::SFOTW: {
-                      auto& incomingBucketMessage = *reinterpret_cast<ShuffledFrameOnTheWay*>(ctx.request);
+
+                  case MESSAGE_TYPE::SSFR: {
+                      auto& incomingBucketMessage = *reinterpret_cast<SendShuffledFrameRequest*>(ctx.request);
 
                   }
 

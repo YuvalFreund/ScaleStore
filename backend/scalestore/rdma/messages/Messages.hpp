@@ -41,8 +41,11 @@ enum class MESSAGE_TYPE : uint8_t {
    PRFRR =15,
 
    // -------------------------------------------------------------------------------------
-   // SHUFFLED frame on the way
-   SFOTW = 16,
+   // Shuffeled frame on the way
+   SSFR = 16,
+   SSFRR = 17,
+   // update shuffled frame arrived
+   USFA = 18,
 
    // -------------------------------------------------------------------------------------
    // bucket manager msg
@@ -199,10 +202,24 @@ struct BucketManagerMessage : public Message{
     }
 };
 
-struct ShuffledFrameOnTheWay : public Message {
+struct SendShuffledFrameRequest : public Message {
     uint64_t shuffledPid;
-    ShuffledFrameOnTheWay(uint64_t shuffledPid) : Message(MESSAGE_TYPE::SFOTW),shuffledPid(shuffledPid){}
+    SendShuffledFrameRequest(uint64_t shuffledPid) : Message(MESSAGE_TYPE::SSFR), shuffledPid(shuffledPid){}
 };
+
+struct SendShuffledFrameResponse : public Message{
+    uint64_t shuffledPid;
+    uintptr_t pageOffset;
+
+    SendShuffledFrameResponse(uint64_t shuffledPid) : Message(MESSAGE_TYPE::SSFR), shuffledPid(shuffledPid){}
+
+};
+
+struct UpdateShuffledFrameArrived : public Message {
+    uint64_t shuffledPid;
+    UpdateShuffledFrameArrived(uint64_t shuffledPid) : Message(MESSAGE_TYPE::USFA),shuffledPid(shuffledPid){}
+};
+
 
 // -------------------------------------------------------------------------------------
 // Get size of Largest Message
@@ -219,7 +236,8 @@ union ALLDERIVED{
    DelegationRequest dr;
    DelegationResponse drr;
    BucketManagerMessage bmmsg;
-   ShuffledFrameOnTheWay sfotw;
+   SendShuffledFrameRequest ssfr;
+   UpdateShuffledFrameArrived usfa;
 
 };
 
