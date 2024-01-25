@@ -12,7 +12,7 @@ MessageHandler::MessageHandler(rdma::CM<InitMessage>& cm, storage::Buffermanager
     : cm(cm), bm(bm), nodeId(nodeId), mbPartitions(FLAGS_messageHandlerThreads), bucketManager(bucketManager), bucketManagerMessageHandler(bmmh)
             {
    // partition mailboxes
-   size_t n = (FLAGS_worker) * (FLAGS_nodes - 1);
+   size_t n = ((FLAGS_worker) * (FLAGS_nodes - 1)) + (FLAGS_nodes - 1); // todo yuval MH - added artificially another mailbox for the bmmh per node
    if (n > 0) {
       ensure(FLAGS_messageHandlerThreads <= n);  // avoid over subscribing message handler threads
       const uint64_t blockSize = n / FLAGS_messageHandlerThreads;
@@ -38,7 +38,7 @@ MessageHandler::MessageHandler(rdma::CM<InitMessage>& cm, storage::Buffermanager
 void MessageHandler::init() {
    InitMessage* initServer = (InitMessage*)cm.getGlobalBuffer().allocate(sizeof(InitMessage));
    // -------------------------------------------------------------------------------------
-   size_t numConnections = (FLAGS_worker) * (FLAGS_nodes - 1);
+   size_t numConnections = (FLAGS_worker) * (FLAGS_nodes - 1) + (FLAGS_nodes - 1); // todo yuval MH- added artificially another mailbox for the bmmh per node
    connectedClients = numConnections;
    while (cm.getNumberIncomingConnections() != (numConnections))
       ;  // block until client is connected
@@ -50,11 +50,16 @@ void MessageHandler::init() {
    while (true) {
       std::vector<RdmaContext*> tmp_rdmaCtxs(cm.getIncomingConnections());  // get cm ids of incomming
       uint64_t workers = 0;
+      uint64_t otherMessageHandlers = 0; // todo yuval MH-
       for (auto* rContext : tmp_rdmaCtxs) {
-         if (rContext->type != Type::WORKER) continue;
-         workers++;
+         if (rContext->type == Type::WORKER){
+             workers++;
+         }
+         if(rContext->type == Type::MESSAGE_HANDLER){
+             otherMessageHandlers++;
+         }
       }
-      if (workers == numConnections) {
+      if (workers + otherMessageHandlers == numConnections) {
          rdmaCtxs = tmp_rdmaCtxs;
          break;
       }
@@ -71,7 +76,7 @@ void MessageHandler::init() {
 
    for (auto* rContext : rdmaCtxs) {
       // -------------------------------------------------------------------------------------
-      if (rContext->type != Type::WORKER) {
+      if (rContext->type != Type::WORKER && rContext->type != Type::MESSAGE_HANDLER) {
          continue;  // skip no worker connection
       }
       
@@ -107,6 +112,9 @@ void MessageHandler::init() {
       cctx.remotePlOffsets.resize(FLAGS_nodes);
       // -------------------------------------------------------------------------------------
       cctxs.push_back(cctx);
+      if(rContext->type == Type::MESSAGE_HANDLER){
+          bmmh_cctxs[rContext->nodeId] = counter;
+      }
       // -------------------------------------------------------------------------------------
       // check if ctx is needed as endpoint
       // increment running counter
@@ -128,7 +136,15 @@ void MessageHandler::startThread() {
          // -------------------------------------------------------------------------------------
          std::unique_ptr<threads::ThreadContext> threadContext = std::make_unique<threads::ThreadContext>();
          threads::ThreadContext::tlsPtr = threadContext.get();  // init tl ptr
-         // ------------------------------------------------------------------------------------- 
+         // -------------------------------------------------------------------------------------
+          // for delegation purpose, i.e., communication to remote message handler
+          // todo yuval MH - this is moved now here, so that we can also create a connection context for message handler
+          std::vector<MHEndpoint> mhEndpoints(FLAGS_nodes);
+          for (uint64_t n_i = 0; n_i < FLAGS_nodes; n_i++) {
+              if (n_i == nodeId) continue;
+              auto& ip = NODES[FLAGS_nodes][n_i];
+              mhEndpoints[n_i].rctx = &(cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId));
+          }
          threadCount++;
          // protect init only ont thread should do it;
          if (t_i == 0) {
@@ -145,13 +161,7 @@ void MessageHandler::startThread() {
          uint64_t mailboxIdx = 0;
          profiling::WorkerCounters counters;  // create counters
          storage::AsyncReadBuffer async_read_buffer(bm.ssd_fd, PAGE_SIZE, 256);
-         // for delegation purpose, i.e., communication to remote message handler
-         std::vector<MHEndpoint> mhEndpoints(FLAGS_nodes);
-         for (uint64_t n_i = 0; n_i < FLAGS_nodes; n_i++) {
-            if (n_i == nodeId) continue;
-            auto& ip = NODES[FLAGS_nodes][n_i];
-            mhEndpoints[n_i].rctx = &(cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId));
-         }
+
          // handle
 
          std::vector<uint64_t> latencies(mbPartition.numberMailboxes);
@@ -388,11 +398,6 @@ void MessageHandler::startThread() {
                       auto bucketMessage = BucketMessage(incomingBucketMessage.payload);
                       vector<BucketMessage> messagesToSend = bucketManagerMessageHandler.handleIncomingMessage(bucketMessage);
                       writeMsgsForBucketManager(messagesToSend);
-                      for (auto & bucketMsg : messagesToSend) {
-                          // todo yuval ask tobi- check about client id and thread context..
-                          auto& preparedBucketMsgToSend = *MessageFabric::createMessage<rdma::BucketManagerMessage>(ctx.response, bucketMsg.messageData);
-                          writeMsg(clientId, preparedBucketMsgToSend,threads::ThreadContext::my().page_handle);
-                      }
                       break;
                   }
 

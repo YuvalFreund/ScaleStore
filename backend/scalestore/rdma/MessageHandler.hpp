@@ -93,6 +93,7 @@ struct MessageHandler {
    // -------------------------------------------------------------------------------------
    NodeID nodeId;
    std::vector<ConnectionContext> cctxs;
+   std::map<NodeID,uint64_t> bmmh_cctxs;
    std::vector<MailboxPartition> mbPartitions;
    std::atomic<uint64_t> connectedClients = 0;
    std::atomic<bool> finishedInit = false;
@@ -442,8 +443,7 @@ struct MessageHandler {
     // todo yuval ask tobi - does it make sense to send messages this way?
     void writeMsgsForBucketManager(vector<BucketMessage> msgs){
        for (auto & bucketMsg : msgs) {
-           // todo yuval - check about client id and thread context..
-           int clientId = 5;
+           auto clientId = bmmh_cctxs[bucketMsg.messageData[MSG_RCV_IDX]];
            auto& ctx = cctxs[clientId];
            auto& preparedBucketMsgToSend = *MessageFabric::createMessage<rdma::BucketManagerMessage>(ctx.response, bucketMsg.messageData);
            writeMsg(clientId, preparedBucketMsgToSend,threads::ThreadContext::my().page_handle);
