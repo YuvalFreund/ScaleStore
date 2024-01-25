@@ -58,7 +58,7 @@ struct BucketShuffler{
             switch(checkPossession){
                 case storage::POSSESSION::NOBODY : {
                     // todo yuval ask tobi - is this how to make sure a frame is in memory?
-                    if(oldBFState ==  storage::BF_STATE::HOT || oldBFState == storage::BF_STATE::EVICTED)){
+                    if(oldBFState ==  storage::BF_STATE::HOT || oldBFState == storage::BF_STATE::EVICTED){
 
                         // todo yuval - if frame is cached, send from cache to new node
                     }else{
@@ -98,7 +98,7 @@ struct BucketShuffler{
         }
         bigBucket->destroyBucketData();
         bmmh.bucketManager.deleteBucket(bucketId);
-
+        /*
         if(mapOfNode[bucketId] != BUCKET_ALREADY_MERGED){
             smallBucket = &(bucketManager.bucketsMap.find(mapOfNode[bucketId])->second);
             uint64_t smallBucketSsdSlotsStart = smallBucket-> SSDSlotStart;
@@ -109,12 +109,12 @@ struct BucketShuffler{
             smallBucket->destroyBucketData();
             bucketManager.deleteBucket(smallBucket->getBucketId());
         }
-
+*/
     }
+    // TODO YUVAL -implement this
+    /*static void merge2bucketsLocally(LocalBucketsMergeJob mergeJob){
 
-    static void merge2bucketsLocally(LocalBucketsMergeJob mergeJob){
-
-    }
+    }*/
 
     static vector<BucketMessage> preparePageIdToBeAddedInBucketOfNewNodeMsg(uint64_t pageId, uint64_t nodeId, uint64_t bucketId){
         vector<BucketMessage> retVal;

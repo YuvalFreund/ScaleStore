@@ -263,7 +263,7 @@ int main(int argc, char* argv[])
                      if(utils::RandomGenerator::getRandU64(0, 10000) < shuffleRatio) { // worker will go and shuffle
                          LocalBucketsMergeJob mergeJob = bmmh.getMergeJob();
                          if(mergeJob.needMerge){
-                             BucketShuffler::merge2bucketsLocally();
+                             //BucketShuffler::merge2bucketsLocally();
                          }
                          if(mergeJob.lastMerge){
                              vector<BucketMessage> toGossip = bmmh.gossipBucketAmountFinishedLeave();
