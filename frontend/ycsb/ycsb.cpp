@@ -12,7 +12,7 @@
 #include <gflags/gflags.h>
 // -------------------------------------------------------------------------------------
 DEFINE_uint32(YCSB_read_ratio, 100, "");
-DEFINE_uint32(FLAGS_YCSB_shuffle_ratio, 0, "");
+DEFINE_uint32(YCSB_shuffle_ratio, 0, "");
 DEFINE_bool(YCSB_all_workloads, false , "Execute all workloads i.e. 50 95 100 ReadRatio on same tree");
 DEFINE_uint64(YCSB_tuple_count, 1, " Tuple count in");
 DEFINE_double(YCSB_zipf_factor, 0.0, "Default value according to spec");
@@ -260,7 +260,7 @@ int main(int argc, char* argv[])
                      ensure(key < YCSB_tuple_count);
                      V result;
                       // worker will try to merge locally - and then to shuffle bucket to remote node
-                     if(utils::RandomGenerator::getRandU64(0, 100) < shuffleRatio) { // worker will go and shuffle
+                     if(utils::RandomGenerator::getRandU64(0, 10000) < shuffleRatio) { // worker will go and shuffle
                          LocalBucketsMergeJob mergeJob = bmmh.getMergeJob();
                          if(mergeJob.needMerge){
                              BucketShuffler::merge2bucketsLocally();

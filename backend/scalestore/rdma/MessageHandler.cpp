@@ -397,7 +397,7 @@ void MessageHandler::startThread() {
                   }
 
                   case MESSAGE_TYPE::SSFR: {
-                      auto& incomingBucketMessage = *reinterpret_cast<SendShuffledFrameRequest*>(ctx.request);
+                      //auto& incomingBucketMessage = *reinterpret_cast<SendShuffledFrameRequest*>(ctx.request);
 
                   }
 
