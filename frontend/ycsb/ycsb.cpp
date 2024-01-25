@@ -253,7 +253,7 @@ int main(int argc, char* argv[])
                   storage::DistributedBarrier barrier(catalog.getCatalogEntry(BARRIER_ID).pid);
                   storage::BTree<K, V> tree(catalog.getCatalogEntry(BTREE_ID).pid);
                   barrier.wait();
-
+                  mh.writeMsgsForBucketManager();// todo yuval - continure here tommorw!
                   while (keep_running) {
                      K key = zipf_random->rand(zipf_offset);
                      ensure(key < YCSB_tuple_count);
