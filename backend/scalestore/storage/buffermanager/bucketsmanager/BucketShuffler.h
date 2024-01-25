@@ -25,7 +25,7 @@ struct BucketShuffler{
         uint64_t leavingNodeId = bucketManager.nodeId;
         map<uint64_t, uint64_t> mapOfNode = bucketManager.mergableBucketsForEachNode[newNodeId]; // this data is necessary for getting the bucket that will be merged
         Bucket* bigBucket = &(bucketManager.bucketsMap.find(bucketId)->second);
-        Bucket* smallBucket;
+        //Bucket* smallBucket;
 
         // dealing with big bucket first uint64_t bigBucketSsdSlotsStart = bigBucket-> SSDSlotStart;
 
@@ -78,7 +78,7 @@ struct BucketShuffler{
                     if(nodeIdIsSolePossessor){
                         // case shared only by the leaving node -
                         // todo yuval - send page from cache and mark as "NO_BODY" in the new location and BF_STATE hot
-                        auto shuffledFrameArrivedUpdate = *rdma::MessageFabric::createMessage<rdma::UpdateShuffledFrameArrived>(mh.cctxs[newNodeId].request, pageId);
+                       // auto shuffledFrameArrivedUpdate = *rdma::MessageFabric::createMessage<rdma::UpdateShuffledFrameArrived>(mh.cctxs[newNodeId].request, pageId);
                         threads::Worker::my().writeMsg<rdma::SendShuffledFrameRequest>(newNodeId, onTheWayUpdateRequest);
                     } else {
                         // todo yuval - no need to send page - just update the possessors in case leaving node is there

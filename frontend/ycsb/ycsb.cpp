@@ -247,7 +247,6 @@ int main(int argc, char* argv[])
             storage::Buffermanager& bufferManager = scalestore.getBuffermanager();
             BucketManagerMessageHandler& bmmh = scalestore.getBucketManagerMessageHandler();
             rdma::MessageHandler& mh = scalestore.getMessageHandler();
-            BucketManager& bucketManager = bmmh.bucketManager;
             for (uint64_t t_i = 0; t_i < FLAGS_worker; ++t_i) {
                scalestore.getWorkerPool().scheduleJobAsync(t_i, [&, t_i]() {
                   running_threads_counter++;

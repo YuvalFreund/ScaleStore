@@ -17,6 +17,6 @@ struct RemoteBucketShuffleJob{
             bucketId), nodeId(nodeId), ssdAddressStartAtReceivingNode(ssdAddressStartAtReceivingNode) {
         needShuffle = false;
     }
-    RemoteBucketShuffleJob();
+    RemoteBucketShuffleJob() {  }
 };
 #endif //LOCALTHESIS_REMOTEBUCKETSHUFFLEJOB_H
