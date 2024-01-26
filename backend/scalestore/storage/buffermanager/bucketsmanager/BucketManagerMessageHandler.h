@@ -31,6 +31,7 @@ struct BucketManagerMessageHandler{
     std::map<uint64_t,queue<pair<uint64_t,uint64_t>>> unionFindDataForNodes;
     int unionFindDataArrived = 0;
     std::map<uint64_t,queue<uint64_t>> bucketShuffleDataForNodes;
+    uint64_t leavingNode;
 
 
 public:
@@ -108,7 +109,7 @@ public:
 ///////// buckets sending functions functions /////////
     vector<BucketMessage> handleIncomingShuffledBucketData(BucketMessage msg);
     vector<BucketMessage> handleIncomingShuffledBucketDataSendMore(BucketMessage msg);
-    vector<BucketMessage>handleIncomingShuffledBucketDataReceivedAll(BucketMessage msg)
+    vector<BucketMessage>handleIncomingShuffledBucketDataReceivedAll(BucketMessage msg);
     vector<BucketMessage> prepareOtherNodesForIncomingBuckets();
 
     void sendBucketToNode(RemoteBucketShuffleJob bucketShuffleJob);

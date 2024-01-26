@@ -44,13 +44,7 @@ vector<BucketMessage> BucketManagerMessageHandler::handleIncomingMessage(BucketM
         case INCOMING_SHUFFLED_BUCKET_DATA_RECEIVED_ALL:
             handleIncomingShuffledBucketDataReceivedAll(msg);
             break;
-        case REQUEST_TO_START_BUCKET_SEND:
-            retVal = handleRequestToStartSendingBucket(msg);
-            break;
 
-        case APPROVE_NEW_BUCKET_READY_TO_RECEIVE:
-            retVal = handleApproveNewBucketReadyToReceive(msg);
-            break;
         case ADD_PAGE_ID_TO_BUCKET:
             retVal = handleAddPageIdToBucket(msg);
             break;
@@ -74,6 +68,7 @@ vector<BucketMessage> BucketManagerMessageHandler::handleNodeLeftTheClusterLeave
     vector<BucketMessage> retVal;
 
     int sendingNode = (int)msg.messageData[MSG_SND_IDX];
+    leavingNode = sendingNode;
     consensusVec[CONSISTENT_HASHING_INFORMATION_SYNCED_LEAVE].set(sendingNode - 1);
     auto leavingNodeId = (uint64_t) msg.messageData[MSG_DATA_START_IDX];
     bucketManager.nodeLeftOrJoinedCluster(false,leavingNodeId);
@@ -293,6 +288,7 @@ vector<BucketMessage> BucketManagerMessageHandler::gossipNodeLeft(){
     string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "gossipNodeLeft. \n" ;//todo DFD
     logActivity(logMsg);
     vector<BucketMessage> retVal;
+    leavingNode = bucketManager.nodeId;
 
     uint8_t messageDataForLeavingNode[MESSAGE_SIZE];
     messageDataForLeavingNode[MSG_ENUM_IDX] = (uint8_t) NODE_LEAVING_THE_CLUSTER_LEAVE;
@@ -713,4 +709,75 @@ void BucketManagerMessageHandler::prepareIncomingBucketsDataForOtherNodes(){ //p
     for(auto pair : bucketsAndNodes){
         bucketShuffleDataForNodes.find(pair.second)->second.push(pair.first);
     }
+}
+vector<BucketMessage> BucketManagerMessageHandler::handleIncomingShuffledBucketData(BucketMessage msg){
+    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleIncomingShuffledBucketData. \n" ;//todo DFD
+    logActivity(logMsg);
+    vector<BucketMessage> retVal;
+    uint64_t newBucketId = convertBytesBackToUint64(&msg.messageData[BUCKET_ID_START_INDEX]);
+    bucketManager.createNewBucket(false, newBucketId);
+    bucketsToReceiveFromNodes.insert(newBucketId);
+    if(msg.messageData[SHUFFLED_BUCKET_LAST_DATA] == 1){
+        bool receivedFromAllNodes = markBitAndReturnAreAllNodesExcludingSelfTrue(msg);
+        if(receivedFromAllNodes){
+            uint8_t messageData[MESSAGE_SIZE];
+            messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
+            messageData[MSG_ENUM_IDX] = (uint8_t) INCOMING_SHUFFLED_BUCKET_DATA_RECEIVED_ALL;
+            auto allShuffledBucktsDataArrived = BucketMessage(messageData);
+            retVal = collectMessagesToGossip(allShuffledBucktsDataArrived);
+            //edge case check for last one the shuffle data
+            consensusVec[INCOMING_SHUFFLED_BUCKET_DATA_RECEIVED_ALL].set(bucketManager.nodeId-1);
+            bool requiresSecondCheck = consensusVec[INCOMING_SHUFFLED_BUCKET_DATA_RECEIVED_ALL].all();
+            if(requiresSecondCheck){
+                string finsihedMessage = "o########################ok######################### \n" ;//todo DFD
+                logActivity(finsihedMessage);
+            }
+        }
+
+    }else{
+        uint8_t messageData[MESSAGE_SIZE];
+        messageData[MSG_ENUM_IDX] = (uint8_t) INCOMING_SHUFFLED_BUCKET_DATA_SEND_MORE;
+        messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
+        messageData[MSG_RCV_IDX] = msg.messageData[MSG_SND_IDX];
+        auto askForMoreDataMsg = BucketMessage(messageData);
+        sendMessage(askForMoreDataMsg);  //todo dfd
+        retVal.emplace_back(askForMoreDataMsg);
+
+    }
+    return retVal;
+}
+vector<BucketMessage> BucketManagerMessageHandler::handleIncomingShuffledBucketDataSendMore(BucketMessage msg){
+    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleIncomingShuffledBucketDataSendMore. \n" ;//todo DFD
+    logActivity(logMsg);
+    vector<BucketMessage> retVal;
+    uint8_t messageData[MESSAGE_SIZE];
+    messageData[MSG_ENUM_IDX] = (uint8_t) INCOMING_SHUFFLED_BUCKET_DATA;
+    messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
+    messageData[MSG_RCV_IDX] = (uint8_t) msg.messageData[MSG_SND_IDX];
+    auto dataQueue = bucketShuffleDataForNodes.find(msg.messageData[MSG_SND_IDX]);
+    breakDownUint64ToBytes(dataQueue->second.front(),&messageData[BUCKET_ID_START_INDEX]);
+    dataQueue->second.pop();
+    if(dataQueue->second.empty()){
+        messageData[SHUFFLED_BUCKET_LAST_DATA] = 1;
+    }else{
+        messageData[SHUFFLED_BUCKET_LAST_DATA] = 0;
+    }
+    auto moreShuffledBucketData = BucketMessage(messageData);
+    sendMessage(moreShuffledBucketData);  //todo dfd
+    retVal.emplace_back(moreShuffledBucketData);
+    return retVal;
+
+}
+vector<BucketMessage>BucketManagerMessageHandler::handleIncomingShuffledBucketDataReceivedAll(BucketMessage msg){
+    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleIncomingShuffledBucketDataReceivedAll. \n" ;//todo DFD
+    logActivity(logMsg);
+    vector<BucketMessage> retVal;
+    consensusVec[INCOMING_SHUFFLED_BUCKET_DATA_RECEIVED_ALL].set(leavingNode-1);
+    bool receivedFromAllNodes = markBitAndReturnAreAllNodesIncludingSelfTrue(msg);
+    if(receivedFromAllNodes){
+        string finsihedMessage = "o########################ok######################### \n" ;//todo DFD
+        logActivity(finsihedMessage);
+    }
+    return retVal;
+
 }
