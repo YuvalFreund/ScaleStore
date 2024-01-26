@@ -28,6 +28,9 @@ struct BucketManagerMessageHandler{
     std::queue<RemoteBucketShuffleJob> remoteBucketShufflingQueue;
     std::atomic<unsigned long> localMergeJobsCounter; // todo yuval - replace with an optimisitic lock!
     std::atomic<unsigned long> remoteShuffleJobsCounter; // todo yuval - replace with an optimisitic lock!
+    std::map<uint64_t,queue<pair<uint64_t,uint64_t>>> unionFindDataForNodes;
+    int unionFindDataArrived = 0;
+    std::map<uint64_t,queue<uint64_t>> bucketShuffleDataForNodes;
 
 
 public:
@@ -49,19 +52,6 @@ public:
 
 
     vector<BucketMessage> handleIncomingMessage(BucketMessage msg);
-    //node joining handlers
-
-    vector<BucketMessage> handleNewNodeJoinedEnter(BucketMessage msg);
-
-    vector<BucketMessage> handleNewHashingStateSynchronizedEnter(BucketMessage msg);
-
-    vector<BucketMessage> handleIncomingUnionFindDataEnter(BucketMessage msg);
-
-    vector<BucketMessage> handleUnionFindDataFinishedEnter(BucketMessage msg);
-
-    vector<BucketMessage> handleBucketAmountsDataEnter(BucketMessage msg);
-
-    vector<BucketMessage> handleBucketAmountsApprovedEnter(BucketMessage msg);
     //node leaving handlers
 
     vector<BucketMessage> handleNodeLeftTheClusterLeave(BucketMessage msg);
@@ -105,8 +95,8 @@ public:
 
     vector<BucketMessage> gossipLocalUnionFindData(MessagesEnum msgEnum);
     vector<BucketMessage> prepareGossipUnionFindAmountsMessages();
-    vector<pair<uint64_t,uint64_t>>* prepareUnionFindData();
     vector<BucketMessage> addIncomingUnionFindData(BucketMessage msg) ;
+    vector<BucketMessage> handleUnionFindDataSendMore(BucketMessage msg);
 
     vector<BucketMessage> gossipFinishedUnionFind(MessagesEnum msgEnum);
 
@@ -116,7 +106,9 @@ public:
 
     bool markBitAndReturnAreAllNodesIncludingSelfTrue(const BucketMessage msg);
 ///////// buckets sending functions functions /////////
-
+    vector<BucketMessage> handleIncomingShuffledBucketData(BucketMessage msg);
+    vector<BucketMessage> handleIncomingShuffledBucketDataSendMore(BucketMessage msg);
+    vector<BucketMessage>handleIncomingShuffledBucketDataReceivedAll(BucketMessage msg)
     vector<BucketMessage> prepareOtherNodesForIncomingBuckets();
 
     void sendBucketToNode(RemoteBucketShuffleJob bucketShuffleJob);
@@ -139,9 +131,11 @@ public:
     static void breakDownBucketIdToBytes(uint64_t input, uint8_t retVal[6]);
     uint64_t convertBytesBackToUint64(uint8_t input[8]);
     uint64_t convertBytesBackToBucketId(uint8_t input[6]);
+    BucketMessage prepareNextUnionFindDataToSendToNode(uint64_t nodeId);
 
     LocalBucketsMergeJob getMergeJob();
     RemoteBucketShuffleJob getShuffleJob();
+    void prepareIncomingBucketsDataForOtherNodes();
 
 };
 

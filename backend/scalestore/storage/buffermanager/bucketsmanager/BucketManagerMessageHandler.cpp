@@ -6,31 +6,6 @@ vector<BucketMessage> BucketManagerMessageHandler::handleIncomingMessage(BucketM
     string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleIncomingMessage. \n" ;//todo DFD
     logActivity(logMsg);
     switch(msg.messageEnum){
-        // node joining
-
-        case NODE_JOINED_THE_CLUSTER_ENTER:
-            retVal = handleNewNodeJoinedEnter(msg);
-            break;
-
-        case CONSISTENT_HASHING_INFORMATION_SYNCED_ENTER:
-            retVal = handleNewHashingStateSynchronizedEnter(msg);
-            break;
-
-        case UNION_FIND_DATA_ENTER:
-            retVal = handleIncomingUnionFindDataEnter(msg);
-            break;
-
-        case UNION_FIND_DATA_FINISHED_ENTER:
-            retVal = handleUnionFindDataFinishedEnter(msg);
-            break;
-
-        case BUCKET_AMOUNTS_DATA_ENTER:
-            retVal = handleBucketAmountsDataEnter(msg);
-            break;
-
-        case BUCKETS_AMOUNTS_APPROVED_ENTER:
-            retVal = handleBucketAmountsApprovedEnter(msg);
-            break;
             // node leaving
 
         case NODE_LEAVING_THE_CLUSTER_LEAVE:
@@ -41,20 +16,16 @@ vector<BucketMessage> BucketManagerMessageHandler::handleIncomingMessage(BucketM
             retVal = handleNewHashingStateSynchronizedLeave(msg);
             break;
 
-        case UNION_FIND_BUCKETS_AMOUNT:
-            retVal = handleUnionFindDataAmount(msg);
-            break;
-
         case UNION_FIND_DATA_LEAVE:
             retVal = handleIncomingUnionFindDataLeave(msg);
             break;
 
-         case UNION_FIND_NODE_RECEIVED_ALL_LEAVE:
-            retVal = handleUnionFindDataFinishedAllNodesLeave(msg);
+        case UNION_FIND_DATA_SEND_MORE:
+            retVal = handleUnionFindDataSendMore(msg);
             break;
 
-        case BUCKET_AMOUNTS_DATA_LEAVE:
-            retVal = handleBucketAmountsDataLeave(msg);
+        case UNION_FIND_NODE_RECEIVED_ALL_LEAVE:
+            retVal = handleUnionFindDataFinishedAllNodesLeave(msg);
             break;
 
         case BUCKETS_AMOUNTS_APPROVED_LEAVE:
@@ -62,7 +33,17 @@ vector<BucketMessage> BucketManagerMessageHandler::handleIncomingMessage(BucketM
             break;
 
             // buckets shuffling messages
+        case INCOMING_SHUFFLED_BUCKET_DATA:
+            handleIncomingShuffledBucketData(msg);
+            break;
 
+        case INCOMING_SHUFFLED_BUCKET_DATA_SEND_MORE:
+            handleIncomingShuffledBucketDataSendMore(msg);
+            break;
+
+        case INCOMING_SHUFFLED_BUCKET_DATA_RECEIVED_ALL:
+            handleIncomingShuffledBucketDataReceivedAll(msg);
+            break;
         case REQUEST_TO_START_BUCKET_SEND:
             retVal = handleRequestToStartSendingBucket(msg);
             break;
@@ -85,94 +66,6 @@ vector<BucketMessage> BucketManagerMessageHandler::handleIncomingMessage(BucketM
     return retVal;
 }
 
-//node joining handlers
-
-vector<BucketMessage> BucketManagerMessageHandler::handleNewNodeJoinedEnter(BucketMessage msg){
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleNewNodeJoinedEnter. \n" ;//todo DFD
-    logActivity(logMsg);
-    vector<BucketMessage> retVal;
-
-    auto newNodeId = (uint64_t) msg.messageData[MSG_DATA_START_IDX];
-    bucketManager.nodeLeftOrJoinedCluster(true,newNodeId);
-    nodeIdsForMessages.emplace_back(newNodeId);
-    uint8_t messageData[MESSAGE_SIZE];
-    messageData[MSG_ENUM_IDX] = (uint8_t) CONSISTENT_HASHING_INFORMATION_SYNCED_ENTER;
-    messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
-    auto consistentHashingCompleted = BucketMessage(messageData);
-    retVal = collectMessagesToGossip(consistentHashingCompleted);
-
-    return retVal;
-}
-
-vector<BucketMessage> BucketManagerMessageHandler::handleNewHashingStateSynchronizedEnter(BucketMessage msg){
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleNewHashingStateSynchronizedEnter. \n" ;//todo DFD
-    logActivity(logMsg);
-    vector<BucketMessage> retVal;
-
-    bool allNodesUpdated = markBitAndReturnAreAllNodesExcludingSelfTrue(msg);
-    if(allNodesUpdated){
-        retVal = gossipLocalUnionFindData(UNION_FIND_DATA_ENTER);
-    }
-    return retVal;
-
-}
-
-vector<BucketMessage> BucketManagerMessageHandler::handleIncomingUnionFindDataEnter(BucketMessage msg){
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleIncomingUnionFindDataEnter. \n" ;//todo DFD
-    logActivity(logMsg);
-    vector<BucketMessage> retVal;
-
-    addIncomingUnionFindData(msg);
-    bool allNodesUpdated = markBitAndReturnAreAllNodesExcludingSelfTrue(msg);
-    if(allNodesUpdated){
-        retVal = gossipFinishedUnionFind(UNION_FIND_DATA_FINISHED_ENTER);
-    }
-    return retVal;
-
-}
-
-vector<BucketMessage> BucketManagerMessageHandler::handleUnionFindDataFinishedEnter(BucketMessage msg){
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleUnionFindDataFinishedEnter. \n" ;//todo DFD
-    logActivity(logMsg);
-    vector<BucketMessage> retVal;
-
-    bool allNodesUpdated = markBitAndReturnAreAllNodesExcludingSelfTrue(msg);
-    if(allNodesUpdated){
-        retVal = prepareBucketAmountsToNodesMessages(BUCKET_AMOUNTS_DATA_ENTER);
-    }
-    return retVal;
-
-}
-
-vector<BucketMessage> BucketManagerMessageHandler::handleBucketAmountsDataEnter(BucketMessage msg){
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleBucketAmountsDataEnter. \n" ;//todo DFD
-    logActivity(logMsg);
-    vector<BucketMessage> retVal;
-
-    bucketManager.updateRequestedBucketNumAndIsMergeNeeded((uint64_t) msg.messageData[MSG_DATA_START_IDX]);
-    bool allNodesUpdated = markBitAndReturnAreAllNodesExcludingSelfTrue(msg);
-    if(allNodesUpdated){
-        retVal = gossipBucketAmountFinishedEnter();
-    }
-    return retVal;
-
-}
-
-vector<BucketMessage> BucketManagerMessageHandler::handleBucketAmountsApprovedEnter(BucketMessage msg){
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleBucketAmountsApprovedEnter. \n" ;//todo DFD
-    logActivity(logMsg);
-    vector<BucketMessage> retVal;
-
-    bool allNodesUpdated = markBitAndReturnAreAllNodesExcludingSelfTrue(msg);
-    if(allNodesUpdated){
-        string finished = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "finished synchronizing stage!. \n" ;//todo DFD
-        logActivity(finished);
-        retVal = prepareOtherNodesForIncomingBuckets();
-    }
-    return retVal;
-
-}
-
 //node leaving handlers
 
 vector<BucketMessage> BucketManagerMessageHandler::handleNodeLeftTheClusterLeave(BucketMessage msg){
@@ -180,6 +73,8 @@ vector<BucketMessage> BucketManagerMessageHandler::handleNodeLeftTheClusterLeave
     logActivity(logMsg);
     vector<BucketMessage> retVal;
 
+    int sendingNode = (int)msg.messageData[MSG_SND_IDX];
+    consensusVec[CONSISTENT_HASHING_INFORMATION_SYNCED_LEAVE].set(sendingNode - 1);
     auto leavingNodeId = (uint64_t) msg.messageData[MSG_DATA_START_IDX];
     bucketManager.nodeLeftOrJoinedCluster(false,leavingNodeId);
 
@@ -212,24 +107,36 @@ vector<BucketMessage> BucketManagerMessageHandler::handleIncomingUnionFindDataLe
     string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleIncomingUnionFindDataLeave. \n" ;//todo DFD
     logActivity(logMsg);
     vector<BucketMessage> retVal;
-
     if(bucketManager.nodeIsToBeDeleted == false){
-        retVal = addIncomingUnionFindData(msg);
+        addIncomingUnionFindData(msg);
+    }
+    if(msg.messageData[UNION_FIND_LAST_DATA] == 0){
+        uint8_t messageData[MESSAGE_SIZE];
+        messageData[MSG_ENUM_IDX] = (uint8_t) UNION_FIND_DATA_SEND_MORE;
+        messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
+        messageData[MSG_RCV_IDX] = (uint8_t) msg.messageData[MSG_SND_IDX];
+        auto askForMoreDataMsg = BucketMessage(messageData);
+        sendMessage(askForMoreDataMsg);
+        retVal.emplace_back(askForMoreDataMsg);
+    }else{
+        bool receivedFromAllNodes = markBitAndReturnAreAllNodesExcludingSelfTrue(msg);
+        if(receivedFromAllNodes){
+            retVal = gossipFinishedUnionFind(UNION_FIND_NODE_RECEIVED_ALL_LEAVE);
+        }
     }
     return retVal;
 
 }
 
-vector<BucketMessage> BucketManagerMessageHandler::handleUnionFindDataAmount(BucketMessage msg){
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleUnionFindDataAmount. \n" ;//todo DFD
+vector<BucketMessage> BucketManagerMessageHandler::handleUnionFindDataSendMore(BucketMessage msg){
+    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleUnionFindDataSendMore. \n" ;//todo DFD
     logActivity(logMsg);
     vector<BucketMessage> retVal;
-
-    uint64_t amount = convertBytesBackToUint64(&msg.messageData[MSG_DATA_START_IDX]);
-    this->unionFindTotalAmount += (int) amount;
+    BucketMessage toSend = prepareNextUnionFindDataToSendToNode(msg.messageData[MSG_SND_IDX]);
+    sendMessage(toSend);
     return retVal;
-
 }
+
 
 vector<BucketMessage> BucketManagerMessageHandler::handleUnionFindDataFinishedAllNodesLeave(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleUnionFindDataFinishedAllNodesLeave. \n" ;//todo DFD
@@ -381,30 +288,6 @@ vector<BucketMessage> BucketManagerMessageHandler::handleNodeFinishedReceivingBu
 // Node joined / leaving functions
 
 
-vector<BucketMessage> BucketManagerMessageHandler::gossipNodeJoined() {
-
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "gossipNodeJoined. \n" ;//todo DFD
-    logActivity(logMsg);
-    vector<BucketMessage> retVal;
-
-    uint8_t messageDataForJoinedNode[MESSAGE_SIZE];
-    messageDataForJoinedNode[MSG_ENUM_IDX] = (uint8_t) NODE_JOINED_THE_CLUSTER_ENTER;
-    messageDataForJoinedNode[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
-    messageDataForJoinedNode[MSG_DATA_START_IDX] = (uint8_t) bucketManager.nodeId;
-    auto bucketAmountFinishedMsg = BucketMessage(messageDataForJoinedNode);
-    retVal = collectMessagesToGossip(bucketAmountFinishedMsg);
-    bucketManager.nodeLeftOrJoinedCluster(true,bucketManager.nodeId);
-    bucketManager.getOldConsistentHashingInfoForNewNode();
-    uint8_t messageDataForConsistentHashing[MESSAGE_SIZE];
-    messageDataForConsistentHashing[MSG_ENUM_IDX] = (uint8_t) CONSISTENT_HASHING_INFORMATION_SYNCED_ENTER;
-    messageDataForConsistentHashing[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
-    auto consistentHashingCompleted = BucketMessage(messageDataForConsistentHashing);
-    collectMessagesToGossip(consistentHashingCompleted); // todo - that doesnt matter right now
-
-    return retVal;
-
-}
-
 vector<BucketMessage> BucketManagerMessageHandler::gossipNodeLeft(){
 
     string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "gossipNodeLeft. \n" ;//todo DFD
@@ -418,12 +301,6 @@ vector<BucketMessage> BucketManagerMessageHandler::gossipNodeLeft(){
     auto bucketAmountFinishedMsg = BucketMessage(messageDataForLeavingNode);
     retVal = collectMessagesToGossip(bucketAmountFinishedMsg);
     bucketManager.nodeLeftOrJoinedCluster(false,bucketManager.nodeId);
-    uint8_t messageDataForConsistentHashing[MESSAGE_SIZE];
-    messageDataForConsistentHashing[MSG_ENUM_IDX] = (uint8_t) CONSISTENT_HASHING_INFORMATION_SYNCED_LEAVE;
-    messageDataForConsistentHashing[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
-    auto consistentHashingCompleted = BucketMessage(messageDataForConsistentHashing);
-    vector<BucketMessage> gossipMessageCompleted = collectMessagesToGossip(consistentHashingCompleted);
-    retVal.insert( retVal.end(), gossipMessageCompleted.begin(), gossipMessageCompleted.end() );
     return retVal;
 
 }
@@ -457,20 +334,6 @@ vector<BucketMessage> BucketManagerMessageHandler::prepareBucketAmountsToNodesMe
 
 }
 
-vector<BucketMessage> BucketManagerMessageHandler::gossipBucketAmountFinishedEnter(){
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "gossipBucketAmountFinishedEnter. \n" ;//todo DFD
-    logActivity(logMsg);
-    vector<BucketMessage> retVal;
-
-    uint8_t messageData[MESSAGE_SIZE];
-    messageData[MSG_ENUM_IDX] = (uint8_t) BUCKETS_AMOUNTS_APPROVED_ENTER;
-    messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
-
-    auto bucketAmountFinishedMsg = BucketMessage(messageData);
-    retVal = collectMessagesToGossip(bucketAmountFinishedMsg);
-    return retVal;
-
-}
 
 vector<BucketMessage> BucketManagerMessageHandler::gossipBucketAmountFinishedLeave(){
     string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "gossipBucketAmountFinishedLeave. \n" ;//todo DFD
@@ -485,67 +348,6 @@ vector<BucketMessage> BucketManagerMessageHandler::gossipBucketAmountFinishedLea
     retVal = collectMessagesToGossip(bucketAmountFinishedMsg);
     return retVal;
 
-}
-
-//Union Find functions
-vector<BucketMessage> BucketManagerMessageHandler::prepareGossipUnionFindAmountsMessages() {
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "prepareGossipUnionFindAmountsMessages. \n";//todo DFD
-    logActivity(logMsg);
-    vector<BucketMessage> retVal;
-
-    uint8_t messageData[MESSAGE_SIZE];
-    messageData[MSG_ENUM_IDX] = (uint8_t) UNION_FIND_BUCKETS_AMOUNT;
-    messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
-    uint64_t unionFindAmount = bucketManager.getDisjointSets().getUnionFindSize();
-    breakDownUint64ToBytes(unionFindAmount, &messageData[MSG_DATA_START_IDX]);
-    auto unionFindDataToGossip = BucketMessage(messageData);
-    retVal = collectMessagesToGossip(unionFindDataToGossip);
-
-    if (bucketManager.nodeIsToBeDeleted) {
-        vector<BucketMessage> finishedMessages = gossipFinishedUnionFind(UNION_FIND_NODE_RECEIVED_ALL_LEAVE);
-        retVal.insert( retVal.end(), finishedMessages.begin(), finishedMessages.end() );
-    }
-    return retVal;
-
-}
-vector<BucketMessage> BucketManagerMessageHandler::gossipLocalUnionFindData(MessagesEnum msgEnum){
-
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "gossipLocalUnionFindData. \n" ;//todo DFD
-    logActivity(logMsg);
-    vector<BucketMessage> retVal;
-    vector<pair<uint64_t,uint64_t>>* unionFindLocalData = prepareUnionFindData();
-    int runningVectorIndex = 0;
-    int messageNumRequired = ceil((double)unionFindLocalData->size() / UNION_FIND_DATA_MAX_AMOUNT);
-    for(int i = 0; i < messageNumRequired; i++){
-        uint8_t messageData[MESSAGE_SIZE];
-        messageData[MSG_ENUM_IDX] = (uint8_t) msgEnum;
-        messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
-        int amountLeftToSend = unionFindLocalData->size() - (i * UNION_FIND_DATA_MAX_AMOUNT);
-        int amountOfBucketToSend = amountLeftToSend < UNION_FIND_DATA_MAX_AMOUNT ? amountLeftToSend : UNION_FIND_DATA_MAX_AMOUNT;
-        messageData[UNION_FIND_BUCKET_DATA_SENT_IDX] = (uint8_t) amountOfBucketToSend;
-        for(int j = 0; j < amountOfBucketToSend; j++){
-            breakDownBucketIdToBytes(unionFindLocalData->at(runningVectorIndex).first,&messageData[MSG_DATA_START_IDX + (6 * j)]);
-            breakDownBucketIdToBytes(unionFindLocalData->at(runningVectorIndex).second,&messageData[MSG_DATA_START_IDX + (6 * j) + 6]);
-            runningVectorIndex++;
-        }
-        auto unionFindDataToGossip = BucketMessage(messageData);
-        vector<BucketMessage> currentMsgs = collectMessagesToGossip(unionFindDataToGossip);
-        retVal.insert( retVal.end(), currentMsgs.begin(), currentMsgs.end() );
-    }
-
-    return retVal;
-
-}
-
-vector<pair<uint64_t,uint64_t>>* BucketManagerMessageHandler::prepareUnionFindData(){
-
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "prepareUnionFindData. \n" ;//todo DFD
-    logActivity(logMsg);
-    auto *retVal = new vector<pair<uint64_t,uint64_t>>();
-    for ( const auto &unionFindPair :   bucketManager.getDisjointSets().getMap() ) {
-        retVal->emplace_back(unionFindPair.first,unionFindPair.second);
-    }
-    return retVal;
 }
 
 vector<BucketMessage> BucketManagerMessageHandler::addIncomingUnionFindData(BucketMessage msg) {
@@ -590,17 +392,6 @@ bool BucketManagerMessageHandler::markBitAndReturnAreAllNodesExcludingSelfTrue(c
     int sendingNode = (int)msg.messageData[MSG_SND_IDX];
     consensusVec[msg.messageEnum].set(sendingNode - 1);
     consensusVec[msg.messageEnum].set(bucketManager.nodeId - 1);
-    if(consensusVec[msg.messageEnum].all()){
-        consensusVec[msg.messageEnum].reset();
-        return true;
-    }else{
-        return false;
-    }
-}
-
-bool BucketManagerMessageHandler::markBitAndReturnAreAllNodesIncludingSelfTrue(const BucketMessage msg){
-    int sendingNode = (int)msg.messageData[MSG_SND_IDX];
-    consensusVec[msg.messageEnum].set(sendingNode - 1);
     if(consensusVec[msg.messageEnum].all()){
         consensusVec[msg.messageEnum].reset();
         return true;
@@ -892,4 +683,34 @@ RemoteBucketShuffleJob BucketManagerMessageHandler::getShuffleJob(){
         }
     }
     return retVal;
+}
+
+BucketMessage BucketManagerMessageHandler::prepareNextUnionFindDataToSendToNode(uint64_t nodeId){
+    uint8_t messageData[MESSAGE_SIZE];
+    messageData[MSG_ENUM_IDX] = (uint8_t) UNION_FIND_DATA_LEAVE;
+    messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
+    messageData[MSG_RCV_IDX] = (uint8_t)nodeId;
+    int i = 0;
+    while(i < UNION_FIND_DATA_MAX_AMOUNT && unionFindDataForNodes.find(nodeId)->second.empty()== false){
+        breakDownBucketIdToBytes(unionFindDataForNodes.find(nodeId)->second.front().first,&messageData[MSG_DATA_START_IDX + (6 * i)]);
+        breakDownBucketIdToBytes(unionFindDataForNodes.find(nodeId)->second.front().second,&messageData[MSG_DATA_START_IDX + (6 * i) + 6]);
+        unionFindDataForNodes.find(nodeId)->second.pop();
+        i++;
+    }
+    messageData[UNION_FIND_BUCKET_DATA_SENT_IDX] = (uint8_t) i;
+    if(unionFindDataForNodes.find(nodeId)->second.empty()){
+        messageData[UNION_FIND_LAST_DATA] = (uint8_t) 1;
+    }else{
+        messageData[UNION_FIND_LAST_DATA] = (uint8_t) 0;
+    }
+    BucketMessage retVal = BucketMessage(messageData);
+    return retVal;
+}
+void BucketManagerMessageHandler::prepareIncomingBucketsDataForOtherNodes(){ //pair is <bucket id , node>
+    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "prepareOtherNodesForIncomingBuckets. \n" ;//todo DFD
+    logActivity(logMsg);
+    vector<pair<uint64_t,uint64_t>> bucketsAndNodes =  bucketManager.getBucketsShufflePrioritiesAndNodes();
+    for(auto pair : bucketsAndNodes){
+        bucketShuffleDataForNodes.find(pair.second)->second.push(pair.first);
+    }
 }
