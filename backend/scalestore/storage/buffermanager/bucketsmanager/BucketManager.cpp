@@ -65,12 +65,6 @@ uint64_t BucketManager::getPageSSDSlotInSelfNode(uint64_t pageId) {
     return retVal;
 }
 
-std::map<uint64_t, Bucket> ::iterator BucketManager::getIterToBucket(uint64_t bucketId){
-    bucketMapMtx.lock();
-    auto retVal =bucketsMap.find(bucketId);
-    bucketMapMtx.unlock();
-    return retVal;
-}
 
 
 uint64_t BucketManager::getNodeIdOfPage(uint64_t pageId){
@@ -398,11 +392,14 @@ bool BucketManager::updateRequestedBucketNumAndIsMergeNeeded(uint64_t newBuckets
 }
 
 void BucketManager::deleteBucket(uint64_t bucketId){
+    bucketMapMtx.lock();
     auto bucketToRemove = bucketsMap.find(bucketId);
     uint64_t ssdSlotFreed = bucketToRemove->second.SSDSlotStart;
     bucketsMap.erase(bucketToRemove);
     bucketsNum--;
     bucketsFreeSSDSlots.push(ssdSlotFreed);
+    bucketMapMtx.unlock();
+
 }
 
 
@@ -446,8 +443,24 @@ void BucketManager::initBucketSizeDataByParameter(int bucketIdByteSize){
             break;
     }
 
-    BucketsDisjointSets BucketManager::getDisjointSets(){
-        return disjointSets;
-    }
+
+}
+PageIdJobFromBucket BucketManager::getPageFromBucketToShuffle(uint64_t bucketId){
+    PageIdJobFromBucket retVal;
+    bucketMapMtx.lock();
+    auto bucketToGetPageFrom = bucketsMap.find(bucketId);
+    retVal = bucketToGetPageFrom->second.getAnyPageOfBucketToShuffle();
+    bucketMapMtx.unlock();
+    return retVal;
 }
 
+void BucketManager::lockBucketBeforeShuffle(uint64_t bucketIdToLock){
+    bucketMapMtx.lock();
+    auto bucketToGetPageFrom = bucketsMap.find(bucketIdToLock)->second.lockBucketBeforeShuffle();
+    bucketMapMtx.unlock();
+}
+
+
+BucketsDisjointSets& BucketManager::getDisjointSets(){
+    return disjointSets;
+}

@@ -28,14 +28,15 @@ struct BucketShuffler{
     std::queue<RemoteBucketShuffleJob> remoteShuffleJobs;
     atomic<bool> initiated = false;
     atomic<bool> workDone = false;
+    RemoteBucketShuffleJob currentShuffleJob;
     rdma::MessageHandler& mh;
     BucketManagerMessageHandler& bmmh;
     storage::Buffermanager& bm;
-    uint64_t currentWorkingBucket;
 
     BucketShuffler(rdma::MessageHandler &mh, BucketManagerMessageHandler &bmmh, storage::Buffermanager &bm) : mh(mh),
                                                                                                               bmmh(bmmh),
-                                                                                                              bm(bm) {}
+                                                                                                              bm(bm) {
+    }
 
     bool doOnePageShuffle(){
         if (initiated == false){
@@ -45,35 +46,42 @@ struct BucketShuffler{
             if(workDone){
                 return true;
             }else{
+                PageShuffleJob jobToExecute = getNextPageToShuffle();
 
             }
         }
     }
 
     PageShuffleJob getNextPageToShuffle(){
+        PageShuffleJob retVal = PageShuffleJob();
         bucketsJobMutex.lock();
-
-        handleOnePageSend();
+        PageIdJobFromBucket check = bmmh.bucketManager.getPageFromBucketToShuffle(currentShuffleJob.bucketId);
+        if(check.bucketContainsPages){
+            retVal.nodeId = currentShuffleJob.nodeId;
+            retVal.pageId = check.pageId;
+        }else{
+            updateCurrentShuffleJob();
+            PageIdJobFromBucket newCheck = bmmh.bucketManager.getPageFromBucketToShuffle(currentShuffleJob.bucketId);
+            retVal.nodeId = currentShuffleJob.nodeId;
+            retVal.pageId = newCheck.pageId;
+        }
         bucketsJobMutex.unlock();
+        return retVal;
     }
 
     void handleOnePageSend(PageShuffleJob pageShuffleJob){
         // todo yuval - this function needs to return list of bucket ids that were transferred
         BucketManager& bucketManager = bmmh.bucketManager;
-        uint64_t bucketId = bucketShuffleJob.bucketId;
-        uint64_t newNodeId = bucketShuffleJob.nodeId;
+        uint64_t pageId = pageShuffleJob.pageId;
+        uint64_t newNodeId = pageShuffleJob.nodeId;
         auto clientId = mh.bmmh_cctxs[newNodeId];
         auto ctx = mh.cctxs[clientId];
-        uint64_t leavingNodeId = bucketManager.nodeId;
-        map<uint64_t, uint64_t> mapOfNode = bucketManager.mergableBucketsForEachNode[newNodeId]; // this data is necessary for getting the bucket that will be merged
-        Bucket* bigBucket = &(bucketManager.bucketsMap.find(bucketId)->second);
-        //Bucket* smallBucket;
+
 
         // dealing with big bucket first uint64_t bigBucketSsdSlotsStart = bigBucket-> SSDSlotStart;
 
         // bucket will be blocked from adding (suggest other bucket in Random loop), removing will be ignored
         // this the bucket becomes basically "read only"= no problem to iterate over the map
-        bigBucket->lockBucketBeforeShuffle();
         // todo yuval - export all this to a function. this needs to happen both for small and big bucket
         for (auto const& [key, val] : bigBucket->pageIdToSlot){
             uint64_t pageId = key;
@@ -190,12 +198,26 @@ struct BucketShuffler{
         if(checkIfQueueReady){
             bucketsJobMutex.lock();
             remoteShuffleJobs = bmmh.remoteBucketShufflingQueue;
-            RemoteBucketShuffleJob firstJob = remoteShuffleJobs.front();
+            currentShuffleJob = remoteShuffleJobs.front();
+            bmmh.bucketManager.lockBucketBeforeShuffle(currentShuffleJob.bucketId);
             remoteShuffleJobs.pop();
-            currentWorkingBucket = firstJob.bucketId;
             bucketsJobMutex.unlock(); // todo - think about this bucket locking - maybe the pointer is not enough
             initiated.store(true);
         }
+    }
+
+    void updateCurrentShuffleJob(){
+        bmmh.bucketManager.deleteBucket(currentShuffleJob.bucketId);
+        auto gossipMessages = bmmh.gossipBucketMoved(currentShuffleJob.bucketId,currentShuffleJob.nodeId);
+        mh.writeMsgsForBucketManager(gossipMessages);
+        // todo yuval - also, deal with small bucket
+
+        bucketsJobMutex.lock();
+        remoteShuffleJobs = bmmh.remoteBucketShufflingQueue;
+        currentShuffleJob = remoteShuffleJobs.front();
+        bmmh.bucketManager.lockBucketBeforeShuffle(currentShuffleJob.bucketId);
+        remoteShuffleJobs.pop();
+        bucketsJobMutex.unlock();
     }
 };
 

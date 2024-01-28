@@ -147,7 +147,7 @@ public:
     // this is just for testing - this wil NOT be called
     uint64_t getNumberOfPagesInNode();
 
-
+    void lockBucketBeforeShuffle(uint64_t bucketIdToLock);
     void putBucketIdToUnionFind(uint64_t newBucketId);
 
     void putNewUnionFindPairData(uint64_t child, uint64_t root);
@@ -159,13 +159,15 @@ public:
     std::queue<LocalBucketsMergeJob> getJobsForMergingOwnBuckets();
 
     void atomicallyMoveToNormal();
-    std::map<uint64_t, Bucket> ::iterator getIterToBucket(uint64_t bucketId);
 
     ///////////////shuffling functions //////////////////////
 
     vector<pair<uint64_t, uint64_t>> getBucketsShufflePrioritiesAndNodes();
     void initBucketSizeDataByParameter(int bucketIdByteSize);
-    BucketsDisjointSets getDisjointSets();
+    BucketsDisjointSets& getDisjointSets();
+
+    PageIdJobFromBucket getPageFromBucketToShuffle(uint64_t bucketId);
+
 
 
 };

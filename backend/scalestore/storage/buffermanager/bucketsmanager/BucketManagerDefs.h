@@ -42,7 +42,10 @@
 #define UNION_FIND_DATA_MAX_AMOUNT 2 // todo - parameterized regarding bucket size
 #define MESSAGE_ENUM_AMOUNT 25
 
-
+struct PageIdJobFromBucket{
+    uint64_t pageId;
+    bool bucketContainsPages;
+};
 
 
 

@@ -176,6 +176,19 @@ public:
     }
 
 
+    PageIdJobFromBucket getAnyPageOfBucketToShuffle(){
+        PageIdJobFromBucket retVal;
+        bucketLock.lock();
+        auto check = pageIdToSlot.begin();
+        if(check == pageIdToSlot.end()){
+            retVal.bucketContainsPages = false;
+        }else{
+            retVal.bucketContainsPages = true;
+            retVal.pageId = check->first;
+        }
+        bucketLock.unlock();
+        return retVal;
+    }
     void initBucketSizeDataByParameter(int bucketIdByteSize){
         switch(bucketIdByteSize){
             case 5:
