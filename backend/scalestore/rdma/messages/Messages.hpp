@@ -42,7 +42,7 @@ enum class MESSAGE_TYPE : uint8_t {
 
    // -------------------------------------------------------------------------------------
    // Shuffeled frame on the way
-   SSFR = 16,
+   CSFR = 16,
    SSFRR = 17,
    // update shuffled frame arrived
    USFA = 18,
@@ -202,9 +202,9 @@ struct BucketManagerMessage : public Message{
     }
 };
 
-struct SendShuffledFrameRequest : public Message {
+struct CreateShuffledFrameRequest : public Message {
     uint64_t shuffledPid;
-    SendShuffledFrameRequest(uint64_t shuffledPid) : Message(MESSAGE_TYPE::SSFR), shuffledPid(shuffledPid){}
+    CreateShuffledFrameRequest(uint64_t shuffledPid) : Message(MESSAGE_TYPE::CSFR), shuffledPid(shuffledPid){}
 };
 
 struct SendShuffledFrameResponse : public Message{
@@ -236,7 +236,7 @@ union ALLDERIVED{
    DelegationRequest dr;
    DelegationResponse drr;
    BucketManagerMessage bmmsg;
-   SendShuffledFrameRequest ssfr;
+   CreateShuffledFrameRequest csfr;
    UpdateShuffledFrameArrived usfa;
 
 };

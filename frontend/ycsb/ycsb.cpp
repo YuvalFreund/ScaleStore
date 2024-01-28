@@ -246,6 +246,7 @@ int main(int argc, char* argv[])
             scalestore.startProfiler(experimentInfo);
             storage::Buffermanager& bufferManager = scalestore.getBuffermanager();
             BucketManagerMessageHandler& bmmh = scalestore.getBucketManagerMessageHandler();
+            BucketShuffler& shuffler = scalestore.getBucketShuffler();
             rdma::MessageHandler& mh = scalestore.getMessageHandler();
             for (uint64_t t_i = 0; t_i < FLAGS_worker; ++t_i) {
                scalestore.getWorkerPool().scheduleJobAsync(t_i, [&, t_i]() {
@@ -253,14 +254,20 @@ int main(int argc, char* argv[])
                   storage::DistributedBarrier barrier(catalog.getCatalogEntry(BARRIER_ID).pid);
                   storage::BTree<K, V> tree(catalog.getCatalogEntry(BTREE_ID).pid);
                   barrier.wait();
-                  mh.writeMsgsForBucketManager();// todo yuval - continure here tommorw!
+                  uint64_t checkForShuffle = 0;
                   while (keep_running) {
+                     if(t_i == 0) {
+                         checkForShuffle++;
+                         if(checkForShuffle > YCSB_trigger_shuffle_flag){
+                             mh.writeMsgsForBucketManager();// todo yuval - implement calling to start shuffling
+                         }
+                     }
                      K key = zipf_random->rand(zipf_offset);
                      ensure(key < YCSB_tuple_count);
                      V result;
                       // worker will try to merge locally - and then to shuffle bucket to remote node
                      if(utils::RandomGenerator::getRandU64(0, 10000) < shuffleRatio) { // worker will go and shuffle
-                         LocalBucketsMergeJob mergeJob = bmmh.getMergeJob();
+                         /*LocalBucketsMergeJob mergeJob = bmmh.getMergeJob();
                          if(mergeJob.needMerge){
                              //BucketShuffler::merge2bucketsLocally();
                          }
@@ -268,14 +275,8 @@ int main(int argc, char* argv[])
                              vector<BucketMessage> toGossip = bmmh.gossipBucketAmountFinishedLeave();
                              mh.writeMsgsForBucketManager(toGossip);
                          }
-
-                         RemoteBucketShuffleJob remoteJob = bmmh.getShuffleJob();
-                         if(remoteJob.needShuffle){
-                             BucketShuffler::sendBucketToNode(remoteJob,mh,bmmh,bufferManager);
-                             vector<BucketMessage> toGossip = bmmh.gossipBucketMoved(remoteJob.bucketId,remoteJob.nodeId);
-                             mh.writeMsgsForBucketManager(toGossip);
-
-                         }
+                        */
+                         shuffler.doOnePageShuffle();
 
                      } else{
                          if (READ_RATIO == 100 || utils::RandomGenerator::getRandU64(0, 100) < READ_RATIO) {

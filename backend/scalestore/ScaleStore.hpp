@@ -18,6 +18,7 @@
 #include "scalestore/storage/buffermanager/bucketsmanager/BucketManagerMessageHandler.h"
 #include "scalestore/storage/buffermanager/bucketsmanager/LocalBucketsMergeJob.h"
 #include "scalestore/storage/buffermanager/bucketsmanager/RemoteBucketShuffleJob.h"
+#include "scalestore/storage/buffermanager/bucketsmanager/bucketShuffler.h"
 
 // -------------------------------------------------------------------------------------
 #include <memory>
@@ -61,6 +62,8 @@ class ScaleStore
    s32 getSSDFD() { return ssd_fd; }
    // -------------------------------------------------------------------------------------
    BucketManagerMessageHandler& getBucketManagerMessageHandler() { return *bucketManagerMessageHandler;}
+   // -------------------------------------------------------------------------------------
+   BucketShuffler& getBucketShuffler() { return *bucketShuffler;}
    // -------------------------------------------------------------------------------------
    rdma::MessageHandler& getMessageHandler(){return *mh;}
    // -------------------------------------------------------------------------------------
@@ -132,6 +135,7 @@ class ScaleStore
    std::unique_ptr<storage::Catalog> catalog;
    std::unique_ptr<BucketManager> bucketManager;
    std::unique_ptr<BucketManagerMessageHandler> bucketManagerMessageHandler;
+   std::unique_ptr<BucketShuffler> bucketShuffler;
    profiling::ProfilingThread pt;
    std::vector<std::thread> profilingThread;
 };

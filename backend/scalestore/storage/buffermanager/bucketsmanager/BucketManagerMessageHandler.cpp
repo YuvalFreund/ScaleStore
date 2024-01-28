@@ -28,6 +28,10 @@ vector<BucketMessage> BucketManagerMessageHandler::handleIncomingMessage(BucketM
             retVal = handleUnionFindDataFinishedAllNodesLeave(msg);
             break;
 
+        case BUCKET_AMOUNTS_DATA_LEAVE:
+            retVal = handleBucketAmountsDataLeave(msg);
+            break;
+
         case BUCKETS_AMOUNTS_APPROVED_LEAVE:
             handleBucketAmountsApprovedLeave(msg);
             break;
@@ -89,9 +93,14 @@ vector<BucketMessage> BucketManagerMessageHandler::handleNewHashingStateSynchron
 
     bool allNodesUpdated = markBitAndReturnAreAllNodesExcludingSelfTrue(msg);
     if(allNodesUpdated){
-        retVal = prepareGossipUnionFindAmountsMessages();
-        vector<BucketMessage> unionFindMessages = gossipLocalUnionFindData(UNION_FIND_DATA_LEAVE);
-        retVal.insert( retVal.end(), unionFindMessages.begin(), unionFindMessages.end() );
+        for(auto node : nodeIdsForMessages){ // to kick start the data-more cycle
+            unionFindDataForNodes[node] = prepareUnionFindData();
+        }
+        for(auto node : nodeIdsForMessages){ // to kick start the data-more cycle
+            BucketMessage toSend = prepareNextUnionFindDataToSendToNode(node);
+            sendMessage(toSend);
+            retVal.emplace_back(toSend);
+        }
     }
     return retVal;
 
@@ -177,51 +186,28 @@ vector<BucketMessage> BucketManagerMessageHandler::handleBucketAmountsApprovedLe
     if(allNodesUpdated){
         string finished = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "finished synchronizing stage!. \n" ;//todo DFD
         logActivity(finished);
-        retVal = prepareOtherNodesForIncomingBuckets();
+        prepareIncomingBucketsDataForOtherNodes();
+        for(auto node : nodeIdsForMessages){
+            if(node == bucketManager.nodeId) continue;
+            uint8_t messageData[MESSAGE_SIZE];
+            messageData[MSG_ENUM_IDX] = (uint8_t) INCOMING_SHUFFLED_BUCKET_DATA;
+            messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
+            messageData[MSG_RCV_IDX] = (uint8_t) node;
+            auto dataQueue = bucketShuffleDataForNodes.find(node);
+            if(dataQueue == bucketShuffleDataForNodes.end()) continue; // the leaving node will not have data here
+            breakDownUint64ToBytes(dataQueue->second.front(),&messageData[BUCKET_ID_START_INDEX]);
+            remoteBucketShufflingQueue.push(RemoteBucketShuffleJob(dataQueue->second.front(),node));
+            dataQueue->second.pop();
+            auto askForMoreDataMsg = BucketMessage(messageData);
+            sendMessage(askForMoreDataMsg);  //todo dfd
+            retVal.emplace_back(askForMoreDataMsg);
+        }
     }
-    return retVal;
 
 }
 
 //sending buckets handlers
 
-vector<BucketMessage> BucketManagerMessageHandler::handleRequestToStartSendingBucket(BucketMessage msg){
-    uint64_t newBucketId = convertBytesBackToUint64(&msg.messageData[BUCKET_ID_START_INDEX]);
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleBeginNewBucket. Bucket id:" +std::to_string(newBucketId)+ " \n" ;//todo DFD
-    logActivity(logMsg);
-    vector<BucketMessage> retVal;
-
-    uint64_t ssdStartingAddressForNewNode = bucketManager.createNewBucket(false, newBucketId);
-    bucketsToReceiveFromNodes.insert(newBucketId);
-    uint8_t messageData[MESSAGE_SIZE];
-    messageData[MSG_ENUM_IDX] = (uint8_t) APPROVE_NEW_BUCKET_READY_TO_RECEIVE;
-    messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
-    messageData[MSG_RCV_IDX] = msg.messageData[MSG_SND_IDX];
-    breakDownUint64ToBytes(newBucketId,&messageData[BUCKET_ID_START_INDEX]);
-    breakDownUint64ToBytes(ssdStartingAddressForNewNode,&messageData[BUCKET_SSD_SLOT_START_INDEX]);
-    auto approveBucketMsg = BucketMessage(messageData);
-    sendMessage(approveBucketMsg); // todo - DFD
-    retVal.emplace_back(approveBucketMsg);
-    return retVal;
-
-}
-
-vector<BucketMessage> BucketManagerMessageHandler::handleApproveNewBucketReadyToReceive(BucketMessage msg) {
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleApproveNewBucketReadyToReceive. \n" ;//todo DFD
-    logActivity(logMsg);
-    vector<BucketMessage> retVal;
-
-    uint64_t bucketToSend = convertBytesBackToUint64(&msg.messageData[BUCKET_ID_START_INDEX]);
-    uint64_t newNodeSsdStartingAddress = convertBytesBackToUint64(&msg.messageData[BUCKET_SSD_SLOT_START_INDEX]);
-    auto receivingNode = (uint64_t) msg.messageData[MSG_SND_IDX];
-    RemoteBucketShuffleJob remoteBucketShuffleJob = RemoteBucketShuffleJob(bucketToSend,receivingNode,newNodeSsdStartingAddress);
-    mtxForShuffleJobsQueue.lock();
-    remoteBucketShufflingQueue.push(remoteBucketShuffleJob);
-    remoteShuffleJobsCounter++;
-    mtxForShuffleJobsQueue.unlock();
-    return retVal;
-
-}
 vector<BucketMessage> BucketManagerMessageHandler::handleAddPageIdToBucket(BucketMessage msg){
     string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "handleAddPageIdToBucket. \n" ;//todo DFD
     logActivity(logMsg);
@@ -260,7 +246,9 @@ vector<BucketMessage> BucketManagerMessageHandler::handleBucketMovedToNewNode(Bu
         }
     }
     // todo yuval implement this properly- this to be locked!
-    //bucketManager.bucketIdToNodeCache[bucketId] = nodeId;
+    bucketManager.bucketCacheMtx.lock();
+    bucketManager.bucketIdToNodeCache[bucketId] = nodeId;
+    bucketManager.bucketCacheMtx.unlock();
     return retVal;
 }
 
@@ -398,82 +386,6 @@ bool BucketManagerMessageHandler::markBitAndReturnAreAllNodesExcludingSelfTrue(c
 
 ///////// buckets sending functions /////////
 
-vector<BucketMessage> BucketManagerMessageHandler::prepareOtherNodesForIncomingBuckets(){ //pair is <bucket id , node>
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "prepareOtherNodesForIncomingBuckets. \n" ;//todo DFD
-    logActivity(logMsg);
-    vector<BucketMessage> retVal;
-
-    vector<pair<uint64_t,uint64_t>> bucketsAndNodes =  bucketManager.getBucketsShufflePrioritiesAndNodes();
-    for(auto pair : bucketsAndNodes){
-        uint8_t messageData[MESSAGE_SIZE];
-        messageData[MSG_ENUM_IDX] = (uint8_t) REQUEST_TO_START_BUCKET_SEND;
-        messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
-        messageData[MSG_RCV_IDX] = (uint8_t) pair.second;
-        breakDownUint64ToBytes(pair.first,&messageData[BUCKET_ID_START_INDEX]);
-        auto newBucketIdToNodeMsg = BucketMessage(messageData);
-        retVal.emplace_back(newBucketIdToNodeMsg);
-        sendMessage(newBucketIdToNodeMsg); // todo - dfd
-    }
-    // this is to ensure that consensus is reached also considering the leaving node -
-    // it also needs to report that it finished receiving nodes (empty manner)
-    if(bucketManager.nodeIsToBeDeleted){
-        uint8_t messageData[MESSAGE_SIZE];
-        messageData[MSG_ENUM_IDX] = (uint8_t) NODE_FINISHED_RECEIVING_BUCKETS;
-        messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
-        auto finishedReceivingBucketsMsg = BucketMessage(messageData);
-        vector<BucketMessage> finishedMessages = collectMessagesToGossip(finishedReceivingBucketsMsg);
-        retVal.insert( retVal.end(), finishedMessages.begin(), finishedMessages.end() );
-    }
-    return retVal;
-
-}
-
-void BucketManagerMessageHandler::sendBucketToNode(RemoteBucketShuffleJob bucketShuffleJob){
-    // todo yuval - remove this when done this just reference for the old code
-    std::cout << bucketShuffleJob.nodeId; // todo yuval - this is just so the check will go away WILL BE REMOVED;
-    /*
-    uint64_t bucketId = bucketShuffleJob.bucketId;
-    uint64_t nodeId = bucketShuffleJob.nodeId;
-    map<uint64_t, uint64_t> mapOfNode = bucketManager.mergableBucketsForEachNode[nodeId];
-    Bucket* bigBucket = &(bucketManager.bucketsMap.find(bucketId)->second);
-    Bucket* smallBucket;
-
-    // dealing with big bucket first
-    bigBucket->bucketLock.lock();
-    uint64_t bigBucketSsdSlotsStart = bigBucket-> SSDSlotStart;
-    for (auto const& [key, val] : bigBucket->pageIdToSlot){
-        //uint64_t oldSsdSlot = bigBucketSsdSlotsStart + val;
-        // todo yuval -  actually do something with it here
-    }
-    bigBucket->destroyBucketData();
-    bigBucket->bucketLock.unlock();
-    bucketManager.deleteBucket(bucketId);
-
-    if(mapOfNode[bucketId] != BUCKET_ALREADY_MERGED){
-        smallBucket = &(bucketManager.bucketsMap.find(mapOfNode[bucketId])->second);
-        smallBucket->bucketLock.lock();
-        uint64_t smallBucketSsdSlotsStart = smallBucket-> SSDSlotStart;
-        for (auto const& [key, val] : smallBucket->pageIdToSlot){
-            //uint64_t oldSsdSlot = smallBucketSsdSlotsStart + val;
-            // todo yuval -  actually do something with it here
-        }
-        smallBucket->destroyBucketData();
-        smallBucket->bucketLock.unlock();
-        bucketManager.deleteBucket(smallBucket->getBucketId());
-    }
-
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "finished sending bucket " + std::to_string(bucketId)+ " to node : " + std::to_string(nodeId)+  " \n" ;//todo DFD
-    logActivity(logMsg);
-    uint8_t messageData[MESSAGE_SIZE];
-    breakDownUint64ToBytes(bucketId,&messageData[BUCKET_ID_START_INDEX]);
-    messageData[MSG_ENUM_IDX] = (uint8_t) FINISHED_BUCKET;
-    messageData[MSG_SND_IDX] = (uint8_t) bucketManager.nodeId;
-    messageData[MSG_RCV_IDX] = (uint8_t) nodeId;
-    auto finishedBucketMsg = BucketMessage(messageData);
-    sendMessage(finishedBucketMsg);
-    gossipBucketMoved(bucketId,nodeId);
-    */
-}
 
 vector<BucketMessage> BucketManagerMessageHandler::gossipBucketMoved(uint64_t bucketId, uint64_t nodeId){
     vector<BucketMessage> retVal;
@@ -562,46 +474,12 @@ void BucketManagerMessageHandler::sendMessage(BucketMessage msg) { //todo DFD
     auto receivingNodeId = (uint64_t) msg.messageData[MSG_RCV_IDX];
     string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "write msg to node: " +  std::to_string(receivingNodeId) + "\n" ;//todo DFD
     if(receivingNodeId == bucketManager.nodeId) return; // avoiding sending self messages
-    if(receivingNodeId == 1) {
-
-        logActivity(logMsg);
-
-        firstMtx->lock();
-        firstMessageQueue->push(msg);
-        firstMtx->unlock();
-    }
-    if(receivingNodeId == 2){
-        logActivity(logMsg);
-
-        secondMtx->lock();
-        secondMessageQueue->push(msg);
-        secondMtx->unlock();
-    }
-    if(receivingNodeId == 3) {
-        logActivity(logMsg);
-
-        thirdMtx->lock();
-        thirdMessageQueue->push(msg);
-        thirdMtx->unlock();
-    }
 
 }
 
 void BucketManagerMessageHandler::logActivity(string const str){
-
-
-    uint64_t nodeId = bucketManager.nodeId;
-    if(nodeId ==1){
-        std::ofstream log("/Users/yuvalfreund/Desktop/MasterThesis/localThesis/logs/log1.txt", std::ios_base::app | std::ios_base::out);
-        log << str;
-    }
-    if(nodeId == 2){
-        std::ofstream log("/Users/yuvalfreund/Desktop/MasterThesis/localThesis/logs/log2.txt", std::ios_base::app | std::ios_base::out);
-        log << str;        }
-    if(nodeId == 3){
-        std::ofstream log("/Users/yuvalfreund/Desktop/MasterThesis/localThesis/logs/log3.txt", std::ios_base::app | std::ios_base::out);
-        log << str;
-    }
+    std::ofstream log("/Users/yuvalfreund/Desktop/MasterThesis/localThesis/logs/log1.txt", std::ios_base::app | std::ios_base::out);
+    log << str;
 }
 
 void BucketManagerMessageHandler::moveAtomicallyToNormalState(){
@@ -661,22 +539,14 @@ LocalBucketsMergeJob BucketManagerMessageHandler::getMergeJob(){
     }
     return retVal;
 }
-RemoteBucketShuffleJob BucketManagerMessageHandler::getShuffleJob(){
-    // todo yuval - is there a less time consuming way of doing this?
 
-    RemoteBucketShuffleJob retVal;
-    unsigned long queueSize = remoteShuffleJobsCounter.load();
-    if(queueSize > 0){
-        mtxForShuffleJobsQueue.lock();
-        if(remoteBucketShufflingQueue.empty() == false){
-            retVal = remoteBucketShufflingQueue.front();
-            retVal.needShuffle = true;
-            remoteBucketShufflingQueue.pop();
-            remoteShuffleJobsCounter.store(remoteBucketShufflingQueue.size());
-            mtxForShuffleJobsQueue.unlock();
-        }else{
-            mtxForShuffleJobsQueue.unlock();
-        }
+queue<pair<uint64_t,uint64_t>> BucketManagerMessageHandler::prepareUnionFindData(){
+
+    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "prepareUnionFindData. \n" ;//todo DFD
+    logActivity(logMsg);
+    auto retVal = queue<pair<uint64_t,uint64_t>>();
+    for ( const auto &unionFindPair :   bucketManager.getDisjointSets().getMap() ) {
+        retVal.push({unionFindPair.first,unionFindPair.second});
     }
     return retVal;
 }

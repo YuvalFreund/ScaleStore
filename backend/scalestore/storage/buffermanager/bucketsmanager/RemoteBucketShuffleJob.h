@@ -10,12 +10,9 @@
 struct RemoteBucketShuffleJob{
     uint64_t bucketId;
     uint64_t nodeId;
-    uint64_t ssdAddressStartAtReceivingNode;
-    bool needShuffle;
 
-    RemoteBucketShuffleJob(uint64_t bucketId, uint64_t nodeId, uint64_t ssdAddressStartAtReceivingNode) : bucketId(
-            bucketId), nodeId(nodeId), ssdAddressStartAtReceivingNode(ssdAddressStartAtReceivingNode) {
-        needShuffle = false;
+    RemoteBucketShuffleJob(uint64_t bucketId, uint64_t nodeId) : bucketId(
+            bucketId), nodeId(nodeId){
     }
     RemoteBucketShuffleJob() {  }
 };

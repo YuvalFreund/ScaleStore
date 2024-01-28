@@ -43,8 +43,6 @@ void BucketManager::removePage(uint64_t pageId){
     uint64_t realBucketId = disjointSets.find(bucketId);
     auto wantedBucket = bucketsMap.find(realBucketId);
     wantedBucket->second.removePageId(pageId);
-
-
 }
 
 uint64_t BucketManager::getPageSSDSlotInSelfNode(uint64_t pageId) {
@@ -67,6 +65,13 @@ uint64_t BucketManager::getPageSSDSlotInSelfNode(uint64_t pageId) {
     return retVal;
 }
 
+std::map<uint64_t, Bucket> ::iterator BucketManager::getIterToBucket(uint64_t bucketId){
+    bucketMapMtx.lock();
+    auto retVal =bucketsMap.find(bucketId);
+    bucketMapMtx.unlock();
+    return retVal;
+}
+
 
 uint64_t BucketManager::getNodeIdOfPage(uint64_t pageId){
 
@@ -82,7 +87,9 @@ uint64_t BucketManager::getNodeIdOfBucket(uint64_t bucketId,bool fromInitStage, 
     bool searchOldOrNewRing = ((managerState.load() == ManagerState::normal) || (managerState.load() == ManagerState::synchronizing));
     if(forceNewState ) searchOldOrNewRing = false;
     if(searchOldOrNewRing){
+        bucketCacheMtx.lock();
         auto pageInCacheIter = bucketIdToNodeCache.find(bucketId);
+        bucketCacheMtx.unlock();
         if(pageInCacheIter != bucketIdToNodeCache.end()){
             return pageInCacheIter->second;
         }
@@ -110,7 +117,9 @@ uint64_t BucketManager::getNodeIdOfBucket(uint64_t bucketId,bool fromInitStage, 
 
     // from init stage checks that we don't just add buckets that are not actually chosen in the end
     if(searchOldOrNewRing && fromInitStage == false){
+        bucketCacheMtx.lock();
         bucketIdToNodeCache[bucketId] = res;
+        bucketCacheMtx.unlock();
     }
     return res;
 }
@@ -119,7 +128,7 @@ uint64_t BucketManager::getNodeIdOfBucket(uint64_t bucketId,bool fromInitStage, 
 
 // we merge small bucket into the big bucket
 void BucketManager::mergeSmallBucketIntoBigBucket(LocalBucketsMergeJob localBucketMergeJob){
-    bucketManagerMtx.lock();
+    bucketMapMtx.lock();
     auto bigBucket = bucketsMap.find(localBucketMergeJob.bigBucket);
     auto smallBucket = bucketsMap.find(localBucketMergeJob.smallBucket);
     //std::cout << "Merging buckets! Big bucket:  " << bigBucketId << " Small bucket: " << smallBucketId << std::endl;
@@ -127,12 +136,12 @@ void BucketManager::mergeSmallBucketIntoBigBucket(LocalBucketsMergeJob localBuck
     bigBucket->second.mergeBucketIn(&smallBucket->second);
     disjointSets.Union(localBucketMergeJob.bigBucket,localBucketMergeJob.smallBucket);
     deleteBucket(localBucketMergeJob.smallBucket);
-    bucketManagerMtx.unlock();
+    bucketMapMtx.unlock();
 }
 
 uint64_t BucketManager::createNewBucket(bool isNewBucketIdNeeded, uint64_t givenBucketId){
     uint64_t retVal;
-    bucketManagerMtx.lock();
+    bucketMapMtx.lock();
     uint64_t newBucketId;
     if(isNewBucketIdNeeded){
         bucketsFreeSSDSlots.pop();
@@ -147,7 +156,7 @@ uint64_t BucketManager::createNewBucket(bool isNewBucketIdNeeded, uint64_t given
     // create new bucket
     bucketsMap.try_emplace(newBucketId, newBucketId, retVal);
     bucketsNum++;
-    bucketManagerMtx.unlock();
+    bucketMapMtx.unlock();
     return retVal;
 }
 
@@ -267,13 +276,8 @@ void BucketManager::initConsistentHashingInfo(bool firstInit){
     }
     std::sort (vectorToUpdate->begin(), vectorToUpdate->end());
 }
-void BucketManager::getOldConsistentHashingInfoForNewNode(){
-    nodeIdsInCluster.erase(nodeId);
-    nodeRingLocationsVector.clear();
-    nodesRingLocationMap.clear();
-    initConsistentHashingInfo(true);
-    nodeIdsInCluster.insert(nodeId);
-}
+
+
 
 void BucketManager::makeStackOfSSDSlotsForBuckets() {
     for(int i = 0; i<BUCKETS_NUM_TO_INIT+1; i++){
@@ -361,9 +365,7 @@ uint64_t BucketManager::getNumberOfPagesInNode(){
     return retVal;
 }
 
-BucketsDisjointSets BucketManager::getDisjointSets(){
-    return disjointSets;
-}
+
 
 void BucketManager::putBucketIdToUnionFind(uint64_t newBucketId){
     disjointSets.addToUnionFind(newBucketId);
@@ -442,6 +444,10 @@ void BucketManager::initBucketSizeDataByParameter(int bucketIdByteSize){
             maxPagesByParameter = MAX_PAGES_7_BYTES_BUCKET_ID;
             bucketIdMaskByParameter = BUCKET_ID_MASK_7_BYTES_BUCKET_ID;
             break;
+    }
+
+    BucketsDisjointSets BucketManager::getDisjointSets(){
+        return disjointSets;
     }
 }
 

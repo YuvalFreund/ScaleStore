@@ -16,12 +16,54 @@
 using namespace scalestore;
 
 struct BucketShuffler{
+    // todo yuval - at one point replace with optimisitc locking
 
-    static void sendBucketToNode(RemoteBucketShuffleJob bucketShuffleJob,rdma::MessageHandler& mh, BucketManagerMessageHandler& bmmh, storage::Buffermanager& bm){
+    struct PageShuffleJob{
+        uint64_t nodeId;
+        uint64_t pageId;
+    };
+
+    std::mutex bucketsJobMutex;
+    std::map<uint64_t,uint16_t>::iterator bucketPageIterator;
+    std::queue<RemoteBucketShuffleJob> remoteShuffleJobs;
+    atomic<bool> initiated = false;
+    atomic<bool> workDone = false;
+    rdma::MessageHandler& mh;
+    BucketManagerMessageHandler& bmmh;
+    storage::Buffermanager& bm;
+    uint64_t currentWorkingBucket;
+
+    BucketShuffler(rdma::MessageHandler &mh, BucketManagerMessageHandler &bmmh, storage::Buffermanager &bm) : mh(mh),
+                                                                                                              bmmh(bmmh),
+                                                                                                              bm(bm) {}
+
+    bool doOnePageShuffle(){
+        if (initiated == false){
+            checkAndInitBucketShuffler();
+            return true;
+        }else{
+            if(workDone){
+                return true;
+            }else{
+
+            }
+        }
+    }
+
+    PageShuffleJob getNextPageToShuffle(){
+        bucketsJobMutex.lock();
+
+        handleOnePageSend();
+        bucketsJobMutex.unlock();
+    }
+
+    void handleOnePageSend(PageShuffleJob pageShuffleJob){
         // todo yuval - this function needs to return list of bucket ids that were transferred
         BucketManager& bucketManager = bmmh.bucketManager;
         uint64_t bucketId = bucketShuffleJob.bucketId;
         uint64_t newNodeId = bucketShuffleJob.nodeId;
+        auto clientId = mh.bmmh_cctxs[newNodeId];
+        auto ctx = mh.cctxs[clientId];
         uint64_t leavingNodeId = bucketManager.nodeId;
         map<uint64_t, uint64_t> mapOfNode = bucketManager.mergableBucketsForEachNode[newNodeId]; // this data is necessary for getting the bucket that will be merged
         Bucket* bigBucket = &(bucketManager.bucketsMap.find(bucketId)->second);
@@ -40,8 +82,8 @@ struct BucketShuffler{
             mh.writeMsgsForBucketManager(msgToNewNodeToAddBucketId);
 
             // send message to new node, ask to add this frame and mark as "ON_THE_WAY" in BF_STATE, Possession will be updated later
-            auto onTheWayUpdateRequest = *rdma::MessageFabric::createMessage<rdma::SendShuffledFrameRequest>(mh.cctxs[newNodeId].request, pageId);
-            threads::Worker::my().writeMsg<rdma::SendShuffledFrameRequest>(newNodeId, onTheWayUpdateRequest);
+            auto onTheWayUpdateRequest = *rdma::MessageFabric::createMessage<rdma::CreateShuffledFrameRequest>(mh.cctxs[newNodeId].request, pageId);
+            threads::Worker::my().writeMsg<rdma::CreateShuffledFrameRequest>(newNodeId, onTheWayUpdateRequest);
             // todo yuval - create new message, that upon receiving will need to open new frame (find or insert from buffer manager)
 
             // get frame from buffer manager (find or insert from buffer manager) with exclusive guard
@@ -55,10 +97,12 @@ struct BucketShuffler{
             guard.frame->state = storage::BF_STATE::MOVED_TO_NEW;
             // todo yuval - maybe release guard here ?
             auto checkPossession = guard.frame->possession;
+
             switch(checkPossession){
                 case storage::POSSESSION::NOBODY : {
                     // todo yuval ask tobi - is this how to make sure a frame is in memory?
                     if(oldBFState ==  storage::BF_STATE::HOT || oldBFState == storage::BF_STATE::EVICTED){
+
 
                         // todo yuval - if frame is cached, send from cache to new node
                     }else{
@@ -79,7 +123,7 @@ struct BucketShuffler{
                         // case shared only by the leaving node -
                         // todo yuval - send page from cache and mark as "NO_BODY" in the new location and BF_STATE hot
                        // auto shuffledFrameArrivedUpdate = *rdma::MessageFabric::createMessage<rdma::UpdateShuffledFrameArrived>(mh.cctxs[newNodeId].request, pageId);
-                        threads::Worker::my().writeMsg<rdma::SendShuffledFrameRequest>(newNodeId, onTheWayUpdateRequest);
+                        threads::Worker::my().writeMsg<rdma::CreateShuffledFrameRequest>(newNodeId, onTheWayUpdateRequest);
                     } else {
                         // todo yuval - no need to send page - just update the possessors in case leaving node is there
 
@@ -139,6 +183,19 @@ struct BucketShuffler{
         }
 
         return retVal;
+    }
+
+    void checkAndInitBucketShuffler(){
+        bool checkIfQueueReady = bmmh.shuffleQueueIsReady;
+        if(checkIfQueueReady){
+            bucketsJobMutex.lock();
+            remoteShuffleJobs = bmmh.remoteBucketShufflingQueue;
+            RemoteBucketShuffleJob firstJob = remoteShuffleJobs.front();
+            remoteShuffleJobs.pop();
+            currentWorkingBucket = firstJob.bucketId;
+            bucketsJobMutex.unlock(); // todo - think about this bucket locking - maybe the pointer is not enough
+            initiated.store(true);
+        }
     }
 };
 

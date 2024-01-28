@@ -18,9 +18,9 @@
 #include "BucketManagerDefs.h"
 
 
-struct BucketManagerMessageHandler{
+struct BucketManagerMessageHandler {
     std::bitset<CONSENSUS_VEC_SIZE> consensusVec[MESSAGE_ENUM_AMOUNT];
-    BucketManager& bucketManager;
+    BucketManager &bucketManager;
     vector<uint64_t> nodeIdsForMessages;
     set<uint64_t> bucketsToReceiveFromNodes;
     int unionFindTotalAmount;
@@ -28,28 +28,32 @@ struct BucketManagerMessageHandler{
     std::queue<RemoteBucketShuffleJob> remoteBucketShufflingQueue;
     std::atomic<unsigned long> localMergeJobsCounter; // todo yuval - replace with an optimisitic lock!
     std::atomic<unsigned long> remoteShuffleJobsCounter; // todo yuval - replace with an optimisitic lock!
-    std::map<uint64_t,queue<pair<uint64_t,uint64_t>>> unionFindDataForNodes;
+    std::atomic<bool> shuffleQueueIsReady = false; // todo yuval - replace with an optimisitic lock!
+    std::map<uint64_t, queue<pair<uint64_t, uint64_t>>> unionFindDataForNodes;
     int unionFindDataArrived = 0;
-    std::map<uint64_t,queue<uint64_t>> bucketShuffleDataForNodes;
+    std::map<uint64_t, queue<uint64_t>> bucketShuffleDataForNodes;
     uint64_t leavingNode;
 
 
+
 public:
-    BucketManagerMessageHandler(BucketManager& bucketManager) : bucketManager(bucketManager){
-        for (auto & element : this->bucketManager.nodeIdsInCluster) {
+    BucketManagerMessageHandler(BucketManager &bucketManager) : bucketManager(bucketManager) {
+        for (auto &element: this->bucketManager.nodeIdsInCluster) {
             nodeIdsForMessages.emplace_back(element);
         }
         unionFindTotalAmount = 0;
     }
+
     BucketManagerMessageHandler();
+
     std::mutex mtxForLocalJobsQueue;
     std::mutex mtxForShuffleJobsQueue;
-    std::mutex * firstMtx;//todo DFD
-    std::mutex * secondMtx;//todo DFD
-    std::mutex * thirdMtx;//todo DFD
-    queue<BucketMessage> * firstMessageQueue; //todo DFD
-    queue<BucketMessage> * secondMessageQueue; //todo DFD
-    queue<BucketMessage> * thirdMessageQueue; //todo DFD
+    std::mutex *firstMtx;//todo DFD
+    std::mutex *secondMtx;//todo DFD
+    std::mutex *thirdMtx;//todo DFD
+    queue<BucketMessage> *firstMessageQueue; //todo DFD
+    queue<BucketMessage> *secondMessageQueue; //todo DFD
+    queue<BucketMessage> *thirdMessageQueue; //todo DFD
 
 
     vector<BucketMessage> handleIncomingMessage(BucketMessage msg);
@@ -58,7 +62,7 @@ public:
     vector<BucketMessage> handleNodeLeftTheClusterLeave(BucketMessage msg);
 
     vector<BucketMessage> handleNewHashingStateSynchronizedLeave(BucketMessage msg);
-    vector<BucketMessage> handleUnionFindDataAmount(BucketMessage msg);
+
     vector<BucketMessage> handleIncomingUnionFindDataLeave(BucketMessage msg);
 
     vector<BucketMessage> handleUnionFindDataFinishedAllNodesLeave(BucketMessage msg);
@@ -76,6 +80,7 @@ public:
     vector<BucketMessage> handleNodeFinishedReceivingBuckets(BucketMessage msg);
 
     vector<BucketMessage> handleBucketMovedToNewNode(BucketMessage msg);
+
     vector<BucketMessage> handleAddPageIdToBucket(BucketMessage msg);
     ///////// Node joined / leaving functions /////////
 
@@ -95,8 +100,9 @@ public:
 ///////// Union Find functions /////////
 
     vector<BucketMessage> gossipLocalUnionFindData(MessagesEnum msgEnum);
-    vector<BucketMessage> prepareGossipUnionFindAmountsMessages();
-    vector<BucketMessage> addIncomingUnionFindData(BucketMessage msg) ;
+
+    vector<BucketMessage> addIncomingUnionFindData(BucketMessage msg);
+
     vector<BucketMessage> handleUnionFindDataSendMore(BucketMessage msg);
 
     vector<BucketMessage> gossipFinishedUnionFind(MessagesEnum msgEnum);
@@ -106,10 +112,14 @@ public:
     bool markBitAndReturnAreAllNodesExcludingSelfTrue(const BucketMessage msg);
 
     bool markBitAndReturnAreAllNodesIncludingSelfTrue(const BucketMessage msg);
+
 ///////// buckets sending functions functions /////////
     vector<BucketMessage> handleIncomingShuffledBucketData(BucketMessage msg);
+
     vector<BucketMessage> handleIncomingShuffledBucketDataSendMore(BucketMessage msg);
-    vector<BucketMessage>handleIncomingShuffledBucketDataReceivedAll(BucketMessage msg);
+
+    vector<BucketMessage> handleIncomingShuffledBucketDataReceivedAll(BucketMessage msg);
+
     vector<BucketMessage> prepareOtherNodesForIncomingBuckets();
 
     void sendBucketToNode(RemoteBucketShuffleJob bucketShuffleJob);
@@ -120,7 +130,9 @@ public:
 ///////// Misc functions /////////
 
     vector<BucketMessage> collectMessagesToGossip(BucketMessage msg);
+
     void checkMailbox();
+
     void sendMessage(BucketMessage msg);
 
     void logActivity(string const str);
@@ -129,15 +141,22 @@ public:
     // utils
 
     static void breakDownUint64ToBytes(uint64_t input, uint8_t retVal[8]);
+
     static void breakDownBucketIdToBytes(uint64_t input, uint8_t retVal[6]);
+
     uint64_t convertBytesBackToUint64(uint8_t input[8]);
+
     uint64_t convertBytesBackToBucketId(uint8_t input[6]);
+
     BucketMessage prepareNextUnionFindDataToSendToNode(uint64_t nodeId);
 
     LocalBucketsMergeJob getMergeJob();
-    RemoteBucketShuffleJob getShuffleJob();
-    void prepareIncomingBucketsDataForOtherNodes();
 
+    RemoteBucketShuffleJob getShuffleJob();
+    queue<pair<uint64_t,uint64_t>> prepareUnionFindData();
+
+    void prepareIncomingBucketsDataForOtherNodes();
 };
+
 
 #endif //LOCALTHESIS_BUCKETMANAGERMESSAGEHANDLER_H

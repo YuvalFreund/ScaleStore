@@ -17,7 +17,7 @@
 
 //files
 #include "Bucket.h"
-#include "GenericDisjointSets.h"
+#include "BucketsDisjointSets.h"
 #include "MessagesEnum.h"
 #include "LocalBucketsMergeJob.h"
 #include "BucketManagerDefs.h"
@@ -31,7 +31,8 @@ public:
 
     //////////////INNER VARIABLES /////////////////////
     ///////// locks /////////
-    std::mutex bucketManagerMtx;
+    std::mutex bucketMapMtx;
+    std::mutex bucketCacheMtx;
 
     ///////// variables /////////
     uint64_t bucketsNum = 0;
@@ -62,15 +63,15 @@ public:
     ///////// data structures for transitional state /////////
 
     // consistent hashing
-    std::map<uint64_t, uint64_t> newNodesRingLocationMap; // locations to swap YUYU
-    std::vector<uint64_t> newNodeRingLocationsVector; // the location on the ring YUYU
+    std::map<uint64_t, uint64_t> newNodesRingLocationMap; // locations to swap
+    std::vector<uint64_t> newNodeRingLocationsVector; // the location on the ring
 
     // buckets amounts
-    std::map<uint64_t, map<uint64_t, uint64_t>> mergableBucketsForEachNode; // YUYU
+    std::map<uint64_t, map<uint64_t, uint64_t>> mergableBucketsForEachNode;
     std::map<uint64_t, uint64_t> bucketAmountsToSendEachNodeAfterMerging;
 
     // disjoint sets
-    BucketsDisjointSets newDisjointSets; // YUYU
+    BucketsDisjointSets newDisjointSets;
 
     //state changes
     enum ManagerState {initiated,normal, synchronizing, shuffling, finished}; //todo DFD - REMOVE FINSIHED
@@ -146,7 +147,6 @@ public:
     // this is just for testing - this wil NOT be called
     uint64_t getNumberOfPagesInNode();
 
-    BucketsDisjointSets getDisjointSets();
 
     void putBucketIdToUnionFind(uint64_t newBucketId);
 
@@ -159,11 +159,13 @@ public:
     std::queue<LocalBucketsMergeJob> getJobsForMergingOwnBuckets();
 
     void atomicallyMoveToNormal();
+    std::map<uint64_t, Bucket> ::iterator getIterToBucket(uint64_t bucketId);
 
     ///////////////shuffling functions //////////////////////
 
-    vector<pair<uint64_t,uint64_t>>  getBucketsShufflePrioritiesAndNodes();
+    vector<pair<uint64_t, uint64_t>> getBucketsShufflePrioritiesAndNodes();
     void initBucketSizeDataByParameter(int bucketIdByteSize);
+    BucketsDisjointSets getDisjointSets();
 
 
 };
