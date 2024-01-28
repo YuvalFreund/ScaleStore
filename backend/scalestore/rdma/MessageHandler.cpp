@@ -401,10 +401,19 @@ void MessageHandler::startThread() {
                       break;
                   }
 
-                  case MESSAGE_TYPE::SSFR: {
-                      //auto& incomingBucketMessage = *reinterpret_cast<CreateShuffledFrameRequest*>(ctx.request);
-
+                  case MESSAGE_TYPE::CSFR: {
+                      auto& incomingBucketMessage = *reinterpret_cast<CreateShuffledFrameRequest*>(ctx.request);
+                      // Todo yuval - add to bucket manager - > bucket should receive new page id
+                      // todo yuval - create a new frame
+                      // todo yuval - create new message, CSFRR, to send back pointer to the LN with location
                   }
+
+                   case MESSAGE_TYPE::CSFRR: {
+                       auto& incomingBucketMessage = *reinterpret_cast<CreateShuffledFrameRequest*>(ctx.request);
+                       // Todo yuval - add to bucket manager - > bucket should receive new page id
+                       // todo yuval - create a new frame
+                       // todo yuval - create new message, CSFRR, to send back pointer to the LN with location
+                   }
 
 
                   default:

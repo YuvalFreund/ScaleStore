@@ -43,7 +43,7 @@ enum class MESSAGE_TYPE : uint8_t {
    // -------------------------------------------------------------------------------------
    // Shuffeled frame on the way
    CSFR = 16,
-   SSFRR = 17,
+   CSFRR = 17,
    // update shuffled frame arrived
    USFA = 18,
 
@@ -204,20 +204,14 @@ struct BucketManagerMessage : public Message{
 
 struct CreateShuffledFrameRequest : public Message {
     uint64_t shuffledPid;
-    CreateShuffledFrameRequest(uint64_t shuffledPid) : Message(MESSAGE_TYPE::CSFR), shuffledPid(shuffledPid){}
+    uint64_t bucketToInsert;
+    CreateShuffledFrameRequest(uint64_t shuffledPid, uint64_t bucketToInsert) : Message(MESSAGE_TYPE::CSFR), shuffledPid(shuffledPid), bucketToInsert(bucketToInsert){}
 };
 
-struct SendShuffledFrameResponse : public Message{
+struct CreateShuffledFrameResponse : public Message {
     uint64_t shuffledPid;
     uintptr_t pageOffset;
-
-    SendShuffledFrameResponse(uint64_t shuffledPid) : Message(MESSAGE_TYPE::SSFR), shuffledPid(shuffledPid){}
-
-};
-
-struct UpdateShuffledFrameArrived : public Message {
-    uint64_t shuffledPid;
-    UpdateShuffledFrameArrived(uint64_t shuffledPid) : Message(MESSAGE_TYPE::USFA),shuffledPid(shuffledPid){}
+    CreateShuffledFrameResponse(uint64_t shuffledPid, uint64_t pageOffset) : Message(MESSAGE_TYPE::CSFRR),shuffledPid(shuffledPid){}
 };
 
 
@@ -237,7 +231,7 @@ union ALLDERIVED{
    DelegationResponse drr;
    BucketManagerMessage bmmsg;
    CreateShuffledFrameRequest csfr;
-   UpdateShuffledFrameArrived usfa;
+   CreateShuffledFrameResponse csfrr;
 
 };
 
