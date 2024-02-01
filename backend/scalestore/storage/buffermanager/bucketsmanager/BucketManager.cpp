@@ -81,9 +81,9 @@ uint64_t BucketManager::getNodeIdOfBucket(uint64_t bucketId,bool fromInitStage, 
     bool searchOldOrNewRing = ((managerState.load() == ManagerState::normal) || (managerState.load() == ManagerState::synchronizing));
     if(forceNewState ) searchOldOrNewRing = false;
     if(searchOldOrNewRing){
-        bucketCacheMtx.lock();
+        //bucketCacheMtx.lock();
         auto pageInCacheIter = bucketIdToNodeCache.find(bucketId);
-        bucketCacheMtx.unlock();
+        //bucketCacheMtx.unlock();
         if(pageInCacheIter != bucketIdToNodeCache.end()){
             return pageInCacheIter->second;
         }
@@ -146,8 +146,6 @@ uint64_t BucketManager::createNewBucket(bool isNewBucketIdNeeded, uint64_t given
         newBucketId = givenBucketId;
     }
     retVal = bucketsFreeSSDSlots.top();
-    //std::cout<<"bucket id: " <<newBucketId << "ssd slot start: " << SSDSlotStart<<std::endl;
-    // create new bucket
     bucketsMap.try_emplace(newBucketId, newBucketId, retVal);
     bucketsNum++;
     bucketMapMtx.unlock();
