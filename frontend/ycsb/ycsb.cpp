@@ -2,6 +2,8 @@
 #include "scalestore/Config.hpp"
 #include "scalestore/ScaleStore.hpp"
 #include "scalestore/rdma/CommunicationManager.hpp"
+#include "scalestore/storage/buffermanager/bucketsmanager/BucketShuffler.h"
+//
 #include "scalestore/storage/datastructures/BTree.hpp"
 #include "scalestore/utils/RandomGenerator.hpp"
 #include "scalestore/utils/ScrambledZipfGenerator.hpp"
@@ -10,6 +12,8 @@
 #include <gflags/gflags.h>
 // -------------------------------------------------------------------------------------
 DEFINE_uint32(YCSB_read_ratio, 100, "");
+DEFINE_uint32(YCSB_shuffle_ratio, 0, "");
+DEFINE_double(YCSB_trigger_leave_percentage, 50.0, "");
 DEFINE_bool(YCSB_all_workloads, false , "Execute all workloads i.e. 50 95 100 ReadRatio on same tree");
 DEFINE_uint64(YCSB_tuple_count, 1, " Tuple count in");
 DEFINE_double(YCSB_zipf_factor, 0.0, "Default value according to spec");
@@ -53,25 +57,25 @@ struct YCSB_workloadInfo : public scalestore::profiling::WorkloadInfo {
     double zipfFactor;
     std::string zipfOffset;
     uint64_t timestamp = 0;
-
+//
     YCSB_workloadInfo(std::string experiment, uint64_t elements, uint64_t readRatio, double zipfFactor, std::string zipfOffset)
             : experiment(experiment), elements(elements), readRatio(readRatio), zipfFactor(zipfFactor), zipfOffset(zipfOffset)
     {
     }
-
-
+//
+//
     virtual std::vector<std::string> getRow(){
         return {
                 experiment, std::to_string(elements),    std::to_string(readRatio), std::to_string(zipfFactor),
                 zipfOffset, std::to_string(timestamp++),
         };
     }
-
+//
     virtual std::vector<std::string> getHeader(){
         return {"workload","elements","read ratio", "zipfFactor", "zipfOffset", "timestamp"};
     }
-
-
+//
+//
     virtual void csv(std::ofstream& file) override
     {
         file << experiment << " , ";
@@ -103,9 +107,8 @@ int main(int argc, char* argv[])
 {
     using K = uint64_t;
     using V = BytesPayload<128>;
-
-    gflags::SetUsageMessage("Catalog Test");
     gflags::ParseCommandLineFlags(&argc, &argv, true);
+    gflags::SetUsageMessage("Catalog Test");
     // -------------------------------------------------------------------------------------
     // prepare workload
     std::vector<std::string> workload_type; // warm up or benchmark
@@ -119,15 +122,14 @@ int main(int argc, char* argv[])
     }else{
         workloads.push_back(FLAGS_YCSB_read_ratio);
     }
-
-
+//
     if(FLAGS_YCSB_warm_up){
         workload_type.push_back("YCSB_warm_up");
         workload_type.push_back("YCSB_txn");
     }else{
         workload_type.push_back("YCSB_txn");
     }
-
+//
     if(FLAGS_YCSB_all_zipf){
         // zipfs.insert(zipfs.end(), {0.0,1.0,1.25,1.5,1.75,2.0});
         // zipfs.insert(zipfs.end(), {1.05,1.1,1.15,1.20,1.3,1.35,1.4,1.45});
@@ -147,7 +149,7 @@ int main(int argc, char* argv[])
             end = N;
         return {.begin = begin, .end = end};
     };
-
+//
     auto barrier_wait = [&]() {
         for (uint64_t t_i = 0; t_i < FLAGS_worker; ++t_i) {
             scalestore.getWorkerPool().scheduleJobAsync(t_i, [&, t_i]() {
@@ -168,6 +170,14 @@ int main(int argc, char* argv[])
     }
     // -------------------------------------------------------------------------------------
     u64 YCSB_tuple_count = FLAGS_YCSB_tuple_count;
+    // -------------------------------------------------------------------------------------
+    uint64_t shuffleRatio = 0;
+    if(FLAGS_YCSB_shuffle_ratio){
+        shuffleRatio = FLAGS_YCSB_shuffle_ratio;
+    }
+    // -------------------------------------------------------------------------------------
+    uint64_t nodeLeavingTrigger = YCSB_tuple_count * FLAGS_YCSB_trigger_leave_percentage / 100;
+//
     // -------------------------------------------------------------------------------------
     auto nodePartition = partition(scalestore.getNodeID(), FLAGS_nodes, YCSB_tuple_count);
     // -------------------------------------------------------------------------------------
@@ -200,16 +210,16 @@ int main(int argc, char* argv[])
     }
     scalestore.getWorkerPool().joinAll();
     scalestore.stopProfiler();
-
+//
     if(FLAGS_YCSB_flush_pages){
         std::cout << "Flushing all pages"
                   << "\n";
         scalestore.getBuffermanager().writeAllPages();
-
+//
         std::cout << "Done"
                   << "\n";
     }
-
+//
     for (auto ZIPF : zipfs) {
         // -------------------------------------------------------------------------------------
         // YCSB Transaction
@@ -220,7 +230,7 @@ int main(int argc, char* argv[])
                                                                           ZIPF);
         else
             zipf_random = std::make_unique<utils::ScrambledZipfGenerator>(0, YCSB_tuple_count, ZIPF);
-
+//
         // -------------------------------------------------------------------------------------
         // zipf creation can take some time due to floating point loop therefore wait with barrier
         barrier_wait();
@@ -230,37 +240,63 @@ int main(int argc, char* argv[])
                 barrier_wait();
                 std::atomic<bool> keep_running = true;
                 std::atomic<u64> running_threads_counter = 0;
-
+//
                 uint64_t zipf_offset = 0;
                 if (FLAGS_YCSB_local_zipf) zipf_offset = (YCSB_tuple_count / FLAGS_nodes) * scalestore.getNodeID();
-
+//
                 YCSB_workloadInfo experimentInfo{TYPE, YCSB_tuple_count, READ_RATIO, ZIPF, (FLAGS_YCSB_local_zipf?"local_zipf":"global_zipf")};
                 scalestore.startProfiler(experimentInfo);
+                //storage::Buffermanager& bufferManager = scalestore.getBuffermanager(); todo yuval - do we actually need it or not
+                BucketManagerMessageHandler& bmmh = scalestore.getBucketManagerMessageHandler();
+                //BucketShuffler& shuffler = scalestore.getBucketShuffler();
+                rdma::MessageHandler& mh = scalestore.getMessageHandler();
                 for (uint64_t t_i = 0; t_i < FLAGS_worker; ++t_i) {
                     scalestore.getWorkerPool().scheduleJobAsync(t_i, [&, t_i]() {
                         running_threads_counter++;
                         storage::DistributedBarrier barrier(catalog.getCatalogEntry(BARRIER_ID).pid);
                         storage::BTree<K, V> tree(catalog.getCatalogEntry(BTREE_ID).pid);
                         barrier.wait();
-
+                        uint64_t checkForShuffle = 0;
                         while (keep_running) {
+                            if(t_i == 0) {
+                                checkForShuffle++;
+                                if(checkForShuffle > nodeLeavingTrigger){
+                                    vector<BucketMessage> gossipNodeLeavesMessages = bmmh.gossipNodeLeft();
+                                    mh.writeMsgsForBucketManager(gossipNodeLeavesMessages);// todo yuval - implement calling to start shuffling
+                                }
+                            }
                             K key = zipf_random->rand(zipf_offset);
                             ensure(key < YCSB_tuple_count);
                             V result;
-
-                            if (READ_RATIO == 100 || utils::RandomGenerator::getRandU64(0, 100) < READ_RATIO) {
-                                auto start = utils::getTimePoint();
-                                auto success = tree.lookup_opt(key, result);
-                                ensure(success);
-                                auto end = utils::getTimePoint();
-                                threads::Worker::my().counters.incr_by(profiling::WorkerCounters::latency, (end - start));
-                            } else {
-                                V payload;
-                                utils::RandomGenerator::getRandString(reinterpret_cast<u8*>(&payload), sizeof(V));
-                                auto start = utils::getTimePoint();
-                                tree.insert(key, payload);
-                                auto end = utils::getTimePoint();
-                                threads::Worker::my().counters.incr_by(profiling::WorkerCounters::latency, (end - start));
+                            // worker will try to merge locally - and then to shuffle bucket to remote node
+                            if(utils::RandomGenerator::getRandU64(0, 10000) < shuffleRatio) { // worker will go and shuffle
+LocalBucketsMergeJob mergeJob = bmmh.getMergeJob();
+                                if(mergeJob.needMerge){
+                                    //BucketShuffler::merge2bucketsLocally();
+                                }
+                                if(mergeJob.lastMerge){
+                                    vector<BucketMessage> toGossip = bmmh.gossipBucketAmountFinishedLeave();
+                                    mh.writeMsgsForBucketManager(toGossip);
+                                }
+//
+//
+                                // todo yuval - add this bool finishedShuffling = shuffler.doOnePageShuffleAndReturnIsFinished();
+//
+                            } else{
+                                if (READ_RATIO == 100 || utils::RandomGenerator::getRandU64(0, 100) < READ_RATIO) {
+                                    auto start = utils::getTimePoint();
+                                    auto success = tree.lookup_opt(key, result);
+                                    ensure(success);
+                                    auto end = utils::getTimePoint();
+                                    threads::Worker::my().counters.incr_by(profiling::WorkerCounters::latency, (end - start));
+                                } else {
+                                    V payload;
+                                    utils::RandomGenerator::getRandString(reinterpret_cast<u8*>(&payload), sizeof(V));
+                                    auto start = utils::getTimePoint();
+                                    tree.insert(key, payload);
+                                    auto end = utils::getTimePoint();
+                                    threads::Worker::my().counters.incr_by(profiling::WorkerCounters::latency, (end - start));
+                                }
                             }
                             threads::Worker::my().counters.incr(profiling::WorkerCounters::tx_p);
                         }
@@ -278,7 +314,7 @@ int main(int argc, char* argv[])
                 scalestore.getWorkerPool().joinAll();
                 // -------------------------------------------------------------------------------------
                 scalestore.stopProfiler();
-
+//
                 if (FLAGS_YCSB_record_latency) {
                     std::atomic<bool> keep_running = true;
                     constexpr uint64_t LATENCY_SAMPLES = 1e6;
@@ -288,12 +324,12 @@ int main(int argc, char* argv[])
                     for (uint64_t t_i = 0; t_i < FLAGS_worker; ++t_i) {
                         scalestore.getWorkerPool().scheduleJobAsync(t_i, [&, t_i]() {
                             running_threads_counter++;
-
+//
                             uint64_t ops = 0;
                             storage::DistributedBarrier barrier(catalog.getCatalogEntry(BARRIER_ID).pid);
                             storage::BTree<K, V> tree(catalog.getCatalogEntry(BTREE_ID).pid);
                             barrier.wait();
-
+//
                             // use for GAM comparision
                             // V payload;
                             // utils::RandomGenerator::getRandString(reinterpret_cast<u8*>(&payload), sizeof(V));
@@ -338,19 +374,19 @@ int main(int argc, char* argv[])
                     // -------------------------------------------------------------------------------------
                     scalestore.stopProfiler();
                     // -------------------------------------------------------------------------------------
-
+//
                     // combine vector of threads into one
                     std::vector<uint64_t> microsecond_latencies;
                     for (uint64_t t_i = 0; t_i < FLAGS_worker; ++t_i) {
                         microsecond_latencies.insert(microsecond_latencies.end(), tl_microsecond_latencies[t_i].begin(), tl_microsecond_latencies[t_i].end());
                     }
-
+//
                     {
                         std::cout << "Shuffle samples " << microsecond_latencies.size() << std::endl;
                         std::random_device rd;
                         std::mt19937 g(rd());
                         std::shuffle(microsecond_latencies.begin(), microsecond_latencies.end(), g);
-
+//
                         // write out 400 samples
                         std::ofstream latency_file;
                         std::ofstream::openmode open_flags = std::ios::app;
@@ -364,11 +400,11 @@ int main(int argc, char* argv[])
                             latency_file << TYPE << ","<<FLAGS_tag << "," << READ_RATIO << "," << YCSB_tuple_count << "," << ZIPF << "," << microsecond_latencies[s_i] << std::endl;
                         }
                         latency_file.close();
-
+//
                     }
                     std::cout << "Sorting Latencies"
                               << "\n";
-
+//
                     std::sort(microsecond_latencies.begin(), microsecond_latencies.end());
                     std::cout << "Latency (min/median/max/99%): " << (microsecond_latencies[0]) << ","
                               << (microsecond_latencies[microsecond_latencies.size() / 2]) << ","
@@ -400,3 +436,6 @@ int main(int argc, char* argv[])
     scalestore.getBuffermanager().reportHashTableStats();
     return 0;
 }
+////
+//// Created by YuvalFreund on 01.02.24.
+////

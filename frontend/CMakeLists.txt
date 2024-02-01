@@ -6,7 +6,7 @@ add_executable(OLAP OLAP.cpp)
 add_dependencies(OLAP scalestore)
 target_link_libraries(OLAP scalestore numa)
 
-add_executable(ycsb ycsb/ycsb.cpp ycsb/ycsbYuval.cpp)
+add_executable(ycsb ycsb/ycsb.cpp)
 add_dependencies(ycsb scalestore)
 target_link_libraries(ycsb scalestore numa)
 
