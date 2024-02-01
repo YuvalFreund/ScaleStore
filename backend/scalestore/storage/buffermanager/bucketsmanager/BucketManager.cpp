@@ -291,8 +291,8 @@ void BucketManager::initAllBuckets(){
 ///////////////////////////////////////////////////
 
 void BucketManager::updateConsistentHashingData(bool newNodeJoined,uint64_t nodeIdChanged){
-    newNodeRingLocationsVector.clear();// yuyu
-    newNodesRingLocationMap.clear();// yuyu
+    newNodeRingLocationsVector.clear();
+    newNodesRingLocationMap.clear();
     if(newNodeJoined){
         nodeIdsInCluster.insert(nodeIdChanged);
     }else{

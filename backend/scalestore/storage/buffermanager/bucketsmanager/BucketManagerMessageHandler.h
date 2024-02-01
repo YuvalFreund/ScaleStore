@@ -46,15 +46,6 @@ public:
 
     BucketManagerMessageHandler();
 
-    std::mutex mtxForLocalJobsQueue;
-    std::mutex mtxForShuffleJobsQueue;
-    std::mutex *firstMtx;//todo DFD
-    std::mutex *secondMtx;//todo DFD
-    std::mutex *thirdMtx;//todo DFD
-    queue<BucketMessage> *firstMessageQueue; //todo DFD
-    queue<BucketMessage> *secondMessageQueue; //todo DFD
-    queue<BucketMessage> *thirdMessageQueue; //todo DFD
-
 
     vector<BucketMessage> handleIncomingMessage(BucketMessage msg);
     //node leaving handlers
@@ -73,10 +64,6 @@ public:
     vector<BucketMessage> handleBucketAmountsApprovedLeave(BucketMessage msg);
     //sending buckets handlers
 
-    vector<BucketMessage> handleRequestToStartSendingBucket(BucketMessage msg);
-
-    vector<BucketMessage> handleApproveNewBucketReadyToReceive(BucketMessage msg);
-
     vector<BucketMessage> handleNodeFinishedReceivingBuckets(BucketMessage msg);
 
     vector<BucketMessage> handleBucketMovedToNewNode(BucketMessage msg);
@@ -85,7 +72,6 @@ public:
     ///////// Node joined / leaving functions /////////
 
 
-    vector<BucketMessage> gossipNodeJoined();
 
     vector<BucketMessage> gossipNodeLeft();
 
@@ -94,12 +80,10 @@ public:
 
     vector<BucketMessage> prepareBucketAmountsToNodesMessages(MessagesEnum msgEnum);
 
-    vector<BucketMessage> gossipBucketAmountFinishedEnter();
 
     vector<BucketMessage> gossipBucketAmountFinishedLeave();
 ///////// Union Find functions /////////
 
-    vector<BucketMessage> gossipLocalUnionFindData(MessagesEnum msgEnum);
 
     vector<BucketMessage> addIncomingUnionFindData(BucketMessage msg);
 
@@ -118,18 +102,12 @@ public:
 
     vector<BucketMessage> handleIncomingShuffledBucketDataReceivedAll(BucketMessage msg);
 
-    vector<BucketMessage> prepareOtherNodesForIncomingBuckets();
-
-    void sendBucketToNode(RemoteBucketShuffleJob bucketShuffleJob);
-
     vector<BucketMessage> gossipBucketMoved(uint64_t bucketId, uint64_t nodeId);
 
 
 ///////// Misc functions /////////
 
     vector<BucketMessage> collectMessagesToGossip(BucketMessage msg);
-
-    void checkMailbox();
 
     void sendMessage(BucketMessage msg);
 
@@ -150,7 +128,6 @@ public:
 
     LocalBucketsMergeJob getMergeJob();
 
-    RemoteBucketShuffleJob getShuffleJob();
     queue<pair<uint64_t,uint64_t>> prepareUnionFindData();
 
     void prepareIncomingBucketsDataForOtherNodes();

@@ -417,58 +417,6 @@ vector<BucketMessage> BucketManagerMessageHandler::collectMessagesToGossip(Bucke
 
 }
 
-void BucketManagerMessageHandler::checkMailbox() { //todo DFD
-    uint64_t nodeId = bucketManager.nodeId;
-    if(nodeId == 1){
-        firstMtx->lock();
-
-        if(firstMessageQueue->empty() == false){
-
-            BucketMessage msg = firstMessageQueue->front();
-            auto receivingNodeId = (uint64_t) msg.messageData[MSG_SND_IDX];//todo DFD
-            string readMsg = "\nread msg from node: " + std::to_string(receivingNodeId);
-            string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "read msg from node: " +  std::to_string(receivingNodeId) + "\n" ;//todo DFD
-            logActivity(logMsg);
-            firstMessageQueue->pop();
-            firstMtx->unlock();
-            handleIncomingMessage(msg);
-        }else{
-            firstMtx->unlock();
-        }
-    }
-    if(nodeId == 2){
-        secondMtx->lock();
-        if(secondMessageQueue->empty() == false){
-
-            BucketMessage msg = secondMessageQueue->front();
-            auto receivingNodeId = (uint64_t) msg.messageData[MSG_SND_IDX];//todo DFD
-            string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "read msg from node: " +  std::to_string(receivingNodeId) + "\n" ;//todo DFD
-            logActivity(logMsg);
-
-            secondMessageQueue->pop();
-            secondMtx->unlock();
-            handleIncomingMessage(msg);
-        }else{
-            secondMtx->unlock();
-        }
-    }
-    if(nodeId == 3){
-        thirdMtx->lock();
-        if(thirdMessageQueue->empty() == false){
-
-            BucketMessage msg = thirdMessageQueue->front();
-            auto receivingNodeId = (uint64_t) msg.messageData[MSG_SND_IDX];//todo DFD
-            string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "read msg from node: " +  std::to_string(receivingNodeId) + "\n" ;//todo DFD
-            logActivity(logMsg);
-
-            thirdMessageQueue->pop();
-            thirdMtx->unlock();
-            handleIncomingMessage(msg);
-        }else{
-            thirdMtx->unlock();
-        }
-    }
-}
 
 void BucketManagerMessageHandler::sendMessage(BucketMessage msg) { //todo DFD
     auto receivingNodeId = (uint64_t) msg.messageData[MSG_RCV_IDX];
