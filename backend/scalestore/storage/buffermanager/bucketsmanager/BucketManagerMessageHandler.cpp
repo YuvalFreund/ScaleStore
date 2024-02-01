@@ -426,6 +426,7 @@ void BucketManagerMessageHandler::sendMessage(BucketMessage msg) { //todo DFD
 }
 
 void BucketManagerMessageHandler::logActivity(string const str){
+
     std::ofstream log("/Users/yuvalfreund/Desktop/MasterThesis/localThesis/logs/log1.txt", std::ios_base::app | std::ios_base::out);
     log << str;
 }

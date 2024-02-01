@@ -27,10 +27,10 @@ struct BucketManagerMessageHandler {
     std::queue<LocalBucketsMergeJob> localBucketsMergeJobQueue;
     std::queue<RemoteBucketShuffleJob> remoteBucketShufflingQueue;
     std::atomic<unsigned long> localMergeJobsCounter; // todo yuval - replace with an optimisitic lock!
-    std::atomic<unsigned long> remoteShuffleJobsCounter; // todo yuval - replace with an optimisitic lock!
     std::atomic<bool> shuffleQueueIsReady = false; // todo yuval - replace with an optimisitic lock!
     std::map<uint64_t, queue<pair<uint64_t, uint64_t>>> unionFindDataForNodes;
     int unionFindDataArrived = 0;
+    std::atomic<int> loggerFlush = 0;
     std::map<uint64_t, queue<uint64_t>> bucketShuffleDataForNodes;
     uint64_t leavingNode;
 
@@ -42,6 +42,8 @@ public:
             nodeIdsForMessages.emplace_back(element);
         }
         unionFindTotalAmount = 0;
+        FILE* file = fopen("example.txt", "w");
+
     }
 
     BucketManagerMessageHandler();
