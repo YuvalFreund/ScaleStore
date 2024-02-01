@@ -13,6 +13,7 @@
 // -------------------------------------------------------------------------------------
 DEFINE_uint32(YCSB_read_ratio, 100, "");
 DEFINE_uint32(YCSB_shuffle_ratio, 0, "");
+DEFINE_double(YCSB_trigger_leave_percentage, 50.0, "");
 DEFINE_bool(YCSB_all_workloads, false , "Execute all workloads i.e. 50 95 100 ReadRatio on same tree");
 DEFINE_uint64(YCSB_tuple_count, 1, " Tuple count in");
 DEFINE_double(YCSB_zipf_factor, 0.0, "Default value according to spec");
@@ -122,13 +123,6 @@ int main(int argc, char* argv[])
       workloads.push_back(FLAGS_YCSB_read_ratio);
    }
 
-    uint64_t shuffleRatio = 0;
-    // todo yuval - how to get this flag working?
-    /*
-    if(FLAGS_YCSB_shuffle_ratio){
-        shuffleRatio = FLAGS_YCSB_shuffle_ratio;
-    }*/
-
     if(FLAGS_YCSB_warm_up){
       workload_type.push_back("YCSB_warm_up");
       workload_type.push_back("YCSB_txn");
@@ -176,6 +170,14 @@ int main(int argc, char* argv[])
    }
    // -------------------------------------------------------------------------------------
    u64 YCSB_tuple_count = FLAGS_YCSB_tuple_count;
+   // -------------------------------------------------------------------------------------
+    uint64_t shuffleRatio = 0;
+    if(FLAGS_YCSB_shuffle_ratio){
+        shuffleRatio = FLAGS_YCSB_shuffle_ratio;
+    }
+    // -------------------------------------------------------------------------------------
+    uint64_t nodeLeavingTrigger = YCSB_tuple_count * YCSB_trigger_leave_percentage / 100;
+
    // -------------------------------------------------------------------------------------
    auto nodePartition = partition(scalestore.getNodeID(), FLAGS_nodes, YCSB_tuple_count);
    // -------------------------------------------------------------------------------------
@@ -258,7 +260,8 @@ int main(int argc, char* argv[])
                   while (keep_running) {
                      if(t_i == 0) {
                          checkForShuffle++;
-                         if(checkForShuffle > YCSB_trigger_shuffle_flag){
+                         if(checkForShuffle > nodeLeavingTrigger){
+                             vector<BucketMessage> gossipNodeLeavesMessages = bmmh.gossipNodeLeft();
                              mh.writeMsgsForBucketManager();// todo yuval - implement calling to start shuffling
                          }
                      }
