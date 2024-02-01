@@ -426,7 +426,7 @@ void BucketManagerMessageHandler::sendMessage(BucketMessage msg) { //todo DFD
 }
 
 void BucketManagerMessageHandler::logActivity(string const& str){
-    fprintf(bmmhLogFile,str.c_str());
+    sprintf(bmmhLogFile,str);
     loggerFlushCounter++;
     if(loggerFlushCounter % 20 == 0){
         fflush(bmmhLogFile);
