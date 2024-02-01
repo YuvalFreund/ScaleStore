@@ -404,8 +404,8 @@ void MessageHandler::startThread() {
                   case MESSAGE_TYPE::CUSFR: {
                       auto& incomingBucketMessage = *reinterpret_cast<CreateOrUpdateShuffledFrameRequest*>(ctx.request);
                       PID pid = PID(incomingBucketMessage.shuffledPid);
-
-                      BufferFrame& frame = bm.insertFrame(pid, [&](BufferFrame& frame){
+                      // todo yuval - check if frame doesn't already exists. in this case-  don't enter
+                      bm.insertFrame(pid, [&](BufferFrame& frame){
                           frame.latch.latchExclusive();
                           frame.pid = pid;
                           frame.setPossession(POSSESSION::EXCLUSIVE);
