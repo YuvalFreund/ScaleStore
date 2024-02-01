@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
             scalestore.startProfiler(experimentInfo);
             //storage::Buffermanager& bufferManager = scalestore.getBuffermanager(); todo yuval - do we actually need it or not
             BucketManagerMessageHandler& bmmh = scalestore.getBucketManagerMessageHandler();
-            BucketShuffler& shuffler = scalestore.getBucketShuffler();
+            //BucketShuffler& shuffler = scalestore.getBucketShuffler();
             rdma::MessageHandler& mh = scalestore.getMessageHandler();
             for (uint64_t t_i = 0; t_i < FLAGS_worker; ++t_i) {
                scalestore.getWorkerPool().scheduleJobAsync(t_i, [&, t_i]() {
