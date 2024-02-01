@@ -456,7 +456,7 @@ PageIdJobFromBucket BucketManager::getPageFromBucketToShuffle(uint64_t bucketId)
 
 void BucketManager::lockBucketBeforeShuffle(uint64_t bucketIdToLock){
     bucketMapMtx.lock();
-    auto bucketToGetPageFrom = bucketsMap.find(bucketIdToLock)->second.lockBucketBeforeShuffle();
+    bucketsMap.find(bucketIdToLock)->second.lockBucketBeforeShuffle();
     bucketMapMtx.unlock();
 }
 
