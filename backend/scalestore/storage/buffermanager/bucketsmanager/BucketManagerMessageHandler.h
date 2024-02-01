@@ -30,10 +30,10 @@ struct BucketManagerMessageHandler {
     std::atomic<bool> shuffleQueueIsReady = false; // todo yuval - replace with an optimisitic lock!
     std::map<uint64_t, queue<pair<uint64_t, uint64_t>>> unionFindDataForNodes;
     int unionFindDataArrived = 0;
-    std::atomic<int> loggerFlush = 0;
+    std::atomic<int> loggerFlushCounter = 0;
     std::map<uint64_t, queue<uint64_t>> bucketShuffleDataForNodes;
     uint64_t leavingNode;
-
+    FILE* bmmhLogFile;
 
 
 public:
@@ -42,7 +42,7 @@ public:
             nodeIdsForMessages.emplace_back(element);
         }
         unionFindTotalAmount = 0;
-        FILE* file = fopen("example.txt", "w");
+        bmmhLogFile = fopen("example.txt", "w");
 
     }
 
@@ -114,7 +114,7 @@ public:
 
     void sendMessage(BucketMessage msg);
 
-    void logActivity(string const str);
+    void logActivity(string const& str);
 
     void moveAtomicallyToNormalState();
     // utils

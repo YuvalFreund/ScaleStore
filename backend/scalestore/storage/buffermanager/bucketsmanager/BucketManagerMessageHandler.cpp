@@ -425,10 +425,12 @@ void BucketManagerMessageHandler::sendMessage(BucketMessage msg) { //todo DFD
 
 }
 
-void BucketManagerMessageHandler::logActivity(string const str){
-
-    std::ofstream log("/Users/yuvalfreund/Desktop/MasterThesis/localThesis/logs/log1.txt", std::ios_base::app | std::ios_base::out);
-    log << str;
+void BucketManagerMessageHandler::logActivity(string const& str){
+    fprintf(bmmhLogFile,str.c_str());
+    loggerFlushCounter++;
+    if(loggerFlushCounter % 20 == 0){
+        fflush(bmmhLogFile);
+    }
 }
 
 void BucketManagerMessageHandler::moveAtomicallyToNormalState(){
