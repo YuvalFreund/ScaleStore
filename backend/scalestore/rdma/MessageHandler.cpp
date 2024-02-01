@@ -406,14 +406,13 @@ void MessageHandler::startThread() {
                       PID pid = PID(incomingBucketMessage.shuffledPid);
 
                       BufferFrame& frame = bm.insertFrame(pid, [&](BufferFrame& frame){
-                          /*frame.latch.latchExclusive();
-                          frame.page = page;
+                          frame.latch.latchExclusive();
                           frame.pid = pid;
                           frame.setPossession(POSSESSION::EXCLUSIVE);
                           frame.setPossessor(nodeId);
                           frame.state = BF_STATE::HOT;
                           frame.epoch = 0;  // low epoch to early evict
-                          frame.pVersion = 0;*/
+                          frame.pVersion = 0;
                       });
                   }
 
