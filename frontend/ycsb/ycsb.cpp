@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
         shuffleRatio = FLAGS_YCSB_shuffle_ratio;
     }
     // -------------------------------------------------------------------------------------
-    uint64_t nodeLeavingTrigger = YCSB_tuple_count * YCSB_trigger_leave_percentage / 100;
+    uint64_t nodeLeavingTrigger = YCSB_tuple_count * FLAGS_YCSB_trigger_leave_percentage / 100;
 
    // -------------------------------------------------------------------------------------
    auto nodePartition = partition(scalestore.getNodeID(), FLAGS_nodes, YCSB_tuple_count);
@@ -262,7 +262,7 @@ int main(int argc, char* argv[])
                          checkForShuffle++;
                          if(checkForShuffle > nodeLeavingTrigger){
                              vector<BucketMessage> gossipNodeLeavesMessages = bmmh.gossipNodeLeft();
-                             mh.writeMsgsForBucketManager();// todo yuval - implement calling to start shuffling
+                             mh.writeMsgsForBucketManager(gossipNodeLeavesMessages);// todo yuval - implement calling to start shuffling
                          }
                      }
                      K key = zipf_random->rand(zipf_offset);
