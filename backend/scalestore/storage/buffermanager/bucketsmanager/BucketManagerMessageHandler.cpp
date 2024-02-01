@@ -420,13 +420,15 @@ vector<BucketMessage> BucketManagerMessageHandler::collectMessagesToGossip(Bucke
 
 void BucketManagerMessageHandler::sendMessage(BucketMessage msg) { //todo DFD
     auto receivingNodeId = (uint64_t) msg.messageData[MSG_RCV_IDX];
-    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "write msg to node: " +  std::to_string(receivingNodeId) + "\n" ;//todo DFD
+    const char* logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "write msg to node: " + "\n" ;//todo DFD
     if(receivingNodeId == bucketManager.nodeId) return; // avoiding sending self messages
 
 }
 
 void BucketManagerMessageHandler::logActivity(string const& str){
-    sprintf(bmmhLogFile,str);
+    char *cstr = new char[str.length() + 1];
+    strcpy(cstr, str.c_str());
+    fprintf(bmmhLogFile,cstr);
     loggerFlushCounter++;
     if(loggerFlushCounter % 20 == 0){
         fflush(bmmhLogFile);
