@@ -18,7 +18,7 @@
 #include "scalestore/storage/buffermanager/bucketsmanager/BucketManagerMessageHandler.h"
 #include "scalestore/storage/buffermanager/bucketsmanager/LocalBucketsMergeJob.h"
 #include "scalestore/storage/buffermanager/bucketsmanager/RemoteBucketShuffleJob.h"
-#include "scalestore/storage/buffermanager/bucketsmanager/bucketShuffler.h"
+#include "scalestore/storage/buffermanager/bucketsmanager/BucketShuffler.h"
 
 // -------------------------------------------------------------------------------------
 #include <memory>
