@@ -45,7 +45,8 @@ public:
     }
 
     BucketManagerMessageHandler();
-
+    std::mutex mtxForLocalJobsQueue;
+    std::mutex mtxForShuffleJobsQueue;
 
     vector<BucketMessage> handleIncomingMessage(BucketMessage msg);
     //node leaving handlers
