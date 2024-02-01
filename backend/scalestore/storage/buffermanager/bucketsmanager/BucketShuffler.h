@@ -73,7 +73,7 @@ struct BucketShuffler{
 
     void handleOnePageSend(PageShuffleJob pageShuffleJob){
         // todo yuval - this function needs to return list of bucket ids that were transferred
-        BucketManager& bucketManager = bmmh.bucketManager;
+       // BucketManager& bucketManager = bmmh.bucketManager;
         uint64_t pageId = pageShuffleJob.pageId;
         uint64_t newNodeId = pageShuffleJob.nodeId;
         auto clientId = mh.bmmh_cctxs[newNodeId];
