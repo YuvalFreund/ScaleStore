@@ -643,7 +643,7 @@ vector<BucketMessage>BucketManagerMessageHandler::handleIncomingShuffledBucketDa
     logActivity(logMsg);
     vector<BucketMessage> retVal;
     consensusVec[INCOMING_SHUFFLED_BUCKET_DATA_RECEIVED_ALL].set(leavingNode-1);
-    bool receivedFromAllNodes = markBitAndReturnAreAllNodesIncludingSelfTrue(msg);
+    bool receivedFromAllNodes = markBitAndReturnAreAllNodesExcludingSelfTrue(msg);
     if(receivedFromAllNodes){
         string finsihedMessage = "o########################ok######################### \n" ;//todo DFD
         logActivity(finsihedMessage);

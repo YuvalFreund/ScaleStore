@@ -111,8 +111,6 @@ public:
 
     bool markBitAndReturnAreAllNodesExcludingSelfTrue(const BucketMessage msg);
 
-    bool markBitAndReturnAreAllNodesIncludingSelfTrue(const BucketMessage msg);
-
 ///////// buckets sending functions functions /////////
     vector<BucketMessage> handleIncomingShuffledBucketData(BucketMessage msg);
 
