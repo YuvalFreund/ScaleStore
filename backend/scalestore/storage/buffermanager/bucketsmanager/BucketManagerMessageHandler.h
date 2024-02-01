@@ -11,6 +11,7 @@
 #include <ios>
 #include <fstream>
 #include <cmath>
+#include <cstring>
 #include "BucketManager.h"
 #include "BucketMessage.h"
 #include "RemoteBucketShuffleJob.h"

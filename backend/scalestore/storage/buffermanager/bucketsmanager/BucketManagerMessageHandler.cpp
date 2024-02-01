@@ -420,7 +420,7 @@ vector<BucketMessage> BucketManagerMessageHandler::collectMessagesToGossip(Bucke
 
 void BucketManagerMessageHandler::sendMessage(BucketMessage msg) { //todo DFD
     auto receivingNodeId = (uint64_t) msg.messageData[MSG_RCV_IDX];
-    const char* logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "write msg to node: " + "\n" ;//todo DFD
+    string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "write msg to node: " +  std::to_string(receivingNodeId) + "\n" ;//todo DFD
     if(receivingNodeId == bucketManager.nodeId) return; // avoiding sending self messages
 
 }
