@@ -2,6 +2,8 @@
 #include "scalestore/Config.hpp"
 #include "scalestore/ScaleStore.hpp"
 #include "scalestore/rdma/CommunicationManager.hpp"
+#include "scalestore/storage/buffermanager/bucketsmanager/BucketShuffler.h"
+
 #include "scalestore/storage/datastructures/BTree.hpp"
 #include "scalestore/utils/RandomGenerator.hpp"
 #include "scalestore/utils/ScrambledZipfGenerator.hpp"
@@ -10,6 +12,8 @@
 #include <gflags/gflags.h>
 // -------------------------------------------------------------------------------------
 DEFINE_uint32(YCSB_read_ratio, 100, "");
+DEFINE_uint32(YCSB_shuffle_ratio, 0, "");
+DEFINE_double(YCSB_trigger_leave_percentage, 50.0, "");
 DEFINE_bool(YCSB_all_workloads, false , "Execute all workloads i.e. 50 95 100 ReadRatio on same tree");
 DEFINE_uint64(YCSB_tuple_count, 1, " Tuple count in");
 DEFINE_double(YCSB_zipf_factor, 0.0, "Default value according to spec");
@@ -103,9 +107,8 @@ int main(int argc, char* argv[])
 {
     using K = uint64_t;
     using V = BytesPayload<128>;
-
-    gflags::SetUsageMessage("Catalog Test");
     gflags::ParseCommandLineFlags(&argc, &argv, true);
+    gflags::SetUsageMessage("Catalog Test");
     // -------------------------------------------------------------------------------------
     // prepare workload
     std::vector<std::string> workload_type; // warm up or benchmark
@@ -119,7 +122,6 @@ int main(int argc, char* argv[])
     }else{
         workloads.push_back(FLAGS_YCSB_read_ratio);
     }
-
 
     if(FLAGS_YCSB_warm_up){
         workload_type.push_back("YCSB_warm_up");
@@ -168,6 +170,14 @@ int main(int argc, char* argv[])
     }
     // -------------------------------------------------------------------------------------
     u64 YCSB_tuple_count = FLAGS_YCSB_tuple_count;
+    // -------------------------------------------------------------------------------------
+    uint64_t shuffleRatio = 0;
+    if(FLAGS_YCSB_shuffle_ratio){
+        shuffleRatio = FLAGS_YCSB_shuffle_ratio;
+    }
+    // -------------------------------------------------------------------------------------
+    uint64_t nodeLeavingTrigger = YCSB_tuple_count * FLAGS_YCSB_trigger_leave_percentage / 100;
+
     // -------------------------------------------------------------------------------------
     auto nodePartition = partition(scalestore.getNodeID(), FLAGS_nodes, YCSB_tuple_count);
     // -------------------------------------------------------------------------------------
@@ -236,31 +246,56 @@ int main(int argc, char* argv[])
 
                 YCSB_workloadInfo experimentInfo{TYPE, YCSB_tuple_count, READ_RATIO, ZIPF, (FLAGS_YCSB_local_zipf?"local_zipf":"global_zipf")};
                 scalestore.startProfiler(experimentInfo);
+                //storage::Buffermanager& bufferManager = scalestore.getBuffermanager(); todo yuval - do we actually need it or not
+                BucketManagerMessageHandler& bmmh = scalestore.getBucketManagerMessageHandler();
+                //BucketShuffler& shuffler = scalestore.getBucketShuffler();
+                rdma::MessageHandler& mh = scalestore.getMessageHandler();
                 for (uint64_t t_i = 0; t_i < FLAGS_worker; ++t_i) {
                     scalestore.getWorkerPool().scheduleJobAsync(t_i, [&, t_i]() {
                         running_threads_counter++;
                         storage::DistributedBarrier barrier(catalog.getCatalogEntry(BARRIER_ID).pid);
                         storage::BTree<K, V> tree(catalog.getCatalogEntry(BTREE_ID).pid);
                         barrier.wait();
-
+                        uint64_t checkForShuffle = 0;
                         while (keep_running) {
+                            if(t_i == 0) {
+                                checkForShuffle++;
+                                if(checkForShuffle > nodeLeavingTrigger){
+                                    vector<BucketMessage> gossipNodeLeavesMessages = bmmh.gossipNodeLeft();
+                                    mh.writeMsgsForBucketManager(gossipNodeLeavesMessages);// todo yuval - implement calling to start shuffling
+                                }
+                            }
                             K key = zipf_random->rand(zipf_offset);
                             ensure(key < YCSB_tuple_count);
                             V result;
+                            // worker will try to merge locally - and then to shuffle bucket to remote node
+                            if(utils::RandomGenerator::getRandU64(0, 10000) < shuffleRatio) { // worker will go and shuffle
+                                /*LocalBucketsMergeJob mergeJob = bmmh.getMergeJob();
+                                if(mergeJob.needMerge){
+                                    //BucketShuffler::merge2bucketsLocally();
+                                }
+                                if(mergeJob.lastMerge){
+                                    vector<BucketMessage> toGossip = bmmh.gossipBucketAmountFinishedLeave();
+                                    mh.writeMsgsForBucketManager(toGossip);
+                                }
+                               */
+                                // todo yuval - add this bool finishedShuffling = shuffler.doOnePageShuffleAndReturnIsFinished();
 
-                            if (READ_RATIO == 100 || utils::RandomGenerator::getRandU64(0, 100) < READ_RATIO) {
-                                auto start = utils::getTimePoint();
-                                auto success = tree.lookup_opt(key, result);
-                                ensure(success);
-                                auto end = utils::getTimePoint();
-                                threads::Worker::my().counters.incr_by(profiling::WorkerCounters::latency, (end - start));
-                            } else {
-                                V payload;
-                                utils::RandomGenerator::getRandString(reinterpret_cast<u8*>(&payload), sizeof(V));
-                                auto start = utils::getTimePoint();
-                                tree.insert(key, payload);
-                                auto end = utils::getTimePoint();
-                                threads::Worker::my().counters.incr_by(profiling::WorkerCounters::latency, (end - start));
+                            } else{
+                                if (READ_RATIO == 100 || utils::RandomGenerator::getRandU64(0, 100) < READ_RATIO) {
+                                    auto start = utils::getTimePoint();
+                                    auto success = tree.lookup_opt(key, result);
+                                    ensure(success);
+                                    auto end = utils::getTimePoint();
+                                    threads::Worker::my().counters.incr_by(profiling::WorkerCounters::latency, (end - start));
+                                } else {
+                                    V payload;
+                                    utils::RandomGenerator::getRandString(reinterpret_cast<u8*>(&payload), sizeof(V));
+                                    auto start = utils::getTimePoint();
+                                    tree.insert(key, payload);
+                                    auto end = utils::getTimePoint();
+                                    threads::Worker::my().counters.incr_by(profiling::WorkerCounters::latency, (end - start));
+                                }
                             }
                             threads::Worker::my().counters.incr(profiling::WorkerCounters::tx_p);
                         }
@@ -400,3 +435,6 @@ int main(int argc, char* argv[])
     scalestore.getBuffermanager().reportHashTableStats();
     return 0;
 }
+//
+// Created by YuvalFreund on 01.02.24.
+//
