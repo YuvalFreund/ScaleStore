@@ -203,7 +203,7 @@ vector<BucketMessage> BucketManagerMessageHandler::handleBucketAmountsApprovedLe
             retVal.emplace_back(askForMoreDataMsg);
         }
     }
-
+    return retVal;
 }
 
 //sending buckets handlers

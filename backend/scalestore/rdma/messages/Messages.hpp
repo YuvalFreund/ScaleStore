@@ -203,8 +203,8 @@ struct BucketManagerMessage : public Message{
 
 struct CreateOrUpdateShuffledFrameRequest : public Message {
     uint64_t shuffledPid;
-    storage::Possessors possessors;
-    CreateOrUpdateShuffledFrameRequest(uint64_t shuffledPid,storage::Possessors possessors) : Message(MESSAGE_TYPE::CUSFR), shuffledPid(shuffledPid),
+    scalestore::storage::Possessors possessors;
+    CreateOrUpdateShuffledFrameRequest(uint64_t shuffledPid,scalestore::storage::Possessors possessors) : Message(MESSAGE_TYPE::CUSFR), shuffledPid(shuffledPid),
                                                                                               possessors(possessors){}
 };
 
