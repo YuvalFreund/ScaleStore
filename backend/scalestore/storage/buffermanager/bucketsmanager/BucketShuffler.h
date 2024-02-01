@@ -39,16 +39,17 @@ struct BucketShuffler{
                                                                                                               bm(bm) {
     }
 
-    bool doOnePageShuffle(){
+    bool doOnePageShuffleAndReturnIsFinished(){
         if (initiated == false){
             checkAndInitBucketShuffler();
-            return true;
+            return false;
         }else{
             if(workDone){
                 return true;
             }else{
                 PageShuffleJob jobToExecute = getNextPageToShuffle();
                 handleOnePageSend(jobToExecute);
+                return false;
             }
         }
     }

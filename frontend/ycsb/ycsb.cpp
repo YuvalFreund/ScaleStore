@@ -246,7 +246,7 @@ int main(int argc, char* argv[])
 
             YCSB_workloadInfo experimentInfo{TYPE, YCSB_tuple_count, READ_RATIO, ZIPF, (FLAGS_YCSB_local_zipf?"local_zipf":"global_zipf")};
             scalestore.startProfiler(experimentInfo);
-            storage::Buffermanager& bufferManager = scalestore.getBuffermanager();
+            //storage::Buffermanager& bufferManager = scalestore.getBuffermanager(); todo yuval - do we actually need it or not
             BucketManagerMessageHandler& bmmh = scalestore.getBucketManagerMessageHandler();
             BucketShuffler& shuffler = scalestore.getBucketShuffler();
             rdma::MessageHandler& mh = scalestore.getMessageHandler();
@@ -279,7 +279,7 @@ int main(int argc, char* argv[])
                              mh.writeMsgsForBucketManager(toGossip);
                          }
                         */
-                         shuffler.doOnePageShuffle();
+                         // todo yuval - add this bool finishedShuffling = shuffler.doOnePageShuffleAndReturnIsFinished();
 
                      } else{
                          if (READ_RATIO == 100 || utils::RandomGenerator::getRandU64(0, 100) < READ_RATIO) {
