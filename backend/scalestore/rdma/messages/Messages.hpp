@@ -2,7 +2,7 @@
 // -------------------------------------------------------------------------------------
 #include "Defs.hpp"
 #include "scalestore/storage/buffermanager/bucketsmanager/BucketManagerDefs.h"
-
+#include "scalestore/storage/buffermanager/BufferFrame.hpp"
 // -------------------------------------------------------------------------------------
 
 namespace scalestore
