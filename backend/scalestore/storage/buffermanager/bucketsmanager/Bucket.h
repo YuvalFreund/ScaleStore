@@ -49,7 +49,7 @@ public:
     uint64_t requestNewPageId(){
         bucketLock.lock();
         uint64_t retVal;
-        if(freeSlots.empty()|| bucketIsUnderWay.load()){ // when bucket is underway, it becomes read only!
+        if(freeSlots.empty()){ // todo yuval - don't forget this when bucket is underway, it becomes read only! || bucketIsUnderWay.load()
             std::cout<<"full bucket"<<std::endl;
             bucketLock.unlock();
             throw std::runtime_error("No empty slots");
@@ -67,7 +67,7 @@ public:
 
     void addNewPageWithPageId(uint64_t pageId){
         bucketLock.lock();
-        if(freeSlots.empty() || bucketIsUnderWay.load()){
+        if(freeSlots.empty() ){ //// todo yuval - don't forget this bucketIsUnderWay.load()
             bucketLock.unlock();
             throw std::runtime_error("No empty slots");
         }
