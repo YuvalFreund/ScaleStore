@@ -405,7 +405,7 @@ void MessageHandler::startThread() {
                       auto& incomingBucketMessage = *reinterpret_cast<CreateOrUpdateShuffledFrameRequest*>(ctx.request);
                       PID pid = PID(incomingBucketMessage.shuffledPid);
                       // todo yuval - check if frame doesn't already exists. in this case-  don't enter
-                      bm.insertFrame(pid, [&](BufferFrame& frame){
+                      /*bm.insertFrame(pid, [&](BufferFrame& frame){
                           frame.latch.latchExclusive();
                           frame.pid = pid;
                           frame.setPossession(POSSESSION::EXCLUSIVE);
@@ -413,7 +413,7 @@ void MessageHandler::startThread() {
                           frame.state = BF_STATE::HOT;
                           frame.epoch = 0;  // low epoch to early evict
                           frame.pVersion = 0;
-                      });
+                      });*/
                   }
 
 

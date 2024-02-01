@@ -48,7 +48,7 @@ struct BucketShuffler{
                 return true;
             }else{
                 PageShuffleJob jobToExecute = getNextPageToShuffle();
-
+                handleOnePageSend(jobToExecute);
             }
         }
     }
