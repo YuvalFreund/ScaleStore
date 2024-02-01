@@ -528,12 +528,12 @@ struct MessageHandler {
 
    // Protocol functor which is injected to Buffermanager find frame;
    struct Copy {
-      void operator()(Guard& g, [[maybe_unused]] NodeID nodeId, BucketManager&  bucketManager1)
+      void operator()(Guard& g, [[maybe_unused]] NodeID nodeId, [[maybe_unused]]BucketManager&  bucketManager1)
       {
           // -------------------------------------------------------------------------------------
          // Exclusive
          // -------------------------------------------------------------------------------------
-          if(bucketManager1.nodeIsToBeDeleted){} // todo yuval - is there another way to deal with the check?
+          //if(bucketManager1.nodeIsToBeDeleted){} // todo yuval - is there another way to deal with the check?
 
           if (!g.frame->latch.tryLatchShared()) {
             g.latchState = LATCH_STATE::UNLATCHED;

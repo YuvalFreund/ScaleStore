@@ -401,19 +401,21 @@ void MessageHandler::startThread() {
                       break;
                   }
 
-                  case MESSAGE_TYPE::CSFR: {
-                      auto& incomingBucketMessage = *reinterpret_cast<CreateShuffledFrameRequest*>(ctx.request);
-                      // Todo yuval - add to bucket manager - > bucket should receive new page id
-                      // todo yuval - create a new frame
-                      // todo yuval - create new message, CSFRR, to send back pointer to the LN with location
-                  }
+                  case MESSAGE_TYPE::CUSFR: {
+                      auto& incomingBucketMessage = *reinterpret_cast<CreateOrUpdateShuffledFrameRequest*>(ctx.request);
+                      PID pid = incomingBucketMessage.shuffledPid;
 
-                   case MESSAGE_TYPE::CSFRR: {
-                       auto& incomingBucketMessage = *reinterpret_cast<CreateShuffledFrameRequest*>(ctx.request);
-                       // Todo yuval - add to bucket manager - > bucket should receive new page id
-                       // todo yuval - create a new frame
-                       // todo yuval - create new message, CSFRR, to send back pointer to the LN with location
-                   }
+                      BufferFrame& frame =insertFrame(pid, [&](BufferFrame& frame){
+                          frame.latch.latchExclusive();
+                          frame.page = page;
+                          frame.pid = pid;
+                          frame.setPossession(POSSESSION::EXCLUSIVE);
+                          frame.setPossessor(nodeId);
+                          frame.state = BF_STATE::HOT;
+                          frame.epoch = 0;  // low epoch to early evict
+                          frame.pVersion = 0;
+                      });
+                  }
 
 
                   default:

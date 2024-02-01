@@ -42,8 +42,7 @@ enum class MESSAGE_TYPE : uint8_t {
 
    // -------------------------------------------------------------------------------------
    // Shuffeled frame on the way
-   CSFR = 16,
-   CSFRR = 17,
+   CUSFR = 16,
    // update shuffled frame arrived
    USFA = 18,
 
@@ -202,18 +201,12 @@ struct BucketManagerMessage : public Message{
     }
 };
 
-struct CreateShuffledFrameRequest : public Message {
+struct CreateOrUpdateShuffledFrameRequest : public Message {
     uint64_t shuffledPid;
-    uint64_t bucketToInsert;
-    CreateShuffledFrameRequest(uint64_t shuffledPid, uint64_t bucketToInsert) : Message(MESSAGE_TYPE::CSFR), shuffledPid(shuffledPid), bucketToInsert(bucketToInsert){}
+    storage::Possessors possessors;
+    CreateOrUpdateShuffledFrameRequest(uint64_t shuffledPid,storage::Possessors possessors) : Message(MESSAGE_TYPE::CUSFR), shuffledPid(shuffledPid),
+                                                                                              possessors(possessors){}
 };
-
-struct CreateShuffledFrameResponse : public Message {
-    uint64_t shuffledPid;
-    uintptr_t pageOffset;
-    CreateShuffledFrameResponse(uint64_t shuffledPid, uint64_t pageOffset) : Message(MESSAGE_TYPE::CSFRR),shuffledPid(shuffledPid){}
-};
-
 
 // -------------------------------------------------------------------------------------
 // Get size of Largest Message
@@ -230,8 +223,7 @@ union ALLDERIVED{
    DelegationRequest dr;
    DelegationResponse drr;
    BucketManagerMessage bmmsg;
-   CreateShuffledFrameRequest csfr;
-   CreateShuffledFrameResponse csfrr;
+   CreateOrUpdateShuffledFrameRequest CUSFR;
 
 };
 
