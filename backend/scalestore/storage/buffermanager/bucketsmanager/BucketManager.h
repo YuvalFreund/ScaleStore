@@ -75,7 +75,6 @@ public:
     BucketsDisjointSets newDisjointSets;
 
     //state changes
-    enum ManagerState {initiated,normal, synchronizing, shuffling, finished}; //todo DFD - REMOVE FINSIHED
     bool nodeIsToBeDeleted;
 
     //node constructor
