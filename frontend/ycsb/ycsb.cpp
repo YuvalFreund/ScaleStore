@@ -268,7 +268,7 @@ int main(int argc, char* argv[])
                                 }
                             }
                             K key = zipf_random->rand(zipf_offset);
-                            if(key < YCSB_tuple_count){
+                            if(key > YCSB_tuple_count){
                                 std::cout<<"key too high!"<<std::endl;
                             }
                             ensure(key < YCSB_tuple_count);
