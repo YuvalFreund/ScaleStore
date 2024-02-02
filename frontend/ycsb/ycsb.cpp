@@ -178,7 +178,7 @@ int main(int argc, char* argv[])
     // -------------------------------------------------------------------------------------
     uint64_t nodeLeavingTrigger = YCSB_tuple_count * FLAGS_YCSB_trigger_leave_percentage / 100;
 //
-    // -------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------
     auto nodePartition = partition(scalestore.getNodeID(), FLAGS_nodes, YCSB_tuple_count);
     // -------------------------------------------------------------------------------------
     // Build YCSB Table / Tree
