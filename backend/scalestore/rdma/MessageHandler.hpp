@@ -442,6 +442,7 @@ struct MessageHandler {
    // -------------------------------------------------------------------------------------
     // todo yuval ask tobi - does it make sense to send messages this way?
     void writeMsgsForBucketManager(vector<BucketMessage> msgs){
+       ensure(msgs.size() > 0);
        for (auto & bucketMsg : msgs) {
            uint64_t nodeIdToSend = bucketMsg.messageData[MSG_RCV_IDX];
            ensure(nodeIdToSend < bmmh_cctxs.size() -1);
