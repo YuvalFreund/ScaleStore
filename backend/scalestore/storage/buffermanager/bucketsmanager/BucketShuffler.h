@@ -29,6 +29,7 @@ struct BucketShuffler{
     std::queue<RemoteBucketShuffleJob> remoteShuffleJobs;
     atomic<bool> initiated = false;
     atomic<bool> workDone = false;
+    bool bigBucketShuffle = false;
     RemoteBucketShuffleJob currentShuffleJob;
     rdma::MessageHandler& mh;
     BucketManagerMessageHandler& bmmh;
@@ -139,14 +140,21 @@ struct BucketShuffler{
         bmmh.bucketManager.deleteBucket(currentShuffleJob.bucketId);
         auto gossipMessages = bmmh.gossipBucketMoved(currentShuffleJob.bucketId,currentShuffleJob.nodeId);
         mh.writeMsgsForBucketManager(gossipMessages);
-        // todo yuval - also, deal with small bucket
         remoteShuffleJobs = bmmh.remoteBucketShufflingQueue;
-        currentShuffleJob = remoteShuffleJobs.front();
+        if(bigBucketShuffle){
+            bigBucketShuffle = false;
+            map<uint64_t, uint64_t> mergableBucketsToSendToNode = bmmh.bucketManager.mergableBucketsForEachNode[currentShuffleJob.nodeId];
+            if(mergableBucketsToSendToNode[currentShuffleJob.bucketId] != BUCKET_ALREADY_MERGED){
+                currentShuffleJob = RemoteBucketShuffleJob(mergableBucketsToSendToNode[currentShuffleJob.bucketId],currentShuffleJob.nodeId);
+            }
+        }else{
+            currentShuffleJob = remoteShuffleJobs.front();
+        }
         bmmh.bucketManager.lockBucketBeforeShuffle(currentShuffleJob.bucketId);
         remoteShuffleJobs.pop();
         bucketsJobMutex.unlock();
-    }
-};
+        }
+    };
 
 
 

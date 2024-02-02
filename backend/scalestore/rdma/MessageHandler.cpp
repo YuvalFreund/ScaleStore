@@ -403,8 +403,10 @@ void MessageHandler::startThread() {
 
                   case MESSAGE_TYPE::CUSFR: {
                       // todo yuval - check if frame doesn't already exists. in this case-  don't enter
-                      /*auto& incomingBucketMessage = *reinterpret_cast<CreateOrUpdateShuffledFrameRequest*>(ctx.request);
+                      auto& incomingBucketMessage = *reinterpret_cast<CreateOrUpdateShuffledFrameRequest*>(ctx.request);
                       PID pid = PID(incomingBucketMessage.shuffledPid);
+                      auto guard = bm.findFrame<CONTENTION_METHOD::NON_BLOCKING>(pid, Invalidation(), ctx.bmId); // todo yuval - think of functor here
+
                       bm.insertFrame(pid, [&](BufferFrame& frame){
                           frame.latch.latchExclusive();
                           frame.pid = pid;
@@ -413,7 +415,7 @@ void MessageHandler::startThread() {
                           frame.state = BF_STATE::HOT;
                           frame.epoch = 0;  // low epoch to early evict
                           frame.pVersion = 0;
-                      });*/
+                      });
                   }
 
 

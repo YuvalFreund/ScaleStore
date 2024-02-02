@@ -129,7 +129,7 @@ struct MessageHandler {
        storage::PartitionedQueue<storage::Page*, PARTITIONS, BATCH_SIZE, utils::Stack>::BatchHandle& page_handle)
    {
       uint8_t* mailboxes = partition.mailboxes;
-      auto guard = bm.findFrameOrInsert<CONTENTION_METHOD::NON_BLOCKING>(request.pid, Protocol<DESIRED_MODE>(), ctx.bmId);
+      auto guard = bm.findFrameOrInsert<CONTENTION_METHOD::NON_BLOCKING>(request.pid, Protocol<DESIRED_MODE>(), ctx.bmId,false);
       // -------------------------------------------------------------------------------------
       if (guard.state == STATE::RETRY) {
          ensure(guard.latchState != LATCH_STATE::EXCLUSIVE);
@@ -442,7 +442,7 @@ struct MessageHandler {
    // -------------------------------------------------------------------------------------
     // todo yuval ask tobi - does it make sense to send messages this way?
     void writeMsgsForBucketManager(vector<BucketMessage> msgs){
-       ensure(msgs.size() > 0);
+       ensure(!msgs.empty());
        for (auto & bucketMsg : msgs) {
            uint64_t nodeIdToSend = bucketMsg.messageData[MSG_RCV_IDX];
            ensure(nodeIdToSend < bmmh_cctxs.size() -1);
