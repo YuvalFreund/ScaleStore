@@ -76,7 +76,6 @@ public:
 
     //state changes
     enum ManagerState {initiated,normal, synchronizing, shuffling, finished}; //todo DFD - REMOVE FINSIHED
-    std::atomic<ManagerState> managerState;
     bool nodeIsToBeDeleted;
 
     //node constructor
@@ -97,7 +96,7 @@ public:
 
     uint64_t getPageSSDSlotInSelfNode(uint64_t pageId);
 
-    uint64_t getNodeIdOfPage(uint64_t pageId);
+    uint64_t getNodeIdOfPage(uint64_t pageId, bool searchOldRing);
 
     uint64_t getNodeIdOfBucket(uint64_t bucketId,bool fromInitStage, bool forceNewState);
 

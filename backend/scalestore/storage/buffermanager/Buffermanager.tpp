@@ -63,7 +63,7 @@ restart:
    g.frame->latch.latchExclusive(); // POSSIBLE ERROR?
    ensure(g.frame->pid == EMPTY_PID);
     //yuval change -  replace with call to buckets manager
-    uint64_t pidOwner = bucketManager.getNodeIdOfPage(g.frame->pid);
+    uint64_t pidOwner = bucketManager.getNodeIdOfPage(g.frame->pid,true);
     g.frame->state =
        (pidOwner == nodeId) ? BF_STATE::IO_SSD : BF_STATE::IO_RDMA;  // important to modify state before releasing the hashtable latch
    g.frame->page = page;
@@ -232,7 +232,7 @@ restart:
          uintptr_t pageOffset = (uintptr_t)guard.frame->page;
          // -------------------------------------------------------------------------------------
          //yuval change- replace with call to buckets manager
-          uint64_t pidOwner = bucketManager.getNodeIdOfPage(pid);
+          uint64_t pidOwner = bucketManager.getNodeIdOfPage(pid,true);
           auto& contextT = threads::Worker::my().cctxs[pidOwner];
          auto& request = *MessageFabric::createMessage<PossessionRequest>(
              contextT.outgoing, ((functor.type == LATCH_STATE::EXCLUSIVE) ? MESSAGE_TYPE::PRX : MESSAGE_TYPE::PRS), pid, pageOffset);
@@ -320,7 +320,7 @@ restart:
       case STATE::LOCAL_POSSESSION_CHANGE: {
           //yuval change- replace with call to buckets manager
 
-          uint64_t pidOwner = bucketManager.getNodeIdOfPage(pid);
+          uint64_t pidOwner = bucketManager.getNodeIdOfPage(pid,true);
          ensure(pidOwner == nodeId);
          ensure(guard.frame->latch.isLatched());
          ensure(guard.frame->possession != POSSESSION::NOBODY);
@@ -419,7 +419,7 @@ restart:
          guard.frame->pVersion++;  // update here to prevent distributed deadlock
          // -------------------------------------------------------------------------------------
           //yuval change- replace with call to buckets manager
-          uint64_t pidOwner = bucketManager.getNodeIdOfPage(pid);
+          uint64_t pidOwner = bucketManager.getNodeIdOfPage(pid,true);
           auto& contextT = threads::Worker::my().cctxs[pidOwner];
          auto& request = *MessageFabric::createMessage<PossessionUpdateRequest>(contextT.outgoing, pid, pVersionOld);
          // -------------------------------------------------------------------------------------

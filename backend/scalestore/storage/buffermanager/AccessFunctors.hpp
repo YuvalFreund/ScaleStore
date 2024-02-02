@@ -21,7 +21,7 @@ struct Exclusive {
       }
       // -------------------------------------------------------------------------------------
        //yuval change-  DONE replace with call to buckets manager
-       uint64_t pidOwner = bucketManager.getNodeIdOfPage(g.frame->pid);
+       uint64_t pidOwner = bucketManager.getNodeIdOfPage(g.frame->pid, true);
        if (g.frame->possession != POSSESSION::EXCLUSIVE || !(g.frame->isPossessor(nodeId))) {
          g.state = (pidOwner == nodeId) ? STATE::LOCAL_POSSESSION_CHANGE : STATE::REMOTE_POSSESSION_CHANGE;
       } else
@@ -65,7 +65,7 @@ struct Shared {
       // -------------------------------------------------------------------------------------
       // can be shared or exclusive as long as we are in possession
        //yuval change- DONE replace with call to buckets manager
-       uint64_t pidOwner = bucketManager.getNodeIdOfPage(g.frame->pid);
+       uint64_t pidOwner = bucketManager.getNodeIdOfPage(g.frame->pid, true);
        if (!(g.frame->isPossessor(nodeId))) {
          g.state = (pidOwner == nodeId) ? STATE::LOCAL_POSSESSION_CHANGE : STATE::REMOTE_POSSESSION_CHANGE;
 
@@ -127,7 +127,7 @@ struct Optimistic {
       // -------------------------------------------------------------------------------------
       // can be shared or exclusive as long as we are in possession
        //yuval change - replace with call to buckets manager
-       uint64_t pidOwner = bucketManager.getNodeIdOfPage(g.frame->pid);
+       uint64_t pidOwner = bucketManager.getNodeIdOfPage(g.frame->pid, true);
        if (!(g.frame->isPossessor(nodeId))) {
          g.state = (pidOwner == nodeId) ? STATE::LOCAL_POSSESSION_CHANGE : STATE::REMOTE_POSSESSION_CHANGE;
       } else

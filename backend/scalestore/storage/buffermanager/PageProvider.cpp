@@ -175,17 +175,15 @@ void PageProvider::startThread() {
          // used wshen we do not evict to SSD but only to remote nodes 
          auto remote_condition = [&](BufferFrame& frame) {
             // local pages shared somewhere else
-             //todo Yuval - DONE replace with call to buckets manager
-             //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
-             uint64_t pidOwner = bucketManager.getNodeIdOfPage(frame.pid);
+             //yuval change -  DONE replace with call to buckets manager
+             uint64_t pidOwner = bucketManager.getNodeIdOfPage(frame.pid, true);
             if ((pidOwner == bm.nodeId) && (frame.state == BF_STATE::HOT) && (frame.possession == POSSESSION::SHARED) &&
                 !frame.latch.isLatched()) {
                if ((frame.isPossessor(bm.nodeId)) && (frame.possessors.shared.count() > 1)) { return true; }
                if ((!frame.isPossessor(bm.nodeId)) && (frame.possessors.shared.count() >= 1)) { return true; }
             }
             // remote pages
-             //todo Yuval - DONE replace with call to buckets manager
-             //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);f
+             //yuval change - DONE replace with call to buckets manager
             if ((pidOwner != bm.nodeId) && (frame.state == BF_STATE::HOT) && !frame.latch.isLatched()) return true;
             return false;
          };
@@ -331,7 +329,7 @@ void PageProvider::startThread() {
                       auto version = frame.latch.version.load();
                       frame.latch.unlatchShared();
                       counters.incr(profiling::WorkerCounters::ssd_pages_written);
-                      uint64_t pidOwner = bucketManager.getNodeIdOfPage(frame.pid);
+                      uint64_t pidOwner = bucketManager.getNodeIdOfPage(frame.pid,true);
 
                       if (epoch_added != frame.epoch.load()) { return; }
                       if ((frame.pid == EMPTY_PID) || (frame.state == BF_STATE::FREE) || (frame.state == BF_STATE::EVICTED)) { return; }
@@ -592,7 +590,7 @@ void PageProvider::startThread() {
                             ensure(frame.state != BF_STATE::FREE);
                             ensure(frame.state != BF_STATE::EVICTED);
                             // -------------------------------------------------------------------------------------
-                             uint64_t pidOwner = bucketManager.getNodeIdOfPage(frame.pid);
+                             uint64_t pidOwner = bucketManager.getNodeIdOfPage(frame.pid,true);
                              if ((pidOwner == bm.nodeId)) {
                                auto rc = evict_owner_page(frame, epoch);
                                if (!rc) break;  // encountered dirty page and we cannot write it to the buffer

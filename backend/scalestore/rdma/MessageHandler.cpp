@@ -405,17 +405,8 @@ void MessageHandler::startThread() {
                       // todo yuval - check if frame doesn't already exists. in this case-  don't enter
                       auto& incomingBucketMessage = *reinterpret_cast<CreateOrUpdateShuffledFrameRequest*>(ctx.request);
                       PID pid = PID(incomingBucketMessage.shuffledPid);
-                      auto guard = bm.findFrame<CONTENTION_METHOD::NON_BLOCKING>(pid, Invalidation(), ctx.bmId); // todo yuval - think of functor here
+                      auto guard = bm.findFrameOrInsert<CONTENTION_METHOD::NON_BLOCKING>(pid, Invalidation(), ctx.bmId, true); // todo yuval - think of functor here
 
-                      bm.insertFrame(pid, [&](BufferFrame& frame){
-                          frame.latch.latchExclusive();
-                          frame.pid = pid;
-                          frame.setPossession(POSSESSION::EXCLUSIVE);
-                          frame.setPossessor(nodeId);
-                          frame.state = BF_STATE::HOT;
-                          frame.epoch = 0;  // low epoch to early evict
-                          frame.pVersion = 0;
-                      });
                   }
 
 

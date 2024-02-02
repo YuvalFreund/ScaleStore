@@ -153,11 +153,10 @@ BufferFrame& Buffermanager::newRemotePage(NodeID remoteNode) {
 void Buffermanager::reclaimPage(BufferFrame& frame) {
    ensure(frame.latch.isLatched());
         // yuval change - DONE replace with call to buckets manager
-   uint64_t pidOwner = bucketManager.getNodeIdOfPage(frame.pid);
+   uint64_t pidOwner = bucketManager.getNodeIdOfPage(frame.pid,true);
    if(pidOwner == nodeId){
       removeFrame(frame, [&](BufferFrame& frame){
           // yuval change - DONE remove page from bucket manager
-                         //pidFreeList.push(frame.pid, threads::ThreadContext::my().pid_handle);
                          bucketManager.removePage(frame.pid);
                          pageFreeList.push(frame.page, threads::ThreadContext::my().page_handle);
                       });
@@ -175,7 +174,7 @@ void Buffermanager::writeAllPages() {
       for (size_t b_i = bf_b; b_i < bf_e; ++b_i) {
          auto& frame = bfs[b_i];
           // yuval change -replace with call to buckets manager
-          uint64_t pidOwner = bucketManager.getNodeIdOfPage(frame.pid);
+          uint64_t pidOwner = bucketManager.getNodeIdOfPage(frame.pid,true);
           if ((pidOwner == nodeId && frame.state == BF_STATE::HOT)) {
             if (!frame.latch.tryLatchExclusive()) {
                std::cerr << "Background thread working and latched page " << std::endl;

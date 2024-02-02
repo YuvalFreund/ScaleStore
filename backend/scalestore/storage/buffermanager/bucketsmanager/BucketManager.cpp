@@ -67,20 +67,18 @@ uint64_t BucketManager::getPageSSDSlotInSelfNode(uint64_t pageId) {
 
 
 
-uint64_t BucketManager::getNodeIdOfPage(uint64_t pageId){
+uint64_t BucketManager::getNodeIdOfPage(uint64_t pageId, bool searchOldRing){
 
     uint64_t bucketId = pageId & bucketIdMaskByParameter;
-    uint64_t foundNodeId = getNodeIdOfBucket(bucketId, false, false);
+    uint64_t foundNodeId = getNodeIdOfBucket(bucketId, false, searchOldRing);
 
     return foundNodeId;
 }
 
 
-uint64_t BucketManager::getNodeIdOfBucket(uint64_t bucketId,bool fromInitStage, bool forceNewState){
+uint64_t BucketManager::getNodeIdOfBucket(uint64_t bucketId, bool fromInitStage, bool searchOldRing){
     uint64_t res = INVALID_NODE_ID;
-    bool searchOldOrNewRing = ((managerState.load() == ManagerState::normal) || (managerState.load() == ManagerState::synchronizing));
-    if(forceNewState ) searchOldOrNewRing = false;
-    if(searchOldOrNewRing){
+    if(searchOldRing){
         //bucketCacheMtx.lock(); // todo yuval - this needs to be locked optimistically, regardless of other places in code using mtx
         auto pageInCacheIter = bucketIdToNodeCache.find(bucketId);
         //bucketCacheMtx.unlock();
@@ -88,8 +86,8 @@ uint64_t BucketManager::getNodeIdOfBucket(uint64_t bucketId,bool fromInitStage, 
             return pageInCacheIter->second;
         }
     }
-    std::map<uint64_t, uint64_t> *mapToSearch = searchOldOrNewRing ? (&nodesRingLocationMap ) : (&newNodesRingLocationMap) ; // locations to swap YUYU
-    std::vector<uint64_t> * vectorToSearch = searchOldOrNewRing ? (&nodeRingLocationsVector) : (&newNodeRingLocationsVector);
+    std::map<uint64_t, uint64_t> *mapToSearch = searchOldRing ? (&nodesRingLocationMap ) : (&newNodesRingLocationMap) ; // locations to swap YUYU
+    std::vector<uint64_t> * vectorToSearch = searchOldRing ? (&nodeRingLocationsVector) : (&newNodeRingLocationsVector);
 
     uint64_t l = 0;
     uint64_t r = vectorToSearch->size() - 1;
@@ -110,7 +108,7 @@ uint64_t BucketManager::getNodeIdOfBucket(uint64_t bucketId,bool fromInitStage, 
     }
 
     // from init stage checks that we don't just add buckets that are not actually chosen in the end
-    if(searchOldOrNewRing && fromInitStage == false){
+    if(searchOldRing && fromInitStage == false){
         bucketCacheMtx.lock();
         bucketIdToNodeCache[bucketId] = res;
         bucketCacheMtx.unlock();
@@ -190,8 +188,6 @@ void BucketManager::nodeLeftOrJoinedCluster(bool nodeJoined, uint64_t leftOrJoin
     if(leftOrJoinedNodeId == nodeId && nodeJoined == false){
         nodeIsToBeDeleted = true;
     }
-    managerState.store(synchronizing);
-
     bucketsLeavingNum = 0;
     updateConsistentHashingData(nodeJoined,leftOrJoinedNodeId);
     auto bucketDesignatedForEachNode = getBucketsIdsAndSizeToSendToNodes();
@@ -408,7 +404,6 @@ void BucketManager::deleteBucket(uint64_t bucketId){
 // for example - random send, send to each node all his buckets, big buckets first, etc.
 vector<pair<uint64_t,uint64_t>> BucketManager::getBucketsShufflePrioritiesAndNodes(){
 
-    managerState.store(shuffling);
     vector<pair<uint64_t,uint64_t>> retVal;
     for(const auto& pairOfNodeIdToSet: mergableBucketsForEachNode){
         if(pairOfNodeIdToSet.first != nodeId){
@@ -421,7 +416,7 @@ vector<pair<uint64_t,uint64_t>> BucketManager::getBucketsShufflePrioritiesAndNod
     return retVal;
 }
 void BucketManager::atomicallyMoveToNormal(){
-    managerState.store(finished); // TODO DFD CHANGE LATER TO NORMAL
+
     //
 }
 
