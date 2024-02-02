@@ -245,7 +245,7 @@ vector<BucketMessage> BucketManagerMessageHandler::handleBucketMovedToNewNode(Bu
             }
         }
     }
-    // todo yuval implement this properly- this to be locked!
+    // todo yuval implement this propeerly- this to be locked optimistacally! not regarding the mutexes
     bucketManager.bucketCacheMtx.lock();
     bucketManager.bucketIdToNodeCache[bucketId] = nodeId;
     bucketManager.bucketCacheMtx.unlock();
