@@ -21,6 +21,7 @@
 #include "MessagesEnum.h"
 #include "LocalBucketsMergeJob.h"
 #include "BucketManagerDefs.h"
+#include "scalestore/Config.hpp"
 
 
 
