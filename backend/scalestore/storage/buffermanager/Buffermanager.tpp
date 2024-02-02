@@ -82,7 +82,7 @@ restart:
 }
 
 template <CONTENTION_METHOD method, typename ACCESS>
-Guard Buffermanager::findFrame(PID pid, ACCESS functor, NodeID nodeId_)  // move functor
+Guard Buffermanager::findFrame(PID pid, ACCESS 7474 , NodeID nodeId_)  // move functor
 {
    Guard g;
    auto& b = pTable[pid];

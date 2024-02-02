@@ -453,12 +453,12 @@ struct MessageHandler {
    // Protocol functor which is injected to Buffermanager find frame;
    template <POSSESSION DESIRED_MODE>
    struct Protocol {
-      void operator()(Guard& g, [[maybe_unused]] NodeID nodeId,BucketManager&  bucketManager1)
+      void operator()(Guard& g, [[maybe_unused]] NodeID nodeId, [[maybe_unused]]BucketManager&  bucketManager1)
       {
          // -------------------------------------------------------------------------------------
          // Optimistic
          // -----------------------------------------------------------------------------------
-          if(bucketManager1.nodeIsToBeDeleted){} // todo yuval -this is just to avoid the "non used" error.  is there another way to deal with the check?
+         // if(bucketManager1.nodeIsToBeDeleted){} // todo yuval -this is just to avoid the "non used" error.  is there another way to deal with the check?
 
          auto version = g.frame->latch.optimisticLatchOrRestart();
          if (!version.has_value()) {

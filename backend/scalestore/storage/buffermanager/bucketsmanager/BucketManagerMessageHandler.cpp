@@ -421,8 +421,7 @@ vector<BucketMessage> BucketManagerMessageHandler::collectMessagesToGossip(Bucke
 void BucketManagerMessageHandler::sendMessage(BucketMessage msg) { //todo DFD
     auto receivingNodeId = (uint64_t) msg.messageData[MSG_RCV_IDX];
     string logMsg = "Node " + std::to_string(bucketManager.nodeId) + " log: " + "write msg to node: " +  std::to_string(receivingNodeId) + "\n" ;//todo DFD
-    if(receivingNodeId == bucketManager.nodeId) return; // avoiding sending self messages
-
+    logActivity(logMsg);
 }
 
 void BucketManagerMessageHandler::logActivity(string const& str){
@@ -430,9 +429,9 @@ void BucketManagerMessageHandler::logActivity(string const& str){
     strcpy(cstr, str.c_str());
     fprintf(bmmhLogFile,"%s",cstr);
     loggerFlushCounter++;
-    if(loggerFlushCounter % 20 == 0){
+    //if(loggerFlushCounter % 20 == 0){ // todo yuval - if this causes issues ignore it
         fflush(bmmhLogFile);
-    }
+    //}
 }
 
 void BucketManagerMessageHandler::moveAtomicallyToNormalState(){
