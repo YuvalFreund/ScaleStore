@@ -252,8 +252,8 @@ int main(int argc, char* argv[])
                 rdma::MessageHandler& mh = scalestore.getMessageHandler();
                 for (uint64_t t_i = 0; t_i < FLAGS_worker; ++t_i) {
                     scalestore.getWorkerPool().scheduleJobAsync(t_i, [&, t_i]() {
-                        pid_t x = syscall(__NR_gettid);
-                        std::cout << "worker has thread id: " << x << std::endl;
+                        //pid_t x = syscall(__NR_gettid);
+                        //std::cout << "worker has thread id: " << x << std::endl;
                         running_threads_counter++;
                         storage::DistributedBarrier barrier(catalog.getCatalogEntry(BARRIER_ID).pid);
                         storage::BTree<K, V> tree(catalog.getCatalogEntry(BTREE_ID).pid);
@@ -268,6 +268,9 @@ int main(int argc, char* argv[])
                                 }
                             }
                             K key = zipf_random->rand(zipf_offset);
+                            if(key < YCSB_tuple_count){
+                                std::cout<<"key too high!"<<std::endl;
+                            }
                             ensure(key < YCSB_tuple_count);
                             V result;
                             // worker will try to merge locally - and then to shuffle bucket to remote node

@@ -81,7 +81,7 @@ uint64_t BucketManager::getNodeIdOfBucket(uint64_t bucketId,bool fromInitStage, 
     bool searchOldOrNewRing = ((managerState.load() == ManagerState::normal) || (managerState.load() == ManagerState::synchronizing));
     if(forceNewState ) searchOldOrNewRing = false;
     if(searchOldOrNewRing){
-        //bucketCacheMtx.lock(); // todo yuval - this causes 95% reduction in performance.
+        //bucketCacheMtx.lock(); // todo yuval - this needs to be locked optimistically, regardless of other places in code using mtx
         auto pageInCacheIter = bucketIdToNodeCache.find(bucketId);
         //bucketCacheMtx.unlock();
         if(pageInCacheIter != bucketIdToNodeCache.end()){
