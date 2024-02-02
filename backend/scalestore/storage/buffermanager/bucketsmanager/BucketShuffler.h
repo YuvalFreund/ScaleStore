@@ -140,8 +140,6 @@ struct BucketShuffler{
         auto gossipMessages = bmmh.gossipBucketMoved(currentShuffleJob.bucketId,currentShuffleJob.nodeId);
         mh.writeMsgsForBucketManager(gossipMessages);
         // todo yuval - also, deal with small bucket
-
-        bucketsJobMutex.lock();
         remoteShuffleJobs = bmmh.remoteBucketShufflingQueue;
         currentShuffleJob = remoteShuffleJobs.front();
         bmmh.bucketManager.lockBucketBeforeShuffle(currentShuffleJob.bucketId);

@@ -193,13 +193,8 @@ void BucketManager::nodeLeftOrJoinedCluster(bool nodeJoined, uint64_t leftOrJoin
     managerState.store(synchronizing);
 
     bucketsLeavingNum = 0;
-    std::cout<<"here1" <<std::endl;
     updateConsistentHashingData(nodeJoined,leftOrJoinedNodeId);
-    std::cout<<"here2" <<std::endl;
-
     auto bucketDesignatedForEachNode = getBucketsIdsAndSizeToSendToNodes();
-    std::cout<<"here3" <<std::endl;
-
     int nonMergedBuckets = 0;
     for (auto & [key, value] : bucketDesignatedForEachNode) {
         mergableBucketsForEachNode[key] = findMergableBuckets(value,&nonMergedBuckets);
