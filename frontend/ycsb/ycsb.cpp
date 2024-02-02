@@ -252,6 +252,8 @@ int main(int argc, char* argv[])
                 rdma::MessageHandler& mh = scalestore.getMessageHandler();
                 for (uint64_t t_i = 0; t_i < FLAGS_worker; ++t_i) {
                     scalestore.getWorkerPool().scheduleJobAsync(t_i, [&, t_i]() {
+                        pid_t x = syscall(__NR_gettid);
+                        std::cout << "worker has thread id: " << x << std::endl;
                         running_threads_counter++;
                         storage::DistributedBarrier barrier(catalog.getCatalogEntry(BARRIER_ID).pid);
                         storage::BTree<K, V> tree(catalog.getCatalogEntry(BTREE_ID).pid);
@@ -260,7 +262,6 @@ int main(int argc, char* argv[])
                         while (keep_running) {
                             if(t_i == 0) {
                                 checkForShuffle++;
-                                if(checkForShuffle % 100000 == 0)std::cout <<"ffff";
                                 if(checkForShuffle > nodeLeavingTrigger){
                                     vector<BucketMessage> gossipNodeLeavesMessages = bmmh.gossipNodeLeft();
                                     mh.writeMsgsForBucketManager(gossipNodeLeavesMessages);// todo yuval - implement calling to start shuffling

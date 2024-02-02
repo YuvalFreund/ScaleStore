@@ -22,7 +22,6 @@ AsyncWriteBuffer::AsyncWriteBuffer(int fd, u64 page_size, u64 batch_max_size) : 
       throw std::runtime_error(("io_setup failed, ret code = " + std::to_string(ret)));
    }
    // init free slots
-   std::cout<<"batch max size: " << batch_max_size<<std::endl;
    for(uint64_t s_i = 0; s_i < batch_max_size; ++s_i)
       free_slots.add(s_i);
 }
