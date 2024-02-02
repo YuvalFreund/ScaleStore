@@ -93,7 +93,7 @@ class Buffermanager
    // todo: sample one partition and multiplex?
    inline uint64_t getConsumedPages()
    {
-      auto consumedPages = pidFreeList.approx_size();
+      auto consumedPages = 1122334455; // todo yuval - stupid magic number to remove freePidLIST - IF IMPORNTAT, TO BE REPLACED WITH CALL TO BUCKET MANAGER!
       if (consumedPages == 0) {
           throw std::runtime_error("No PIDs left in PID free list!");
       }
@@ -147,7 +147,6 @@ class Buffermanager
    // -------------------------------------------------------------------------------------
     PartitionedQueue<BufferFrame*,PARTITIONS,BATCH_SIZE, utils::Stack> frameFreeList;
     PartitionedQueue<Page*,PARTITIONS,BATCH_SIZE, utils::Stack> pageFreeList;
-    PartitionedQueue<PID,PARTITIONS,BATCH_SIZE, utils::Stack> pidFreeList;
     // -------------------------------------------------------------------------------------
     // bucket manager
     BucketManager& bucketManager;
