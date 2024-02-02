@@ -13,7 +13,7 @@
 // -------------------------------------------------------------------------------------
 DEFINE_uint32(YCSB_read_ratio, 100, "");
 DEFINE_uint32(YCSB_shuffle_ratio, 0, "");
-DEFINE_double(YCSB_trigger_leave_percentage, 50.0, "");
+DEFINE_double(YCSB_trigger_leave_percentage, 10.0, "");
 DEFINE_bool(YCSB_all_workloads, false , "Execute all workloads i.e. 50 95 100 ReadRatio on same tree");
 DEFINE_uint64(YCSB_tuple_count, 1, " Tuple count in");
 DEFINE_double(YCSB_zipf_factor, 0.0, "Default value according to spec");
