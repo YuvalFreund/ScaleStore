@@ -82,7 +82,6 @@ public:
     BucketManager(uint64_t nodeId, std::vector<uint64_t> nodeIdsInput) : nodeId(nodeId) {
         std::srand (std::time (0));
         initBucketSizeDataByParameter(FLAGS_bucket_id_size_in_bytes);
-        managerState.store(normal);
         fullBucketManagerInit(nodeIdsInput);
         nodeIsToBeDeleted = false;
     }
