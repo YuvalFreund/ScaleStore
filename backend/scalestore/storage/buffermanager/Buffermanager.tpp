@@ -322,8 +322,7 @@ restart:
           //todo Yuval DONE- replace with call to buckets manager
 
           uint64_t pidOwner = bucketManager.getNodeIdOfPage(pid);
-
-          ensure(pidOwner == nodeId);
+         ensure(pidOwner == nodeId);
          ensure(guard.frame->latch.isLatched());
          ensure(guard.frame->possession != POSSESSION::NOBODY);
          // -------------------------------------------------------------------------------------

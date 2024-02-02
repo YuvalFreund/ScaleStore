@@ -27,8 +27,7 @@ public:
     Bucket(uint64_t BucketId,uint64_t SSDSlotStart):
             BucketId(BucketId), SSDSlotStart(SSDSlotStart){
         //empty slots stack is fulled of all the available slots
-        // todo yuval - this needs to be read from the flags
-        initBucketSizeDataByParameter(6);
+        initBucketSizeDataByParameter(FLAGS_bucket_id_size_in_bytes);
         for(int64_t i = maxPagesByParameter-1; i >=0 ; i--) {
             freeSlots.push(i);
         }

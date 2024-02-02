@@ -21,6 +21,7 @@ DECLARE_uint32(falloc);
 DECLARE_uint64(prob_SSD);
 DECLARE_uint32(partitionBits);
 DECLARE_uint32(page_pool_partitions);
+DECLARE_uint32(bucket_id_size_in_bytes);
 /// -------------------------------------------------------------------------------------
 // CONTENTION
 // -------------------------------------------------------------------------------------

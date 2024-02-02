@@ -458,7 +458,6 @@ struct MessageHandler {
          // -------------------------------------------------------------------------------------
          // Optimistic
          // -----------------------------------------------------------------------------------
-         // if(bucketManager1.nodeIsToBeDeleted){} // todo yuval -this is just to avoid the "non used" error.  is there another way to deal with the check?
 
          auto version = g.frame->latch.optimisticLatchOrRestart();
          if (!version.has_value()) {
@@ -497,12 +496,11 @@ struct MessageHandler {
 
    // Protocol functor which is injected to Buffermanager find frame;
    struct Invalidation {
-      void operator()(Guard& g, [[maybe_unused]] NodeID nodeId,BucketManager&  bucketManager1)
+      void operator()(Guard& g, [[maybe_unused]] NodeID nodeId,[[maybe_unused]]BucketManager&  bucketManager1)
       {
           // -------------------------------------------------------------------------------------
          // Exclusive
          // -------------------------------------------------------------------------------------
-          if(bucketManager1.nodeIsToBeDeleted){} // todo yuval - is there another way to deal with the check?
 
           if (!g.frame->latch.tryLatchExclusive()) {
             g.latchState = LATCH_STATE::UNLATCHED;
@@ -533,8 +531,6 @@ struct MessageHandler {
           // -------------------------------------------------------------------------------------
          // Exclusive
          // -------------------------------------------------------------------------------------
-          //if(bucketManager1.nodeIsToBeDeleted){} // todo yuval - is there another way to deal with the check?
-
           if (!g.frame->latch.tryLatchShared()) {
             g.latchState = LATCH_STATE::UNLATCHED;
             g.state = STATE::RETRY;

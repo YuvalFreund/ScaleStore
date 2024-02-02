@@ -12,7 +12,7 @@ MessageHandler::MessageHandler(rdma::CM<InitMessage>& cm, storage::Buffermanager
     : cm(cm), bm(bm), nodeId(nodeId), mbPartitions(FLAGS_messageHandlerThreads), bucketManager(bucketManager), bucketManagerMessageHandler(bmmh)
             {
    // partition mailboxes
-   size_t n = ((FLAGS_worker) * (FLAGS_nodes - 1)) + (FLAGS_nodes - 1); // todo yuval MH - added artificially another mailbox for the bmmh per node
+   size_t n = ((FLAGS_worker) * (FLAGS_nodes - 1)) + (FLAGS_nodes - 1); // yuval change - added artificially another mailbox for the bmmh per node
    if (n > 0) {
       ensure(FLAGS_messageHandlerThreads <= n);  // avoid over subscribing message handler threads
       const uint64_t blockSize = n / FLAGS_messageHandlerThreads;
@@ -38,7 +38,7 @@ MessageHandler::MessageHandler(rdma::CM<InitMessage>& cm, storage::Buffermanager
 void MessageHandler::init() {
    InitMessage* initServer = (InitMessage*)cm.getGlobalBuffer().allocate(sizeof(InitMessage));
    // -------------------------------------------------------------------------------------
-   size_t numConnections = (FLAGS_worker) * (FLAGS_nodes - 1) + (FLAGS_nodes - 1); // todo yuval MH- added artificially another mailbox for the bmmh per node
+   size_t numConnections = (FLAGS_worker) * (FLAGS_nodes - 1) + (FLAGS_nodes - 1);
    connectedClients = numConnections;
    while (cm.getNumberIncomingConnections() != (numConnections))
       ;  // block until client is connected
@@ -50,12 +50,12 @@ void MessageHandler::init() {
    while (true) {
       std::vector<RdmaContext*> tmp_rdmaCtxs(cm.getIncomingConnections());  // get cm ids of incomming
       uint64_t workers = 0;
-      uint64_t otherMessageHandlers = 0; // todo yuval MH-
+      uint64_t otherMessageHandlers = 0;
       for (auto* rContext : tmp_rdmaCtxs) {
          if (rContext->type == Type::WORKER){
              workers++;
          }
-         if(rContext->type == Type::MESSAGE_HANDLER){
+         if(rContext->type == Type::MESSAGE_HANDLER) { // yuval change - also connecto to other message handler
              otherMessageHandlers++;
          }
       }
@@ -138,7 +138,7 @@ void MessageHandler::startThread() {
          threads::ThreadContext::tlsPtr = threadContext.get();  // init tl ptr
          // -------------------------------------------------------------------------------------
           // for delegation purpose, i.e., communication to remote message handler
-          // todo yuval MH - this is moved now here, so that we can also create a connection context for message handler
+          // yuval change - moved this upo to create connection also to other message handlers before init
           std::vector<MHEndpoint> mhEndpoints(FLAGS_nodes);
           for (uint64_t n_i = 0; n_i < FLAGS_nodes; n_i++) {
               if (n_i == nodeId) continue;

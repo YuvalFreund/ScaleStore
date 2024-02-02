@@ -18,6 +18,7 @@ DEFINE_uint32(falloc, 0, "Preallocate GiB");
 DEFINE_uint64(prob_SSD, 1000, "Probability to evict to SSD when page encountered [1-1000]");
 DEFINE_uint32(partitionBits, 6, "bits per partition");
 DEFINE_uint32(page_pool_partitions, 8, "page pool partitions each is shifted by 512 byte to increase cache associativity");
+DEFINE_uint32(bucket_id_size_in_bytes, 6, "How big is the bucket id in the bucket manager");
 // -------------------------------------------------------------------------------------
 DEFINE_bool(backoff, true, "backoff enabled");
 // -------------------------------------------------------------------------------------
