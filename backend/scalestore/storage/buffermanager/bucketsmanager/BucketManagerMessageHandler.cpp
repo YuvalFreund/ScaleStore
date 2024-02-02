@@ -430,7 +430,7 @@ void BucketManagerMessageHandler::logActivity(string const& str){
     std::cout<<str;
     fprintf(bmmhLogFile,"%s",cstr);
     loggerFlushCounter++;
-    //if(loggerFlushCounter % 20 == 0){ // todo yuval - if this causes issues ignore it
+    //if(loggerFlushCounter % 20 == 0){ // todo yuval - if this causes issues unignore it
         fflush(bmmhLogFile);
     //}
 }
