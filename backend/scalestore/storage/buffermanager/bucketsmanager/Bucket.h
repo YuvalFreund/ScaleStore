@@ -12,6 +12,8 @@
 #include <stack>
 #include <mutex>
 #include "BucketManagerDefs.h"
+#include "scalestore/Config.hpp"
+
 struct Bucket{
 public:
     uint64_t BucketId;
