@@ -39,7 +39,7 @@ ScaleStore::ScaleStore(){
    ensure(fcntl(ssd_fd, F_GETFL) != -1);
    // -------------------------------------------------------------------------------------
    // order of construction is important
-    vector<uint64_t> nodesInCluster = {0};
+    vector<uint64_t> nodesInCluster = {0}; // todo yuval - make sure this is what it needs to be when using 2 nodes
     bucketManager = std::make_unique<BucketManager>(nodeId,nodesInCluster);
     bucketManagerMessageHandler = std::make_unique<BucketManagerMessageHandler>(*bucketManager);
     cm = std::make_unique<rdma::CM<rdma::InitMessage>>();
