@@ -443,6 +443,8 @@ struct MessageHandler {
     // todo yuval ask tobi - does it make sense to send messages this way?
     void writeMsgsForBucketManager(vector<BucketMessage> msgs){
        for (auto & bucketMsg : msgs) {
+           uint64_t nodeIdToSend = bucketMsg.messageData[MSG_RCV_IDX];
+           ensure(nodeIdToSend < bmmh_cctxs.size() -1);
            auto clientId = bmmh_cctxs[bucketMsg.messageData[MSG_RCV_IDX]];
            auto& ctx = cctxs[clientId];
            auto& preparedBucketMsgToSend = *MessageFabric::createMessage<rdma::BucketManagerMessage>(ctx.response, bucketMsg.messageData);
