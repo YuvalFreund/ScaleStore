@@ -85,11 +85,8 @@ Buffermanager::Buffermanager(rdma::CM<rdma::InitMessage>& cm, NodeID nodeId, s32
       }
    });
    // -------------------------------------------------------------------------------------
-   // free list PIDs
-   // todo yuval - consider unnecessary free list PID
    uint64_t ssdPages = (FLAGS_ssd_gib * 1024 * 1024 * 1024) / sizeof(Page);
    ensure(dramPoolNumberPages < ssdPages);
-
 
    // create catalog page
    if (nodeId == CATALOG_OWNER) {

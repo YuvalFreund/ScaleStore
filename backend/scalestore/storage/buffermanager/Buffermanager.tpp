@@ -62,7 +62,7 @@ restart:
    // -------------------------------------------------------------------------------------
    g.frame->latch.latchExclusive(); // POSSIBLE ERROR?
    ensure(g.frame->pid == EMPTY_PID);
-    //todo Yuval - DONE replace with call to buckets manager
+    //yuval change -  replace with call to buckets manager
     uint64_t pidOwner = bucketManager.getNodeIdOfPage(g.frame->pid);
     g.frame->state =
        (pidOwner == nodeId) ? BF_STATE::IO_SSD : BF_STATE::IO_RDMA;  // important to modify state before releasing the hashtable latch
@@ -73,7 +73,7 @@ restart:
    // -------------------------------------------------------------------------------------
    ht_latch.unlatchExclusive();
    // -------------------------------------------------------------------------------------
-    //todo Yuval - DONE replace with call to buckets manager
+    //yuval change -  replace with call to buckets manager
 
     g.state = (pidOwner == nodeId) ? STATE::SSD : STATE::REMOTE;
    g.vAcquired = g.frame->latch.version;
@@ -231,18 +231,17 @@ restart:
          // -------------------------------------------------------------------------------------
          uintptr_t pageOffset = (uintptr_t)guard.frame->page;
          // -------------------------------------------------------------------------------------
-         //todo Yuval DONE- replace with call to buckets manager
+         //yuval change- replace with call to buckets manager
           uint64_t pidOwner = bucketManager.getNodeIdOfPage(pid);
           auto& contextT = threads::Worker::my().cctxs[pidOwner];
          auto& request = *MessageFabric::createMessage<PossessionRequest>(
              contextT.outgoing, ((functor.type == LATCH_STATE::EXCLUSIVE) ? MESSAGE_TYPE::PRX : MESSAGE_TYPE::PRS), pid, pageOffset);
-          //todo Yuval - DONE replace with call to buckets manager
+          //yuval change-  replace with call to buckets manager
           threads::Worker::my().writeMsgASync<PossessionResponse>(pidOwner, request);
          // -------------------------------------------------------------------------------------
          _mm_prefetch(&guard.frame->page->data[0], _MM_HINT_T0);  // prefetch first cache line of page
          // -------------------------------------------------------------------------------------
-          //todo Yuval DONE- replace with call to buckets manager
-          //todo -  uint64_t pidOwner = bucketManager->getNodeIdOfPage(frame.pid);
+          //yuval change replace with call to buckets manager
 
           auto& response = threads::Worker::my().collectResponseMsgASync<PossessionResponse>(pidOwner);
          // -------------------------------------------------------------------------------------
@@ -319,7 +318,7 @@ restart:
       // Upgrade we are owner and need to change possession or page evicted
       // ------------------------------------------------------------------------------------
       case STATE::LOCAL_POSSESSION_CHANGE: {
-          //todo Yuval DONE- replace with call to buckets manager
+          //yuval change- replace with call to buckets manager
 
           uint64_t pidOwner = bucketManager.getNodeIdOfPage(pid);
          ensure(pidOwner == nodeId);
@@ -419,12 +418,12 @@ restart:
          auto pVersionOld = guard.frame->pVersion.load();
          guard.frame->pVersion++;  // update here to prevent distributed deadlock
          // -------------------------------------------------------------------------------------
-          //todo Yuval DONE - replace with call to buckets manager
+          //yuval change- replace with call to buckets manager
           uint64_t pidOwner = bucketManager.getNodeIdOfPage(pid);
           auto& contextT = threads::Worker::my().cctxs[pidOwner];
          auto& request = *MessageFabric::createMessage<PossessionUpdateRequest>(contextT.outgoing, pid, pVersionOld);
          // -------------------------------------------------------------------------------------
-          //todo Yuval DONE- replace with call to buckets manager
+          //tyuval change replace with call to buckets manager
           auto& response = threads::Worker::my().writeMsgSync<PossessionUpdateResponse>(pidOwner, request);
 
          if (response.resultType == RESULT::UpdateFailed) {

@@ -427,6 +427,7 @@ void BucketManagerMessageHandler::sendMessage(BucketMessage msg) { //todo DFD
 void BucketManagerMessageHandler::logActivity(string const& str){
     char *cstr = new char[str.length() + 1];
     strcpy(cstr, str.c_str());
+    std::cout<<str;
     fprintf(bmmhLogFile,"%s",cstr);
     loggerFlushCounter++;
     //if(loggerFlushCounter % 20 == 0){ // todo yuval - if this causes issues ignore it
