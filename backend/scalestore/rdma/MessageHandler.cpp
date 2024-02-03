@@ -104,7 +104,6 @@ void MessageHandler::init() {
        if(rContext->type == Type::MESSAGE_HANDLER){
             std::cout<<"skip exhanging initial message for hm"<<std::endl;
        }else{
-           std::cout<<"trying to exchange initial message for worker"<<std::endl;
            cm.exchangeInitialMesssage(*(cctx.rctx), initServer);
        }
       // -------------------------------------------------------------------------------------
