@@ -161,20 +161,20 @@ void MessageHandler::startThread() {
              finishedCreatingConnections = true;
             init();
             finishedInit = true;
-         } else if(t_i == 1){
+         } /*else if(t_i == 1){
              while (!finishedCreatingConnections);
              for(auto mhEndpoint : mhEndpoints )   {
                  std::cout<<"t_1 trying to do sth"<<std::endl;
                  rdma::InitMessage* initMsg = (rdma::InitMessage*)cm.getGlobalBuffer().allocate(sizeof(rdma::InitMessage));
                  // fill init messages
-                 initMsg->mbOffset = 0;  // No MB offset
-                 initMsg->plOffset = (uintptr_t)mhEndpoint.request;
+                 initMsg->mbOffset = 0;
+                 initMsg->plOffset = (uintptr_t)mhEndpoint.response;
                  initMsg->bmId = nodeId;
                  initMsg->type = rdma::MESSAGE_TYPE::Init;
                  cm.exchangeInitialMesssage(*(mhEndpoint.rctx), initMsg);
              }
              while (!finishedInit);
-         }else{
+         }*/else{
             while (!finishedInit)
                ;  // block until initialized
          }
