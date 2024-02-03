@@ -154,7 +154,7 @@ void MessageHandler::startThread() {
                  if (n_i == nodeId) continue;
                  auto& ip = NODES[FLAGS_nodes][n_i];
                  std::cout<<"nodeid: " << nodeId << "trying to connect to ip: " << ip <<std::endl;
-                 auto rctx = &(cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId));
+                 cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId));
                  std::cout<<"nodeid: " << nodeId << "succeeded connecting to ip: " << ip <<std::endl;
                  // todo yuval ask tobi - is this just so that we ensure to connection works ? if yes, need to find a way to trigger it from maybe another threadd..
                 /*
