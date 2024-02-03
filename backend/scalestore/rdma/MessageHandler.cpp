@@ -142,7 +142,7 @@ void MessageHandler::startThread() {
          threads::ThreadContext::tlsPtr = threadContext.get();  // init tl ptr
          // -------------------------------------------------------------------------------------
 
-          std::vector<MHEndpoint> mhEndpoints(FLAGS_nodes-1);
+         std::vector<ConnectionContext> mhEndpoints(FLAGS_nodes-1);
 
          threadCount++;
          // protect init only ont thread should do it;
@@ -154,6 +154,8 @@ void MessageHandler::startThread() {
                  auto& ip = NODES[FLAGS_nodes][n_i];
                  std::cout<<"nodeid: " << nodeId << "trying to connect to ip: " << ip <<std::endl;
                  mhEndpoints[n_i].rctx = &(cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId));
+                 mhEndpoints[n_i].incoming = (rdma::Message*)cm.getGlobalBuffer().allocate(rdma::LARGEST_MESSAGE, CACHE_LINE);
+                 mhEndpoints[n_i].outgoing = (rdma::Message*)cm.getGlobalBuffer().allocate(rdma::LARGEST_MESSAGE, CACHE_LINE);
                  std::cout<<"nodeid: " << nodeId << "succeeded connecting to ip: " << ip <<std::endl;
              }
              finishedCreatingConnections = true;
@@ -166,7 +168,7 @@ void MessageHandler::startThread() {
                  rdma::InitMessage* initMsg = (rdma::InitMessage*)cm.getGlobalBuffer().allocate(sizeof(rdma::InitMessage));
                  // fill init messages
                  initMsg->mbOffset = 0;  // No MB offset
-                 initMsg->plOffset = (uintptr_t)cm.getGlobalBuffer().allocate(rdma::LARGEST_MESSAGE, CACHE_LINE);
+                 initMsg->plOffset = mhEndpoint.incoming;
                  initMsg->bmId = nodeId;
                  initMsg->type = rdma::MESSAGE_TYPE::Init;
                  cm.exchangeInitialMesssage(*(mhEndpoint.rctx), initMsg);
