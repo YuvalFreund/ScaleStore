@@ -155,7 +155,7 @@ void MessageHandler::startThread() {
                  std::cout<<"nodeid: " << nodeId << "trying to connect to ip: " << ip <<std::endl;
                  cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId);
                  std::cout<<"nodeid: " << nodeId << "succeeded connecting to ip: " << ip <<std::endl;
-                 rdma::InitMessage* initMsg = (rdma::InitMessage*)cm.getGlobalBuffer().allocate(sizeof(rdma::InitMessage));
+                 //rdma::InitMessage* initMsg = (rdma::InitMessage*)cm.getGlobalBuffer().allocate(sizeof(rdma::InitMessage));
                  // fill init messages
                  //initMsg->mbOffset = 0;  // No MB offset
                  //initMsg->plOffset = (uintptr_t)cm.getGlobalBuffer().allocate(rdma::LARGEST_MESSAGE, CACHE_LINE);
