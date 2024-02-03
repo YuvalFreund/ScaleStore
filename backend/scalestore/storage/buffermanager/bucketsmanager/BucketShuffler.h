@@ -87,7 +87,7 @@ struct BucketShuffler{
         ensure(guard.state != storage::STATE::NOT_FOUND);
         ensure(guard.state != storage::STATE::RETRY);
         guard.frame->state = storage::BF_STATE::MOVED_TO_NEW;
-        auto onTheWayUpdateRequest = *rdma::MessageFabric::createMessage<rdma::CreateOrUpdateShuffledFrameRequest>(mh.cctxs[newNodeId].request, pageId, guard.frame->possessors);
+        auto onTheWayUpdateRequest = *rdma::MessageFabric::createMessage<rdma::CreateOrUpdateShuffledFrameRequest>(mh.cctxs[newNodeId].request, pageId, guard.frame->possessors,guard.frame->possession);
         threads::Worker::my().writeMsg<rdma::CreateOrUpdateShuffledFrameRequest>(newNodeId, onTheWayUpdateRequest);
         guard.frame->latch.unlatchExclusive();
 
