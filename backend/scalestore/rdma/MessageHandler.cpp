@@ -163,7 +163,7 @@ void MessageHandler::startThread() {
                  rdma::InitMessage* init = (rdma::InitMessage*)cm.getGlobalBuffer().allocate(sizeof(rdma::InitMessage));
                  // fill init messages
                  init->mbOffset = 0;  // No MB offset
-                 init->plOffset = (uintptr_t)cctxs[n_i].incoming;
+                 init->plOffset = (uintptr_t)rctx.incoming;
                  init->bmId = nodeId;
                  init->type = rdma::MESSAGE_TYPE::Init;
                  cm.exchangeInitialMesssage(*(rctx), init);
