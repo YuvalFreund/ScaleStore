@@ -38,7 +38,7 @@ MessageHandler::MessageHandler(rdma::CM<InitMessage>& cm, storage::Buffermanager
 void MessageHandler::init() {
    InitMessage* initServer = (InitMessage*)cm.getGlobalBuffer().allocate(sizeof(InitMessage));
    // -------------------------------------------------------------------------------------
-   size_t numConnections = (FLAGS_worker) * (FLAGS_nodes - 1);//todo yuval - try without + (FLAGS_nodes - 1);
+   size_t numConnections = (FLAGS_worker) * (FLAGS_nodes - 1) + (FLAGS_nodes - 1);
    connectedClients = numConnections;
    while (cm.getNumberIncomingConnections() != (numConnections))
       ;  // block until client is connected
@@ -153,17 +153,15 @@ void MessageHandler::startThread() {
                  if (n_i == nodeId) continue;
                  auto& ip = NODES[FLAGS_nodes][n_i];
                  std::cout<<"nodeid: " << nodeId << "trying to connect to ip: " << ip <<std::endl;
-                 //cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId);
+                 cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId);
                  std::cout<<"nodeid: " << nodeId << "succeeded connecting to ip: " << ip <<std::endl;
-                 // todo yuval ask tobi - is this just so that we ensure to connection works ? if yes, need to find a way to trigger it from maybe another threadd..
-                /*
                  rdma::InitMessage* initMsg = (rdma::InitMessage*)cm.getGlobalBuffer().allocate(sizeof(rdma::InitMessage));
                  // fill init messages
                  initMsg->mbOffset = 0;  // No MB offset
                  initMsg->plOffset = (uintptr_t)cm.getGlobalBuffer().allocate(rdma::LARGEST_MESSAGE, CACHE_LINE);
                  initMsg->bmId = nodeId;
                  initMsg->type = rdma::MESSAGE_TYPE::Init;
-                 cm.exchangeInitialMesssage(*(rctx), initMsg);*/
+                 cm.exchangeInitialMesssage(*(rctx), initMsg);
              }
             init();
             finishedInit = true;
