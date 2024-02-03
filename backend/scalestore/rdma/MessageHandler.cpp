@@ -71,10 +71,11 @@ void MessageHandler::init() {
    // -------------------------------------------------------------------------------------
    auto rng = std::default_random_engine{};
    std::shuffle(std::begin(rdmaCtxs), std::end(rdmaCtxs), rng);
-
+   std::cout<<"after found all connections 1" << std::endl;
    uint64_t counter = 0;
    uint64_t partitionId = 0;
    uint64_t partitionOffset = 0;
+   std::cout<<"after found all connections 2" << std::endl;
 
    for (auto* rContext : rdmaCtxs) {
       // -------------------------------------------------------------------------------------
@@ -104,6 +105,12 @@ void MessageHandler::init() {
       initServer->bmId = nodeId;
       initServer->type = rdma::MESSAGE_TYPE::Init;
       // -------------------------------------------------------------------------------------
+       if(rContext->type == Type::MESSAGE_HANDLER){
+            std::cout<<"trying to exchange initial message for hm"<<std::endl;
+       }else{
+           std::cout<<"trying to exchange initial message for worker"<<std::endl;
+
+       }
       cm.exchangeInitialMesssage(*(cctx.rctx), initServer);
       // -------------------------------------------------------------------------------------
       // finish initialization of cctx
