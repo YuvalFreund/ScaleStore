@@ -410,6 +410,7 @@ void MessageHandler::startThread() {
                       guard.frame->possessors = incomingBucketMessage.possessors;
                       guard.frame->possession = incomingBucketMessage.possession;
                       guard.frame->pid = shuffledPid;
+                      guard.unlock(); // todo yuval - that feels wrong..
                       break;
                   }
 
