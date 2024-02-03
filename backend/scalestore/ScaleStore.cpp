@@ -39,20 +39,14 @@ ScaleStore::ScaleStore(){
    ensure(fcntl(ssd_fd, F_GETFL) != -1);
    // -------------------------------------------------------------------------------------
    // order of construction is important
-    vector<uint64_t> nodesInCluster =  {0}; // todo yuval - make sure this is what it needs to be when using 2 nodes
+    vector<uint64_t> nodesInCluster =  getNodeIdsVec(FLAGS_nodes); // todo yuval - make sure this is what it needs to be when using 2 nodes
     std::cout<<"nodeid: "<<nodeId << std::endl;
     bucketManager = std::make_unique<BucketManager>(nodeId,nodesInCluster);
-    std::cout<<"here1: "<<nodeId << std::endl;
     bucketManagerMessageHandler = std::make_unique<BucketManagerMessageHandler>(*bucketManager);
-    std::cout<<"here2: "<<nodeId << std::endl;
     cm = std::make_unique<rdma::CM<rdma::InitMessage>>();
-    std::cout<<"here3: "<<nodeId << std::endl;
     bm = std::make_unique<storage::Buffermanager>(*cm, nodeId, ssd_fd, *bucketManager);
-    std::cout<<"here4: "<<nodeId << std::endl;
     storage::BM::global = bm.get();
     mh = std::make_unique<rdma::MessageHandler>(*cm, *bm, nodeId,*bucketManager,*bucketManagerMessageHandler);
-    std::cout<<"herer: "<<nodeId << std::endl;
-
     workerPool = std::make_unique<threads::WorkerPool>(*cm, nodeId);
     pp = std::make_unique<storage::PageProvider>(*cm, *bm, mh->mbPartitions, ssd_fd,*bucketManager);
     bucketShuffler = std::make_unique<BucketShuffler>(*mh,*bucketManagerMessageHandler,*bm);

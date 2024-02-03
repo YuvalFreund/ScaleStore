@@ -237,7 +237,6 @@ void BucketManager::initFreeListOfBucketIds(){
     uint64_t temp;
     uint64_t bucketIdToEnter;
     uint64_t randSalt;
-    std::cout<<"here1: "<<nodeId << std::endl;
     for(int i = 0; i< MAX_BUCKETS; i++){
         randSalt = rand();
         temp = tripleHash(randSalt);

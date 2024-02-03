@@ -117,7 +117,11 @@ class ScaleStore
       catalog->insertCatalogEntry(storage::DS_TYPE::BARRIER, barrier.pid);
       return barrier;
    }
-
+   vector<uint64_t> getNodeIdsVec(uint64_t nodesNum){
+       vector<uint64_t> retVal;
+       for(uint64_t i=0; i<nodesNum; i++) retVal.emplace_back(i);
+       return retVal;
+   }
    
    
    // -------------------------------------------------------------------------------------
