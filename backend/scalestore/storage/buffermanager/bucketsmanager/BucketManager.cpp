@@ -225,21 +225,11 @@ void BucketManager::fullBucketManagerInit(const std::vector<uint64_t> nodeIdsInp
     for(const unsigned long long & i : nodeIdsInput){
         nodeIdsInCluster.insert(i);
     }
-    std::cout<<"here1: "<<nodeId << std::endl;
-
     nodeIdsInCluster.insert(nodeId);
-    std::cout<<"here2: "<<nodeId << std::endl;
-
     initConsistentHashingInfo(true);
-    std::cout<<"here3: "<<nodeId << std::endl;
     initFreeListOfBucketIds();
-    std::cout<<"here4: "<<nodeId << std::endl;
     makeStackOfSSDSlotsForBuckets();
-    std::cout<<"here5: "<<nodeId << std::endl;
-
     disjointSets.makeInitialSet(bucketIds);
-    std::cout<<"here6: "<<nodeId << std::endl;
-
     initAllBuckets();
 }
 
@@ -247,10 +237,11 @@ void BucketManager::initFreeListOfBucketIds(){
     uint64_t temp;
     uint64_t bucketIdToEnter;
     uint64_t randSalt;
+    std::cout<<"here1: "<<nodeId << std::endl;
     for(int i = 0; i< MAX_BUCKETS; i++){
         randSalt = rand();
         temp = tripleHash(randSalt);
-        while(getNodeIdOfBucket(temp & bucketIdMaskByParameter, true, false) != nodeId){
+        while(getNodeIdOfBucket(temp & bucketIdMaskByParameter, true, true) != nodeId){
             temp = tripleHash(randSalt);
             randSalt = rand();
         }
