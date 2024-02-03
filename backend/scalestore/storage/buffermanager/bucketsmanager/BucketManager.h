@@ -165,7 +165,7 @@ public:
 
     PageIdJobFromBucket getPageFromBucketToShuffle(uint64_t bucketId);
 
-
+    void enterNewShuffledPidToBucketManager(uint64_t shuffledPid);
 
 };
 #endif //LOCALTHESIS_BUCKETMANAGER_H

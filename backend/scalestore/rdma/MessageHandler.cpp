@@ -403,10 +403,14 @@ void MessageHandler::startThread() {
 
                   case MESSAGE_TYPE::CUSFR: {
                       // todo yuval - check if frame doesn't already exists. in this case-  don't enter
-                      /*auto& incomingBucketMessage = *reinterpret_cast<CreateOrUpdateShuffledFrameRequest*>(ctx.request);
-                      PID pid = PID(incomingBucketMessage.shuffledPid);
-                      auto guard = bm.findFrameOrInsert<CONTENTION_METHOD::NON_BLOCKING>(pid, Invalidation(), ctx.bmId, true); // todo yuval - think of functor here
-                      */
+                      auto& incomingBucketMessage = *reinterpret_cast<CreateOrUpdateShuffledFrameRequest*>(ctx.request);
+                      bucketManager.enterNewShuffledPidToBucketManager(incomingBucketMessage.shuffledPid);
+                      PID shuffledPid = PID(incomingBucketMessage.shuffledPid);
+                      auto guard = bm.findFrameOrInsert<CONTENTION_METHOD::BLOCKING>(shuffledPid, Invalidation(), ctx.bmId, true); // todo yuval - think of functor here
+                      guard.frame->possessors = incomingBucketMessage.possessors;
+                      guard.frame->possession = incomingBucketMessage.possession;
+                      guard.frame->pid = shuffledPid;
+                      gu
                   }
 
 

@@ -45,6 +45,9 @@
 struct PageIdJobFromBucket{
     uint64_t pageId;
     bool bucketContainsPages;
+
+    PageIdJobFromBucket() {}
+
 };
 
 

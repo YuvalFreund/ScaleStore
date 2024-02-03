@@ -453,6 +453,13 @@ void BucketManager::lockBucketBeforeShuffle(uint64_t bucketIdToLock){
     bucketMapMtx.unlock();
 }
 
+void BucketManager::enterNewShuffledPidToBucketManager(uint64_t shuffledPid){
+    uint64_t bucketId = bucketIdMaskByParameter & shuffledPid;
+    uint64_t realBucketId = disjointSets.find(bucketId);
+    bucketsMap.find(realBucketId)->second.addNewPageWithPageId(shuffledPid);
+}
+
+
 
 BucketsDisjointSets& BucketManager::getDisjointSets(){
     return disjointSets;
