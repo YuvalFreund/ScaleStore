@@ -139,18 +139,20 @@ void MessageHandler::startThread() {
          std::unique_ptr<threads::ThreadContext> threadContext = std::make_unique<threads::ThreadContext>();
          threads::ThreadContext::tlsPtr = threadContext.get();  // init tl ptr
          // -------------------------------------------------------------------------------------
-          // for delegation purpose, i.e., communication to remote message handler
-          // yuval change - moved this upo to create connection also to other message handlers before init
+
           std::vector<MHEndpoint> mhEndpoints(FLAGS_nodes);
-          for (uint64_t n_i = 0; n_i < FLAGS_nodes; n_i++) {
-              if (n_i == nodeId) continue;
-              auto& ip = NODES[FLAGS_nodes][n_i];
-              std::cout<<"nodeid: " << nodeId << "trying to connect to ip: " << ip <<std::endl;
-              mhEndpoints[n_i].rctx = &(cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId));
-          }
+
          threadCount++;
          // protect init only ont thread should do it;
          if (t_i == 0) {
+             // for delegation purpose, i.e., communication to remote message handler
+             // yuval change - moved this upo to create connection also to other message handlers before init
+             for (uint64_t n_i = 0; n_i < FLAGS_nodes; n_i++) {
+                 if (n_i == nodeId) continue;
+                 auto& ip = NODES[FLAGS_nodes][n_i];
+                 std::cout<<"nodeid: " << nodeId << "trying to connect to ip: " << ip <<std::endl;
+                 mhEndpoints[n_i].rctx = &(cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId));
+             }
             init();
             finishedInit = true;
          } else {
