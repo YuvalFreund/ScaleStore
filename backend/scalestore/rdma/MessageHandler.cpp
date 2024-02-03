@@ -102,12 +102,11 @@ void MessageHandler::init() {
       initServer->type = rdma::MESSAGE_TYPE::Init;
       // -------------------------------------------------------------------------------------
        if(rContext->type == Type::MESSAGE_HANDLER){
-            std::cout<<"trying to exchange initial message for hm"<<std::endl;
+            std::cout<<"skip exhanging initial message for hm"<<std::endl;
        }else{
            std::cout<<"trying to exchange initial message for worker"<<std::endl;
-
+           cm.exchangeInitialMesssage(*(cctx.rctx), initServer);
        }
-      cm.exchangeInitialMesssage(*(cctx.rctx), initServer);
       // -------------------------------------------------------------------------------------
       // finish initialization of cctx
       cctx.plOffset = (reinterpret_cast<InitMessage*>((cctx.rctx->applicationData)))->plOffset;
@@ -157,14 +156,15 @@ void MessageHandler::startThread() {
                  std::cout<<"nodeid: " << nodeId << "trying to connect to ip: " << ip <<std::endl;
                  auto rctx = &(cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId));
                  std::cout<<"nodeid: " << nodeId << "succeeded connecting to ip: " << ip <<std::endl;
-
+                 // todo yuval ask tobi - is this just so that we ensure to connection works ? if yes, need to find a way to trigger it from maybe another threadd..
+                /*
                  rdma::InitMessage* initMsg = (rdma::InitMessage*)cm.getGlobalBuffer().allocate(sizeof(rdma::InitMessage));
                  // fill init messages
                  initMsg->mbOffset = 0;  // No MB offset
                  initMsg->plOffset = (uintptr_t)cm.getGlobalBuffer().allocate(rdma::LARGEST_MESSAGE, CACHE_LINE);
                  initMsg->bmId = nodeId;
                  initMsg->type = rdma::MESSAGE_TYPE::Init;
-                 cm.exchangeInitialMesssage(*(rctx), initMsg);
+                 cm.exchangeInitialMesssage(*(rctx), initMsg);*/
              }
             init();
             finishedInit = true;
