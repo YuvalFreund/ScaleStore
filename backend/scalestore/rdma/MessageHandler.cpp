@@ -57,6 +57,7 @@ void MessageHandler::init() {
          }
          if(rContext->type == Type::MESSAGE_HANDLER) { // yuval change - also connecto to other message handler
              otherMessageHandlers++;
+             std::cout<<"found a message Handler" << std::endl;
          }
       }
       if (workers + otherMessageHandlers == numConnections) {
