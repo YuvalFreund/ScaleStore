@@ -86,7 +86,7 @@ uint64_t BucketManager::getNodeIdOfBucket(uint64_t bucketId, bool fromInitStage,
             return pageInCacheIter->second;
         }
     }
-    std::map<uint64_t, uint64_t> *mapToSearch = searchOldRing ? (&nodesRingLocationMap ) : (&newNodesRingLocationMap) ; // locations to swap YUYU
+    std::map<uint64_t, uint64_t> *mapToSearch = searchOldRing ? (&nodesRingLocationMap ) : (&newNodesRingLocationMap);
     std::vector<uint64_t> * vectorToSearch = searchOldRing ? (&nodeRingLocationsVector) : (&newNodeRingLocationsVector);
 
     uint64_t l = 0;
@@ -97,7 +97,11 @@ uint64_t BucketManager::getNodeIdOfBucket(uint64_t bucketId, bool fromInitStage,
     while (l <= r) {
         uint64_t m = l + (r - l) / 2;
         if (vectorToSearch->at(m) <= bucketId && vectorToSearch->at(m + 1) > bucketId) {
-            res = mapToSearch->at(vectorToSearch->at(r));
+            try{
+                res = mapToSearch->at(vectorToSearch->at(r));
+            }catch (const std::exception& ex){
+                std::cout<< "bucket id caused excepetion:" <<bucketId;
+            }
             break;
         }
         if (vectorToSearch->at(m) < bucketId) {
