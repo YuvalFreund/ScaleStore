@@ -153,19 +153,24 @@ void MessageHandler::startThread() {
                  if (n_i == nodeId) continue;
                  auto& ip = NODES[FLAGS_nodes][n_i];
                  std::cout<<"nodeid: " << nodeId << "trying to connect to ip: " << ip <<std::endl;
-                 cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId);
+                 mhEndpoints[n_i].rctx = &(cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId));
                  std::cout<<"nodeid: " << nodeId << "succeeded connecting to ip: " << ip <<std::endl;
-                 //rdma::InitMessage* initMsg = (rdma::InitMessage*)cm.getGlobalBuffer().allocate(sizeof(rdma::InitMessage));
-                 // fill init messages
-                 //initMsg->mbOffset = 0;  // No MB offset
-                 //initMsg->plOffset = (uintptr_t)cm.getGlobalBuffer().allocate(rdma::LARGEST_MESSAGE, CACHE_LINE);
-                 //initMsg->bmId = nodeId;
-                 //initMsg->type = rdma::MESSAGE_TYPE::Init;
-                 //cm.exchangeInitialMesssage(*(rctx), initMsg);
              }
             init();
             finishedInit = true;
-         } else {
+         } else if(t_i == 1){
+             while (!finishedCreatingConnections);
+             for(auto mhEndpoint : mhEndpoints )   {
+                 rdma::InitMessage* initMsg = (rdma::InitMessage*)cm.getGlobalBuffer().allocate(sizeof(rdma::InitMessage));
+                 // fill init messages
+                 initMsg->mbOffset = 0;  // No MB offset
+                 initMsg->plOffset = (uintptr_t)cm.getGlobalBuffer().allocate(rdma::LARGEST_MESSAGE, CACHE_LINE);
+                 initMsg->bmId = nodeId;
+                 initMsg->type = rdma::MESSAGE_TYPE::Init;
+                 cm.exchangeInitialMesssage(*(mhEndpoint.rctx), initMsg);
+             }
+             while (!finishedInit);
+         }else{
             while (!finishedInit)
                ;  // block until initialized
          }

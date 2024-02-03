@@ -97,6 +97,7 @@ struct MessageHandler {
    std::vector<MailboxPartition> mbPartitions;
    std::atomic<uint64_t> connectedClients = 0;
    std::atomic<bool> finishedInit = false;
+   std::atomic<bool> finishedCreatingConnections = false;
    BucketManager& bucketManager;
    BucketManagerMessageHandler& bucketManagerMessageHandler;
 
