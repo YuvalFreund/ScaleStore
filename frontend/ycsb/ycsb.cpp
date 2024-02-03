@@ -140,6 +140,8 @@ int main(int argc, char* argv[])
     // -------------------------------------------------------------------------------------
     ScaleStore scalestore;
     auto& catalog = scalestore.getCatalog();
+    std::cout<<"finished catalog init" << std::endl;
+
     // -------------------------------------------------------------------------------------
     auto partition = [&](uint64_t id, uint64_t participants, uint64_t N) -> Partition {
         const uint64_t blockSize = N / participants;

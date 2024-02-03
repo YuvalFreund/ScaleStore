@@ -54,6 +54,7 @@ ScaleStore::ScaleStore(){
     bmCounters = std::make_unique<profiling::BMCounters>(*bm);
     rdmaCounters = std::make_unique<profiling::RDMACounters>();
     catalog = std::make_unique<storage::Catalog>();
+    std::cout<<"finished scalestore init" << std::endl;
 
     // init catalog
    workerPool->scheduleJobSync(
