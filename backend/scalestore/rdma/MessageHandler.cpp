@@ -57,7 +57,6 @@ void MessageHandler::init() {
          }
          if(rContext->type == Type::MESSAGE_HANDLER) { // yuval change - also connecto to other message handler
              otherMessageHandlers++;
-             std::cout<<"found a message Handler" << std::endl;
          }
       }
       if (workers + otherMessageHandlers == numConnections) {
@@ -65,22 +64,19 @@ void MessageHandler::init() {
          break;
       }
    }
-   std::cout<<"found all connections" << std::endl;
    // -------------------------------------------------------------------------------------
    // shuffle worker connections
    // -------------------------------------------------------------------------------------
    auto rng = std::default_random_engine{};
    std::shuffle(std::begin(rdmaCtxs), std::end(rdmaCtxs), rng);
-   std::cout<<"after found all connections 1" << std::endl;
    uint64_t counter = 0;
    uint64_t partitionId = 0;
    uint64_t partitionOffset = 0;
-   std::cout<<"after found all connections 2" << std::endl;
 
    for (auto* rContext : rdmaCtxs) {
       // -------------------------------------------------------------------------------------
       if (rContext->type != Type::WORKER && rContext->type != Type::MESSAGE_HANDLER) {
-         continue;  // skip no worker connection
+         continue;  // skip no worker or mh connection
       }
       
       // partially initiallize connection connectxt
@@ -162,12 +158,13 @@ void MessageHandler::startThread() {
                  auto rctx = &(cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId));
                  std::cout<<"nodeid: " << nodeId << "succeeded connecting to ip: " << ip <<std::endl;
 
-                 rdma::InitMessage* init = (rdma::InitMessage*)cm.getGlobalBuffer().allocate(sizeof(rdma::InitMessage));
+                 rdma::InitMessage* initMsg = (rdma::InitMessage*)cm.getGlobalBuffer().allocate(sizeof(rdma::InitMessage));
                  // fill init messages
-                 init->mbOffset = 0;  // No MB offset
-                 init->bmId = nodeId;
-                 init->type = rdma::MESSAGE_TYPE::Init;
-                 cm.exchangeInitialMesssage(*(rctx), init);
+                 initMsg->mbOffset = 0;  // No MB offset
+                 initMsg->plOffset = cm.getGlobalBuffer().allocate(rdma::LARGEST_MESSAGE, CACHE_LINE);
+                 initMsg->bmId = nodeId;
+                 initMsg->type = rdma::MESSAGE_TYPE::Init;
+                 cm.exchangeInitialMesssage(*(rctx), initMsg);
              }
             init();
             finishedInit = true;
