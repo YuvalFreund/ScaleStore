@@ -56,7 +56,6 @@ public:
             throw std::runtime_error("No empty slots");
         }
 
-
         auto freeSlot = freeSlots.top();
         retVal = BucketId & bucketIdMaskByParameter;
         retVal = freeSlot | retVal;

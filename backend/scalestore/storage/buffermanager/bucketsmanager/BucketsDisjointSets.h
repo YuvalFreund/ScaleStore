@@ -42,6 +42,7 @@ public:
     }
 
     uint64_t find(uint64_t x){
+        std::cout<<"in disjoint sets!";
         mtxForUnionFind.lock();
         if (disjointMap.find(x)->second != x) {
             disjointMap.find(x)->second = find(disjointMap.at(x));
