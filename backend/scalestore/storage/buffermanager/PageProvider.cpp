@@ -774,7 +774,7 @@ void PageProvider::init() {
    InitMessage* init = (InitMessage*)cm.getGlobalBuffer().allocate(sizeof(InitMessage));
    // -------------------------------------------------------------------------------------
    size_t numConnections = (FLAGS_worker) * (FLAGS_nodes - 1);  // only expect lower nodeId nodes
-   numConnections += (FLAGS_pageProviderThreads * (bm.nodeId)) + ((FLAGS_messageHandlerThreads) * (FLAGS_nodes - 1));
+   numConnections += (FLAGS_pageProviderThreads * (bm.nodeId)) + ((FLAGS_messageHandlerThreads) * (FLAGS_nodes - 1)) + (FLAGS_nodes - 1);
    // -------------------------------------------------------------------------------------
    std::cout << " expected connections PP int" << numConnections << "\n";
    while (cm.getNumberIncomingConnections() != (numConnections))
