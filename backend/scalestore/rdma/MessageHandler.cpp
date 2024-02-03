@@ -159,7 +159,14 @@ void MessageHandler::startThread() {
                  if (n_i == nodeId) continue;
                  auto& ip = NODES[FLAGS_nodes][n_i];
                  std::cout<<"nodeid: " << nodeId << "trying to connect to ip: " << ip <<std::endl;
-                 mhEndpoints[n_i].rctx = &(cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId));
+                 auto rctx = &(cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId));
+                 rdma::InitMessage* init = (rdma::InitMessage*)cm.getGlobalBuffer().allocate(sizeof(rdma::InitMessage));
+                 // fill init messages
+                 init->mbOffset = 0;  // No MB offset
+                 init->plOffset = (uintptr_t)cctxs[n_i].incoming;
+                 init->bmId = nodeId;
+                 init->type = rdma::MESSAGE_TYPE::Init;
+                 cm.exchangeInitialMesssage(*(rctx), init);
              }
             init();
             finishedInit = true;
