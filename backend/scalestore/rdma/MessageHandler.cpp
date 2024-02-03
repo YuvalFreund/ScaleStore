@@ -142,7 +142,7 @@ void MessageHandler::startThread() {
          threads::ThreadContext::tlsPtr = threadContext.get();  // init tl ptr
          // -------------------------------------------------------------------------------------
 
-          std::set<MHEndpoint> mhEndpoints(FLAGS_nodes-1);
+          std::vector<MHEndpoint> mhEndpoints(FLAGS_nodes-1);
 
          threadCount++;
          // protect init only ont thread should do it;
