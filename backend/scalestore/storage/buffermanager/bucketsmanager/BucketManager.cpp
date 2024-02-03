@@ -225,11 +225,21 @@ void BucketManager::fullBucketManagerInit(const std::vector<uint64_t> nodeIdsInp
     for(const unsigned long long & i : nodeIdsInput){
         nodeIdsInCluster.insert(i);
     }
+    std::cout<<"here1: "<<nodeId << std::endl;
+
     nodeIdsInCluster.insert(nodeId);
+    std::cout<<"here2: "<<nodeId << std::endl;
+
     initConsistentHashingInfo(true);
+    std::cout<<"here3: "<<nodeId << std::endl;
     initFreeListOfBucketIds();
+    std::cout<<"here4: "<<nodeId << std::endl;
     makeStackOfSSDSlotsForBuckets();
+    std::cout<<"here5: "<<nodeId << std::endl;
+
     disjointSets.makeInitialSet(bucketIds);
+    std::cout<<"here6: "<<nodeId << std::endl;
+
     initAllBuckets();
 }
 
