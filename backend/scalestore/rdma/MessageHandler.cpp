@@ -156,6 +156,7 @@ void MessageHandler::startThread() {
                  mhEndpoints[n_i].rctx = &(cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId));
                  std::cout<<"nodeid: " << nodeId << "succeeded connecting to ip: " << ip <<std::endl;
              }
+             finishedCreatingConnections = true;
             init();
             finishedInit = true;
          } else if(t_i == 1){
