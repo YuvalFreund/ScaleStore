@@ -145,6 +145,7 @@ void MessageHandler::startThread() {
           for (uint64_t n_i = 0; n_i < FLAGS_nodes; n_i++) {
               if (n_i == nodeId) continue;
               auto& ip = NODES[FLAGS_nodes][n_i];
+              std::cout<<"nodeid: " << nodeId << "trying to connect to ip: " << ip <<std::endl;
               mhEndpoints[n_i].rctx = &(cm.initiateConnection(ip, rdma::Type::MESSAGE_HANDLER, 99, nodeId));
           }
          threadCount++;
