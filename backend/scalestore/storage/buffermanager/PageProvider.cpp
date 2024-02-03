@@ -776,7 +776,7 @@ void PageProvider::init() {
    size_t numConnections = (FLAGS_worker) * (FLAGS_nodes - 1);  // only expect lower nodeId nodes
    numConnections += (FLAGS_pageProviderThreads * (bm.nodeId)) + ((FLAGS_messageHandlerThreads) * (FLAGS_nodes - 1)) + (FLAGS_nodes - 1); // yuval change
    // -------------------------------------------------------------------------------------
-   std::cout << " expected connections PP int" << numConnections << "\n"
+   std::cout << " expected connections PP int" << numConnections << "\n";
    std::cout << "cm.getNumberIncomingConnections():" <<cm.getNumberIncomingConnections() <<std::endl;
    while (cm.getNumberIncomingConnections() != (numConnections))
       ;  // block until client is connected
