@@ -80,10 +80,10 @@ uint64_t BucketManager::getNodeIdOfBucket(uint64_t bucketId, bool fromInitStage,
     uint64_t res = INVALID_NODE_ID;
     if(searchOldRing){
         //bucketCacheMtx.lock(); // todo yuval - this needs to be locked optimistically, regardless of other places in code using mtx
-        auto pageInCacheIter = bucketIdToNodeCache.find(bucketId);
+        auto bucketIdCacheIter = bucketIdToNodeCache.find(bucketId);
         //bucketCacheMtx.unlock();
-        if(pageInCacheIter != bucketIdToNodeCache.end()){
-            return pageInCacheIter->second;
+        if(bucketIdCacheIter != bucketIdToNodeCache.end()){
+            return bucketIdCacheIter->second;
         }
     }
     std::map<uint64_t, uint64_t> *mapToSearch = searchOldRing ? (&nodesRingLocationMap ) : (&newNodesRingLocationMap);
@@ -92,16 +92,18 @@ uint64_t BucketManager::getNodeIdOfBucket(uint64_t bucketId, bool fromInitStage,
     uint64_t l = 0;
     uint64_t r = vectorToSearch->size() - 1;
     // edge case for cyclic operation
-    if(bucketId < vectorToSearch->at(l) || bucketId > vectorToSearch->at(r)) return mapToSearch->at(vectorToSearch->at(r));
+    if(bucketId < vectorToSearch->at(l) || bucketId > vectorToSearch->at(r)) {
+        auto itr = mapToSearch->find(vectorToSearch->at(r));
+        ensure(itr != mapToSearch->end());
+        return itr->second;
+    }
     // binary search
     while (l <= r) {
         uint64_t m = l + (r - l) / 2;
         if (vectorToSearch->at(m) <= bucketId && vectorToSearch->at(m + 1) > bucketId) {
-            try{
-                res = mapToSearch->at(vectorToSearch->at(r));
-            }catch (const std::exception& ex){
-                std::cout<< "bucket id caused excepetion:" <<bucketId;
-            }
+            auto itr = mapToSearch->find(vectorToSearch->at(r));
+            ensure(itr != mapToSearch->end());
+            res = itr->second;
             break;
         }
         if (vectorToSearch->at(m) < bucketId) {

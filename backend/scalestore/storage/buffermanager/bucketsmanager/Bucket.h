@@ -13,6 +13,7 @@
 #include <mutex>
 #include "BucketManagerDefs.h"
 #include "scalestore/Config.hpp"
+#include "Defs.hpp"
 
 struct Bucket{
 public:
@@ -132,13 +133,15 @@ public:
         bucketLock.lock();
         uint64_t retVal;
         uint64_t offset;
-        try {
-            offset = pageIdToSlot.at(pageId);
-        }catch (const std::out_of_range& e) {
+        auto iter = pageIdToSlot.find(pageId);
+        if(iter != pageIdToSlot.end()){
+            offset = iter->second;
+        }
+        else{
             bucketLock.unlock();
             throw std::runtime_error("Page doesnt exist!");
         }
-        retVal = SSDSlotStart + offset ;
+        retVal = SSDSlotStart + offset;
         bucketLock.unlock();
         return retVal;
     }

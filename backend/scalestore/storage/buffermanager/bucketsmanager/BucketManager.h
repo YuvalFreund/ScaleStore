@@ -22,6 +22,7 @@
 #include "LocalBucketsMergeJob.h"
 #include "BucketManagerDefs.h"
 #include "scalestore/Config.hpp"
+#include "Defs.hpp"
 
 
 

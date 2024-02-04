@@ -399,7 +399,7 @@ void MessageHandler::startThread() {
                      // -------------------------------------------------------------------------------------
                      PID pid = PID(bucketManager.addNewPage());
                      // -------------------------------------------------------------------------------------
-                     BufferFrame& frame =bm.insertFrame(pid, [&](BufferFrame& frame){
+                     BufferFrame& frame = bm.insertFrame(pid, [&](BufferFrame& frame){
                                                                 frame.latch.latchExclusive();
                                                                 frame.setPossession(POSSESSION::EXCLUSIVE);
                                                                 frame.setPossessor(ctx.bmId);

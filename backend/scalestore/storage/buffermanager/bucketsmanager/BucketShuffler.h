@@ -25,7 +25,6 @@ struct BucketShuffler{
     };
 
     std::mutex bucketsJobMutex;
-    std::map<uint64_t,uint16_t>::iterator bucketPageIterator;
     std::queue<RemoteBucketShuffleJob> remoteShuffleJobs;
     atomic<bool> initiated = false;
     atomic<bool> workDone = false;
@@ -74,7 +73,6 @@ struct BucketShuffler{
     }
 
     void handleOnePageSend(PageShuffleJob pageShuffleJob){
-        // todo yuval - this function needs to return list of bucket ids that were transferred
        // BucketManager& bucketManager = bmmh.bucketManager;
         uint64_t pageId = pageShuffleJob.pageId;
         uint64_t newNodeId = pageShuffleJob.nodeId;
