@@ -72,8 +72,9 @@ enum class RESULT : uint8_t {
    UpdateFailed = 7,
    UpdateSucceed = 8,
    UpdateSucceedWithSharedConflict =9,
-   CopyFailedWithRestart =10,
+   CopyFailedWithRestart = 10,
    CopyFailedWithInvalidation =11,
+   PageShuffledToNewNode = 12
 };
 // -------------------------------------------------------------------------------------
 // INIT Message is exchanged via RDMA S/R hence not in inheritance hierarchy

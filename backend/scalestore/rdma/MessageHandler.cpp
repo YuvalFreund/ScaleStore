@@ -256,7 +256,17 @@ void MessageHandler::startThread() {
                      ensure(guard.frame->page != nullptr);
                      ensure(guard.frame->latch.isLatched());
                      ensure(guard.latchState == LATCH_STATE::EXCLUSIVE);
-                     // -------------------------------------------------------------------------------------
+
+                      // YUVAL CHANGE
+                      if(guard.frame->state == BF_STATE::MOVED_TO_NEW){
+                          ensure(guard.frame->latch.isLatched());
+                          auto& response = *MessageFabric::createMessage<rdma::PossessionResponse>(ctx.response, RESULT::PageShuffledToNewNode);
+                          writeMsg(clientId, response,threads::ThreadContext::my().page_handle);
+                          guard.frame->latch.unlatchExclusive();
+                          break;
+                      }
+
+                      // -------------------------------------------------------------------------------------
                      auto& response = *MessageFabric::createMessage<PossessionMoveResponse>(ctx.response, RESULT::WithPage);
                      // Respond
                      // -------------------------------------------------------------------------------------

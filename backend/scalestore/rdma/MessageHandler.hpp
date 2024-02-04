@@ -132,6 +132,7 @@ struct MessageHandler {
       uint8_t* mailboxes = partition.mailboxes;
       auto guard = bm.findFrameOrInsert<CONTENTION_METHOD::NON_BLOCKING>(request.pid, Protocol<DESIRED_MODE>(), ctx.bmId,false);
       // -------------------------------------------------------------------------------------
+
       if (guard.state == STATE::RETRY) {
          ensure(guard.latchState != LATCH_STATE::EXCLUSIVE);
          mailboxes[m_i] = 1;
@@ -163,7 +164,18 @@ struct MessageHandler {
          mailboxes[m_i] = 1;
          counters.incr(profiling::WorkerCounters::mh_msgs_restarted);
          return;
+
       }
+
+      // YUVAL CHANGE
+      if(guard.frame->state == BF_STATE::MOVED_TO_NEW){
+          ensure(guard.frame->latch.isLatched());
+          auto& response = *MessageFabric::createMessage<rdma::PossessionResponse>(ctx.response, RESULT::PageShuffledToNewNode);
+          writeMsg(clientId, response,page_handle);
+          guard.frame->latch.unlatchExclusive();
+      }
+
+
       // -------------------------------------------------------------------------------------
       ensure((guard.frame->state == BF_STATE::HOT) || (guard.frame->state == BF_STATE::EVICTED));
       ensure(guard.frame->latch.isLatched());
@@ -173,6 +185,9 @@ struct MessageHandler {
       response.type = (DESIRED_MODE == POSSESSION::SHARED ? MESSAGE_TYPE::PRRS : MESSAGE_TYPE::PRRX);
       //-------------------------------------------------------------------------------------
       ensure(guard.state == STATE::LOCAL_POSSESSION_CHANGE);  // TODO add ssd
+
+
+
       // -------------------------------------------------------------------------------------
       // Shared Possession
       // -------------------------------------------------------------------------------------

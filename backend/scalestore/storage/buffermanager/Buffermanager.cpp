@@ -164,7 +164,7 @@ void Buffermanager::reclaimPage(BufferFrame& frame) {
       removeFrame(frame, [&](BufferFrame& frame){
                             pageFreeList.push(frame.page, threads::ThreadContext::my().page_handle);
                          });
-      // XXX TODO call remote reclaim page on owner via the page provider 
+      // XXX TODO call remote reclaim page on owner via the page provider
    }
 }
 // -------------------------------------------------------------------------------------

@@ -292,6 +292,8 @@ restart:
                }
                goto restartNoPageEvicted;
             }
+         }else if(response.resultType == RESULT::PageShuffledToNewNode){
+
          }
          // -------------------------------------------------------------------------------------
          // ensure(guard.frame->page->magicDebuggingNumber == pid);
