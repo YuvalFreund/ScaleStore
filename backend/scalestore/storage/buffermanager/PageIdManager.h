@@ -11,6 +11,7 @@
 #include <mutex>
 #include <set>
 #include <atomic>
+#include <algorithm>
 
 #include "PageIdManagerDefs.h"
 struct PageIdManager {
