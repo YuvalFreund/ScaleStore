@@ -10,6 +10,7 @@
 #include <vector>
 #include <mutex>
 #include <set>
+#include <atomic>
 
 #include "PageIdManagerDefs.h"
 struct PageIdManager {
