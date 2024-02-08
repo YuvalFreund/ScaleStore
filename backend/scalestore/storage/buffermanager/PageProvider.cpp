@@ -175,7 +175,7 @@ void PageProvider::startThread() {
          // used wshen we do not evict to SSD but only to remote nodes 
          auto remote_condition = [&](BufferFrame& frame) {
             // local pages shared somewhere else
-             //yuval change -  DONE replace with call to buckets manager
+             //yuval change -  replace with call to buckets manager
              uint64_t pidOwner = bucketManager.getNodeIdOfPage(frame.pid, true);
             if ((pidOwner == bm.nodeId) && (frame.state == BF_STATE::HOT) && (frame.possession == POSSESSION::SHARED) &&
                 !frame.latch.isLatched()) {

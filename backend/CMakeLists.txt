@@ -14,7 +14,7 @@ endif ()
 # ---------------------------------------------------------------------------
 # Library
 # ---------------------------------------------------------------------------
-add_library(scalestore STATIC ${SCALESTORE_CC} scalestore/storage/buffermanager/bucketsmanager/BucketShuffler.h)
+add_library(scalestore STATIC ${SCALESTORE_CC} scalestore/storage/buffermanager/bucketsmanager/BucketShuffler.h scalestore/storage/buffermanager/PageIdManager.cpp scalestore/storage/buffermanager/PageIdManager.h scalestore/storage/buffermanager/PageIdManagerDefs.h)
 
 OPTION(SANI "Compile scalestore with sanitizers" OFF)
 IF(SANI)

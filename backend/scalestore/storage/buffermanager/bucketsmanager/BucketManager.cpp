@@ -32,9 +32,6 @@ uint64_t BucketManager::addNewPage(){
             createNewBucket(false,ZERO);
         }
     }
-    if(retVal % 200000 == 0){
-        //printNodeData();
-    }
     return retVal;
 }
 
